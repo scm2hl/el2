@@ -292,7 +292,6 @@ namespace ModuleProducts.ViewModels
             using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
             foreach (var m in ProductsView)
             {
-
                 foreach (var o in (m as ProductMaterial).ProdOrders)
                 {
                     ProductOrder s = (ProductOrder)o;
