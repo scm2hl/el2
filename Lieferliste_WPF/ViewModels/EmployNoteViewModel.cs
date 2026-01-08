@@ -354,7 +354,7 @@ namespace Lieferliste_WPF.ViewModels
             for (int i = 0; i < userSettingsService.KWReview; i++)
             {
                 ret.Add(string.Format("KW {0}", CultureInfo.CurrentCulture.Calendar
-                    .GetWeekOfYear(date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Sunday)));
+                    .GetWeekOfYear(date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday)));
                 date = date.AddDays(7);
             }
             return ret;
