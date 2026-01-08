@@ -19,9 +19,9 @@ public partial class OrderComponent
 
     public int? ConfirmedQuantity { get; set; }
 
-    public DateTime? LatestRequirementsDate { get; set; }
-
     public string? Assembly { get; set; }
+
+    public DateTime? LatestRequirementsDate { get; set; }
 
     public virtual OrderRb AidNavigation { get; set; } = null!;
 

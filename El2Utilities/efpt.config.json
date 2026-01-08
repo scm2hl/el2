@@ -68,6 +68,9 @@
          "ObjectType": 0
       },
       {
+         "ExcludedColumns": [
+            "LatestRequirementsDate1"
+         ],
          "Name": "[dbo].[OrderComponent]",
          "ObjectType": 0
       },

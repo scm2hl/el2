@@ -104,8 +104,6 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.UseCollation("Latin1_General_CI_AS");
-
         modelBuilder.Entity<AccountCost>(entity =>
         {
             entity.HasKey(e => new { e.AccountId, e.CostId }).HasFillFactor(95);
@@ -455,7 +453,7 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.Assembly).HasMaxLength(50);
-            entity.Property(e => e.LatestRequirementsDate).HasColumnType("date");
+            entity.Property(e => e.LatestRequirementsDate).HasColumnType("datetime");
             entity.Property(e => e.Material).HasMaxLength(255);
 
             entity.HasOne(d => d.AidNavigation).WithMany(p => p.OrderComponents)
@@ -490,7 +488,8 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
             entity.Property(e => e.ArchivPath)
                 .HasMaxLength(150)
                 .IsUnicode(false);
-            entity.Property(e => e.ArchivState).HasAnnotation("Relational:DefaultConstraintName", "DF_OrderRB_ArchivState_1");
+            entity.Property(e => e.ArchivState).HasAnnotation("Relational:DefaultConstraintName", "DF_OrderRB_ArchivState");
+            entity.Property(e => e.Archivated).HasAnnotation("Relational:DefaultConstraintName", "DF_OrderRB_Archivated");
             entity.Property(e => e.AuftragFarbe).HasMaxLength(10);
             entity.Property(e => e.Ausgebl)
                 .HasAnnotation("Relational:DefaultConstraintName", "DF_Order_ausgebl")

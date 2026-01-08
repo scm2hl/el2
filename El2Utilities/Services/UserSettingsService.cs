@@ -2,7 +2,10 @@
 using System;
 using System.Configuration;
 using System.IO;
+using System.Reflection.Metadata;
+using System.Threading;
 using System.Windows;
+
 
 namespace El2Core.Services
 {
@@ -148,6 +151,7 @@ namespace El2Core.Services
             {
                 try
                 {
+                    
                     Properties.Settings.Default.Upgrade();
                     Properties.Settings.Default.Reload();
    
