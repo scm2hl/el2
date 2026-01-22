@@ -1,9 +1,6 @@
-﻿using Prism.Events;
-using System;
+﻿using System;
 using System.Configuration;
 using System.IO;
-using System.Reflection.Metadata;
-using System.Threading;
 using System.Windows;
 
 
