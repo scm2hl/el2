@@ -1,4 +1,5 @@
-﻿using El2Core.Constants;
+﻿using CompositeCommands.Core;
+using El2Core.Constants;
 using El2Core.Models;
 using El2Core.Services;
 using El2Core.Utils;
@@ -24,11 +25,12 @@ namespace Lieferliste_WPF.ViewModels
     internal class EmployNoteViewModel : ViewModelBase
     {
         public EmployNoteViewModel(IContainerProvider containerProvider, UserSettingsService usrSettingsService,
-            IDialogService dialogService)
+            IDialogService dialogService, IApplicationCommands applicationCommands)
         {
             container = containerProvider;
             userSettingsService = usrSettingsService;
             _dialogService = dialogService;
+            _applicationCommands = applicationCommands;
             _ctx = container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
             var loggerFactory = container.Resolve<ILoggerFactory>();
             _logger = loggerFactory.CreateLogger<EmployNoteViewModel>();
@@ -45,8 +47,21 @@ namespace Lieferliste_WPF.ViewModels
         private DB_COS_LIEFERLISTE_SQLContext _ctx;
         private ILogger _logger;
         private readonly IDialogService _dialogService;
+
         private IEnumerable<dynamic> VorgangRef { get; set; }
         public NotifyTaskCompletion<IEnumerable<dynamic>>? VrgTask { get; private set; }
+        private IApplicationCommands _applicationCommands;
+
+        public IApplicationCommands ApplicationCommands
+        {
+            get => _applicationCommands;
+            set
+            {
+                if (_applicationCommands != value)
+                    _applicationCommands = value;
+                NotifyPropertyChanged(() => ApplicationCommands);
+            }
+        }
         private VorgItem? _SelectedVorgangItem;
         public VorgItem? SelectedVorgangItem
         {
@@ -56,7 +71,7 @@ namespace Lieferliste_WPF.ViewModels
                 _SelectedVorgangItem = value;
                 if (value != null)
                 {
-                    ReferencePre = new RefItem("Vorgang", value.SourceVorgang.VorgangId, string.Format("{0} - {1}\n{2} {3}",
+                    ReferencePre = new RefItem("Vorgang", value.VorgangId, string.Format("{0} - {1}\n{2} {3}",
                         value.Auftrag, value.Vorgang, value.Material?.Trim(), value.Bezeichnung));
  
                 }
@@ -243,14 +258,15 @@ namespace Lieferliste_WPF.ViewModels
         private async Task<IEnumerable<dynamic>> LoadVrgAsnc()
         {
             using var db = container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
-            VorgangRef = await db.Vorgangs
-                .Include(x => x.AidNavigation)
-                .Include(x => x.AidNavigation.MaterialNavigation)
-                .Include(x => x.AidNavigation.DummyMatNavigation)
-                .Where(static x => x.AidNavigation.SysStatus.Contains("TABG") == false)                       
-                .OrderBy(x => x.Aid)
-                .ThenBy(x => x.Vnr)
-                .Select(s => new VorgItem(s)).ToListAsync();
+            //VorgangRef = await db.Vorgangs
+            //    .Include(x => x.AidNavigation)
+            //    .Include(x => x.AidNavigation.MaterialNavigation)
+            //    .Include(x => x.AidNavigation.DummyMatNavigation)
+            //    .Where(static x => x.AidNavigation.SysStatus.Contains("TABG") == false)                       
+            //    .OrderBy(x => x.Aid)
+            //    .ThenBy(x => x.Vnr)
+            //    .Select(s => new VorgItem(s)).ToListAsync();
+            VorgangRef = await db.ViewVorgangClosedDates.AsNoTracking().Select(s => new VorgItem(s)).ToListAsync();
             return VorgangRef;
         }
 
@@ -325,6 +341,7 @@ namespace Lieferliste_WPF.ViewModels
             if (ReferencePre.Value.Table == "Vorgang")
             {
                 emp.VorgId = ReferencePre.Value.Id;
+                
             }
             else
             {

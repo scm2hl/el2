@@ -4,15 +4,18 @@
    "ContextNamespace": null,
    "FilterSchemas": false,
    "IncludeConnectionString": false,
-   "MinimumProductVersion": "2.6.1186",
+   "IrregularWords": null,
+   "MinimumProductVersion": "2.6.1301",
    "ModelNamespace": null,
    "OutputContextPath": "",
    "OutputPath": "Models",
+   "PluralRules": null,
    "PreserveCasingWithRegex": true,
    "ProjectRootNamespace": "El2Core",
    "Schemas": null,
    "SelectedHandlebarsLanguage": 0,
    "SelectedToBeGenerated": 0,
+   "SingularRules": null,
    "T4TemplatePath": null,
    "Tables": [
       {
@@ -169,6 +172,10 @@
       {
          "Name": "[dbo].[WorkShift]",
          "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[View_Vorgang_ClosedDate]",
+         "ObjectType": 3
       }
    ],
    "UiHint": null,

@@ -107,7 +107,7 @@ namespace ModuleMeasuring.ViewModels
                 if (value != _SelectedItem)
                 {
                     _SelectedItem = value;
-                    InWorkState = value.SourceVorgang.VorgangDocu?.InWorkState ?? 0;
+                    InWorkState = value.SourceVorgang?.VorgangDocu?.InWorkState ?? 0;
                     SelectedValue = _SelectedItem.Auftrag;
                     NotifyPropertyChanged(() => SelectedItem);
                     OnOrderChanged();
@@ -558,7 +558,7 @@ namespace ModuleMeasuring.ViewModels
         }
         private bool onVmpbCreatePdfCanExecute(object arg)
         {
-            return (SelectedItem.SourceVorgang.VorgangDocu?.VmpbOriginal != null) && InWorkState == 1;
+            return (SelectedItem.SourceVorgang?.VorgangDocu?.VmpbOriginal != null) && InWorkState == 1;
         }
 
         private void onVmpbCreatePdfExecuted(object obj)
@@ -566,14 +566,14 @@ namespace ModuleMeasuring.ViewModels
 
             try
             {
-                if (SelectedItem.SourceVorgang.VorgangDocu != null)
+                if (SelectedItem.SourceVorgang?.VorgangDocu != null)
                 {
                     var mes = ProcessList.First(x => x.Auftrag == _SelectedValue);
                     var oa = new string[] { mes.Material.Trim(), mes.Auftrag, SelectedItem.Vorgang };
 
                     var docu = VmpbInfo.CreateDocumentInfos(oa);
                     VmpbInfo.Collect();
-                    var vmpFile = new FileInfo(SelectedItem.SourceVorgang.VorgangDocu.VmpbOriginal);
+                    var vmpFile = new FileInfo(SelectedItem.SourceVorgang?.VorgangDocu?.VmpbOriginal);
                     var path = Path.Combine(docu[DocumentPart.RootPath], docu[DocumentPart.SavePath],
                         docu[DocumentPart.Folder], Path.GetFileNameWithoutExtension(vmpFile.Name));
                     Type officeType = Type.GetTypeFromProgID("Word.Application");
@@ -630,13 +630,13 @@ namespace ModuleMeasuring.ViewModels
         }
         private bool onVmpbDelCanExecute(object arg)
         {
-            return SelectedItem.SourceVorgang.VorgangDocu != null;
+            return SelectedItem.SourceVorgang?.VorgangDocu != null;
         }
 
         private void onVmpbDelExecuted(object obj)
         {
  
-            if(SelectedItem.SourceVorgang.VorgangDocu?.VmpbOriginal != null) File.Delete(SelectedItem.SourceVorgang.VorgangDocu.VmpbOriginal);
+            if(SelectedItem.SourceVorgang?.VorgangDocu?.VmpbOriginal != null) File.Delete(SelectedItem.SourceVorgang.VorgangDocu.VmpbOriginal);
             
             using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
             var o = db.VorgangDocus.SingleOrDefault(x => x.Vorgang.Aid == SelectedValue);
@@ -646,7 +646,8 @@ namespace ModuleMeasuring.ViewModels
                 db.SaveChanges();
             }
             InWorkState = 0;
-            SelectedItem.SourceVorgang.VorgangDocu = null;
+            if (SelectedItem.SourceVorgang != null)
+                SelectedItem.SourceVorgang.VorgangDocu = null;
 
         }
         private void OnOrderChanged()

@@ -431,7 +431,12 @@ namespace Lieferliste_WPF.ViewModels
         }
         private static bool OnOpenOrderCanExecute(object arg)
         {
-            return PermissionsProvider.GetInstance().GetUserPermission(Permissions.Order);
+            bool ret = false;
+            if (arg is string f) { ret = !string.IsNullOrEmpty(f); }
+            if (arg is Vorgang) ret = true;
+            if (arg is Shape) ret = true;
+            return PermissionsProvider.GetInstance().GetUserPermission(Permissions.Order) && ret;
+                
         }
         private void OnOpenOrderExecuted(object parameter)
         {
@@ -441,26 +446,26 @@ namespace Lieferliste_WPF.ViewModels
             else if (parameter is Shape shape) { aid = shape.ToString(); }
             if (string.IsNullOrEmpty(aid) == false)
             {
-                using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
-                {
-                    var vrgs = db.Vorgangs
-                        .Include(x => x.AidNavigation)
-                        .Include(x => x.AidNavigation.DummyMatNavigation)
-                        .Include(x => x.AidNavigation.MaterialNavigation)
-                        .Include(x => x.AidNavigation.Pro)
-                        .Include(x => x.RidNavigation)
-                        .Include(x => x.ArbPlSapNavigation)
-                        .ThenInclude(x => x.Ressource)
-                        .ThenInclude(x => x.WorkArea)
-                        .Where(x => x.Aid == aid)
-                        .ToList();
+                using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                var vrgs = db.Vorgangs
+                    .Include(x => x.AidNavigation)
+                    .Include(x => x.AidNavigation.DummyMatNavigation)
+                    .Include(x => x.AidNavigation.MaterialNavigation)
+                    .Include(x => x.AidNavigation.Pro)
+                    .Include(x => x.RidNavigation)
+                    .Include(x => x.ArbPlSapNavigation)
+                    .ThenInclude(x => x.Ressource)
+                    .ThenInclude(x => x.WorkArea)
+                    .Where(x => x.Aid == aid)
+                    .ToList();
 
-                    if (vrgs != null)
+                if (vrgs != null)
+                {
+                    var par = new DialogParameters
                     {
-                        var par = new DialogParameters();
-                        par.Add("vrgList", vrgs);
-                        _dialogService.Show("Order", par, null);
-                    }
+                        { "vrgList", vrgs }
+                    };
+                    _dialogService.Show("Order", par, null);
                 }
             }
         }

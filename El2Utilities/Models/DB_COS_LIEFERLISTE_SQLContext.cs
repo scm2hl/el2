@@ -79,6 +79,8 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
 
     public virtual DbSet<TblMaterial> TblMaterials { get; set; }
 
+    public virtual DbSet<ViewVorgangClosedDate> ViewVorgangClosedDates { get; set; }
+
     public virtual DbSet<Vorgang> Vorgangs { get; set; }
 
     public virtual DbSet<VorgangAttachment> VorgangAttachments { get; set; }
@@ -909,6 +911,119 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
             entity.Property(e => e.Type)
                 .HasMaxLength(100)
                 .HasColumnName("TYPE");
+        });
+
+        modelBuilder.Entity<ViewVorgangClosedDate>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToView("View_Vorgang_ClosedDate");
+
+            entity.Property(e => e.Abgeschlossen).HasColumnName("abgeschlossen");
+            entity.Property(e => e.ActualEndDate).HasColumnType("datetime");
+            entity.Property(e => e.ActualStartDate).HasColumnType("datetime");
+            entity.Property(e => e.Aid)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("AID");
+            entity.Property(e => e.Aktuell).HasColumnName("aktuell");
+            entity.Property(e => e.ArbPlSap)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("ArbPlSAP");
+            entity.Property(e => e.ArchivPath)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.AuftragFarbe).HasMaxLength(10);
+            entity.Property(e => e.Ausgebl).HasColumnName("ausgebl");
+            entity.Property(e => e.BasisMg).HasMaxLength(255);
+            entity.Property(e => e.Beaze).HasColumnName("BEAZE");
+            entity.Property(e => e.BeazeEinheit)
+                .HasMaxLength(5)
+                .HasColumnName("BEAZE_Einheit");
+            entity.Property(e => e.BemM)
+                .IsUnicode(false)
+                .HasColumnName("Bem_M");
+            entity.Property(e => e.BemMa)
+                .IsUnicode(false)
+                .HasColumnName("Bem_MA");
+            entity.Property(e => e.BemT)
+                .IsUnicode(false)
+                .HasColumnName("Bem_T");
+            entity.Property(e => e.Bemerkung).HasMaxLength(255);
+            entity.Property(e => e.Bezeichng).HasMaxLength(256);
+            entity.Property(e => e.Bullet).HasMaxLength(9);
+            entity.Property(e => e.BulletTwo).HasMaxLength(9);
+            entity.Property(e => e.CommentMach).IsUnicode(false);
+            entity.Property(e => e.CompleteDate).HasColumnType("datetime");
+            entity.Property(e => e.DummyMat)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.Eckende).HasColumnType("datetime");
+            entity.Property(e => e.Eckstart).HasColumnType("datetime");
+            entity.Property(e => e.Fertig).HasColumnName("fertig");
+            entity.Property(e => e.Istende).HasColumnType("datetime");
+            entity.Property(e => e.Iststart).HasColumnType("datetime");
+            entity.Property(e => e.LieferTermin).HasMaxLength(255);
+            entity.Property(e => e.MarkCode).HasMaxLength(50);
+            entity.Property(e => e.Material).HasMaxLength(255);
+            entity.Property(e => e.Mattext).HasColumnName("MATTEXT");
+            entity.Property(e => e.Msf)
+                .HasMaxLength(50)
+                .HasColumnName("MSF");
+            entity.Property(e => e.MsfInWork).HasColumnName("MSF-InWork");
+            entity.Property(e => e.OrderRbMarkCode)
+                .HasMaxLength(255)
+                .HasColumnName("OrderRB_MarkCode");
+            entity.Property(e => e.OrderRbSysstatus)
+                .HasMaxLength(255)
+                .HasColumnName("OrderRB_Sysstatus");
+            entity.Property(e => e.Prio).HasMaxLength(255);
+            entity.Property(e => e.ProId)
+                .HasMaxLength(50)
+                .HasColumnName("ProID");
+            entity.Property(e => e.ProcessingUom)
+                .HasMaxLength(16)
+                .IsFixedLength()
+                .HasColumnName("ProcessingUOM");
+            entity.Property(e => e.QuantityMiss).HasColumnName("Quantity-miss");
+            entity.Property(e => e.QuantityMissNeo).HasColumnName("Quantity-miss-neo");
+            entity.Property(e => e.QuantityRework).HasColumnName("Quantity-rework");
+            entity.Property(e => e.QuantityScrap).HasColumnName("Quantity-scrap");
+            entity.Property(e => e.QuantityYield).HasColumnName("Quantity-yield");
+            entity.Property(e => e.Rid).HasColumnName("RID");
+            entity.Property(e => e.Rstze).HasColumnName("RSTZE");
+            entity.Property(e => e.RstzeEinheit)
+                .HasMaxLength(5)
+                .HasColumnName("RSTZE_Einheit");
+            entity.Property(e => e.SortPos)
+                .HasMaxLength(8)
+                .IsFixedLength();
+            entity.Property(e => e.SpaetEnd).HasColumnType("datetime");
+            entity.Property(e => e.SpaetStart).HasColumnType("datetime");
+            entity.Property(e => e.Spos).HasColumnName("SPOS");
+            entity.Property(e => e.SteuSchl).HasMaxLength(255);
+            entity.Property(e => e.SysStatus).HasMaxLength(255);
+            entity.Property(e => e.Termin).HasColumnType("datetime");
+            entity.Property(e => e.Text).HasMaxLength(150);
+            entity.Property(e => e.Timestamp)
+                .HasColumnType("datetime")
+                .HasColumnName("timestamp");
+            entity.Property(e => e.Type)
+                .HasMaxLength(100)
+                .HasColumnName("TYPE");
+            entity.Property(e => e.Vnr).HasColumnName("VNR");
+            entity.Property(e => e.VorgangId)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("VorgangID");
+            entity.Property(e => e.Wbselement)
+                .HasMaxLength(50)
+                .HasColumnName("WBSElement");
+            entity.Property(e => e.Wrtze).HasColumnName("WRTZE");
+            entity.Property(e => e.WrtzeEinheit)
+                .HasMaxLength(5)
+                .HasColumnName("WRTZE_Einheit");
         });
 
         modelBuilder.Entity<Vorgang>(entity =>
