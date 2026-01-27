@@ -176,6 +176,10 @@
       {
          "Name": "[dbo].[View_Vorgang_ClosedDate]",
          "ObjectType": 3
+      },
+      {
+         "Name": "[dbo].[ProductMaterials]",
+         "ObjectType": 1
       }
    ],
    "UiHint": null,
