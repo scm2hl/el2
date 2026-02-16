@@ -225,7 +225,9 @@ namespace Lieferliste_WPF.ViewModels
             ImmutableArray.Create(new string[] { "Setup1", "Setup2" });
         public ICollectionView PersonalFilterView { get; private set; }
         public ObservableCollection<ProjectScheme> ProjectSchemes { get; private set; }
-        
+        public bool MeMessage { get; set; } = false;
+        public bool TeMessage { get; set; } = false;
+        public bool MaMessage { get; set; } = false;
         public UserSettingsViewModel(IUserSettingsService settingsService, IContainerExtension container, IEventAggregator eva)
         {
                 _ea = eva;
@@ -234,7 +236,7 @@ namespace Lieferliste_WPF.ViewModels
                 var factory = container.Resolve<ILoggerFactory>();
                 _logger = factory.CreateLogger<UserSettingsViewModel>();
             try
-            { 
+            {
                 var br = new BrushConverter();
                 SaveCommand = new ActionCommand(OnSaveExecuted, OnSaveCanExecute);
                 ResetCommand = new ActionCommand(OnResetExecuted, OnResetCanExecute);
@@ -255,7 +257,13 @@ namespace Lieferliste_WPF.ViewModels
                 Wdocu = WorkareaDocumentInfo.CreateDocumentInfos();
                 MeasureDocumentInfo = new MeasureDocumentInfo(container);
                 Mdocu = MeasureDocumentInfo.CreateDocumentInfos();
-
+                var n = container.Resolve<NotifyBroker>().GetAbonnentById(UserInfo.User.UserId);
+                if (n != null)
+                { 
+                    MeMessage = n.Value.Subsribes.Contains("MeBem");
+                    TeMessage = n.Value.Subsribes.Contains("TeBem");
+                    MaMessage = n.Value.Subsribes.Contains("MeBem");
+                }
                 LoadFilters();
                 LoadProjectSchemes();
                 LoadRules();
