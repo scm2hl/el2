@@ -56,11 +56,13 @@
     <PackageReference Include="FileAssociation2" />
     <PackageReference Include="HtmlToXaml" />
     <PackageReference Include="log4net" />
+    <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="MimeKit" />
     <PackageReference Include="Prism.Core" />
     <PackageReference Include="Prism.Plugin.Logging.Abstractions" />
     <PackageReference Include="Prism.Unity" />

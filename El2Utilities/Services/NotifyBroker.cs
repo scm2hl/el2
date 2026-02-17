@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using Windows.Devices.Sms;
+using MimeKit;
+using MailKit.Net.Smtp;
 
 namespace El2Core.Services
 {
@@ -13,7 +13,7 @@ namespace El2Core.Services
     {
         List<Abonnent> Abonnents { get; }
         Abonnent? GetAbonnentById(string id);
-        void SendMessage(string message, string sender);
+        Task SendMessageAsync(string message_body, string sender);
         void AddAbonnent(Abonnent abonnent);
         void RemoveAbonnent(Abonnent abonnent);
     }
@@ -43,21 +43,38 @@ namespace El2Core.Services
             Abonnents.Remove(abonnent);
         }
 
-        public void SendMessage(string message, string sender)
+        public async Task SendMessageAsync(string message_body, string sender)
         {
-            var abo = Abonnents.Where(m => m.Subsribes.Contains(sender));
-            var client = new SmtpClient
-            {
-                UseDefaultCredentials = true
-            };
-            foreach (var a in abo)
-            {
-                var mail_message = new MailMessage(Application.Current.MainWindow.Name, a.Address);
-                mail_message.Subject = sender;
-                mail_message.Body = message;
+  
 
-                client.Send(mail_message);
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("Absender Name", "sender@beispiel.de"));
+            message.To.Add(new MailboxAddress("Empfänger Name", "empfaenger@beispiel.de"));
+            message.Subject = "Test E-Mail aus .NET";
+            message.Body = new TextPart("html") { Text = "<b>Hallo!</b> Dies ist eine Test-Mail." };
+
+            using (var client = new SmtpClient())
+            {
+                // Verbindung zum SMTP-Server (z.B. Gmail, Outlook oder Firmenserver)
+                await client.ConnectAsync("smtp-mail.outlook365.de", 587, MailKit.Security.SecureSocketOptions.StartTls);
+               // await client.AuthenticateAsync("benutzername", "passwort");
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
             }
+
+            //var abo = Abonnents.Where(m => m.Subsribes.Contains(sender));
+            //var client = new SmtpClient
+            //{
+            //    UseDefaultCredentials = true
+            //};
+            //foreach (var a in abo)
+            //{
+            //    var mail_message = new MailMessage(Application.Current.MainWindow.Name, a.Address);
+            //    mail_message.Subject = sender;
+            //    mail_message.Body = message;
+
+            //    client.Send(mail_message);
+            //}
         }
     }
 }
