@@ -87,11 +87,21 @@
                                 <NotifyDataErrorValidationRule/>
                             </Binding.ValidationRules>
                         </Binding>
-        
+
                     </TextBox>
                     <Label Content="Zeitformat (Arbeitszeiten)"/>
                     <ComboBox ItemsSource="{Binding TimeFormats}" SelectedItem="{Binding EmployTimeFormat}"/>
+                    <Label Content="Abonnement"/>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Meister Bemerkung"/>
+                        <CheckBox IsChecked="{Binding MeMessage}" Margin="5,0"/>
+                        <TextBlock Text="Teamleiter Bemerkung"/>
+                        <CheckBox IsChecked="{Binding TeMessage}" Margin="5,0"/>
+                        <TextBlock Text="Mitarbeiter Bemerkung"/>
+                        <CheckBox IsChecked="{Binding MaMessage}" Margin="5,0"/>
+                    </StackPanel>
                 </StackPanel>
+
             </TabItem>
             <TabItem Header="Teamleiter">
                 <StackPanel>

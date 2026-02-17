@@ -1,4 +1,5 @@
 ﻿using El2Core.Models;
+using El2Core.Services;
 using Microsoft.EntityFrameworkCore;
 using Prism.Ioc;
 using System;
@@ -90,6 +91,17 @@ namespace El2Core.Utils
             }
             Archivator.IsChanged = false;
 
+            ext = Rules.Find(x => x.RuleName.Trim() == "Notification");
+            if (ext != null)
+            {
+                var serializer = XmlSerializerHelper.GetSerializer(typeof(List<Abonnent>));
+                TextReader xmlData = new StringReader(ext.RuleData);
+                var notify = serializer.Deserialize(xmlData);
+                if (notify == null) return;
+                var notifyBroker = Container.Resolve<NotifyBroker>();
+                notifyBroker.Abonnents.AddRange((IEnumerable<Abonnent>)notify);
+            }
+
         }
         public static void SaveRule(string RuleKey, string value)
         {
@@ -145,6 +157,18 @@ namespace El2Core.Utils
             rule.RuleData = sw.ToString();
             SaveRule(rule);
             Archivator.IsChanged = false;
+        }
+
+        public static void SaveNotify(NotifyBroker notify)
+        {
+            var serializer = XmlSerializerHelper.GetSerializer(typeof(NotifyBroker));
+            StringWriter sw = new StringWriter();
+            serializer.Serialize(sw, notify.Abonnents);
+            Rule rule = new Rule();
+            rule.RuleName = "Notification";
+            rule.RuleValue = "NotifyBroker";
+            rule.RuleData = sw.ToString();
+            SaveRule(rule);
         }
         public void Dispose()
         {

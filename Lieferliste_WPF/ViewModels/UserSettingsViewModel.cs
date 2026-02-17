@@ -228,6 +228,7 @@ namespace Lieferliste_WPF.ViewModels
         public bool MeMessage { get; set; } = false;
         public bool TeMessage { get; set; } = false;
         public bool MaMessage { get; set; } = false;
+        private NotifyBroker NotifyBroker => _container.Resolve<NotifyBroker>();
         public UserSettingsViewModel(IUserSettingsService settingsService, IContainerExtension container, IEventAggregator eva)
         {
                 _ea = eva;
@@ -257,12 +258,12 @@ namespace Lieferliste_WPF.ViewModels
                 Wdocu = WorkareaDocumentInfo.CreateDocumentInfos();
                 MeasureDocumentInfo = new MeasureDocumentInfo(container);
                 Mdocu = MeasureDocumentInfo.CreateDocumentInfos();
-                var n = container.Resolve<NotifyBroker>().GetAbonnentById(UserInfo.User.UserId);
-                if (n != null)
+                
+                if (NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
                 { 
-                    MeMessage = n.Value.Subsribes.Contains("MeBem");
-                    TeMessage = n.Value.Subsribes.Contains("TeBem");
-                    MaMessage = n.Value.Subsribes.Contains("MeBem");
+                    MeMessage = abo.Subsribes.Contains("MeBem");
+                    TeMessage = abo.Subsribes.Contains("TeBem");
+                    MaMessage = abo.Subsribes.Contains("MeBem");
                 }
                 LoadFilters();
                 LoadProjectSchemes();
@@ -409,6 +410,34 @@ namespace Lieferliste_WPF.ViewModels
                 Archivator.FileExtensions = ArchivFileExt.Split(',');
                 Archivator.DelayDays = ArchivDelayDays;
                 Globals.SaveArchivator();              
+            }
+            bool n = false;
+            bool nn = false;
+            if (!NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
+            {
+                abo = new Abonnent { Address = UserInfo.User.Email ?? string.Empty, Name = UserInfo.User.UsrName, Subsribes = [] };
+                nn = true;
+            }
+
+            if (MeMessage || TeMessage || MaMessage)
+            {
+                var subs = new List<string>();
+                if (MeMessage) subs.Add("MeBem");
+                if (TeMessage) subs.Add("TeBem");
+                if (MaMessage) subs.Add("MaBem");
+
+                abo.Subsribes = [.. subs];
+                if (nn) { NotifyBroker.AddAbonnent(abo); n = true; }
+                else n = NotifyBroker.UpdateAbonnent(abo);
+            }
+            else
+            {
+                n = NotifyBroker.RemoveAbonnent(abo);
+            }
+            if (n)
+            {
+                
+                Globals.SaveNotify(NotifyBroker);
             }
         }
         private bool OnPersonalFilterRemoveCanExecute(object arg)

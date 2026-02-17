@@ -12,10 +12,11 @@ namespace El2Core.Services
     public interface INotifyBroker
     {
         List<Abonnent> Abonnents { get; }
-        Abonnent? GetAbonnentById(string id);
+        bool GetAbonnentById(string id, out Abonnent abo);
         Task SendMessageAsync(string message_body, string sender);
         void AddAbonnent(Abonnent abonnent);
-        void RemoveAbonnent(Abonnent abonnent);
+        bool RemoveAbonnent(Abonnent abonnent);
+        bool UpdateAbonnent(Abonnent value);
     }
     public struct Abonnent
     {
@@ -28,9 +29,20 @@ namespace El2Core.Services
     {
         private readonly List<Abonnent> abonnents = [];
         public List<Abonnent> Abonnents { get { return abonnents; } }
-        public Abonnent? GetAbonnentById(string id)
+        public bool GetAbonnentById(string id, out Abonnent abo)
         {
-            return Abonnents.FirstOrDefault(m => m.Name == id);
+            var a = Abonnents.SingleOrDefault(m => m.Name == id);
+            if (a.Name != default)
+            {
+                abo = a;
+                return true;
+            }
+            else
+            {
+                abo = default;
+                return false;
+            }
+            
         }
 
         public void AddAbonnent(Abonnent abonnent)
@@ -38,9 +50,9 @@ namespace El2Core.Services
             Abonnents.Add(abonnent);
         }
 
-        public void RemoveAbonnent(Abonnent abonnent)
+        public bool RemoveAbonnent(Abonnent abonnent)
         {
-            Abonnents.Remove(abonnent);
+            return Abonnents.Remove(abonnent);
         }
 
         public async Task SendMessageAsync(string message_body, string sender)
@@ -75,6 +87,25 @@ namespace El2Core.Services
 
             //    client.Send(mail_message);
             //}
+        }
+
+        public bool UpdateAbonnent(Abonnent value)
+        {
+            var abo = Abonnents.SingleOrDefault(m => m.Name == value.Name);
+            if (abo.Name != default)
+            {
+                if (abo.Subsribes == value.Subsribes)
+                {
+                    return false;
+                }
+                else
+                {
+                    abo.Address = value.Address;
+                    abo.Subsribes = value.Subsribes;
+                    return true;
+                }
+            }
+            else  return false;
         }
     }
 }
