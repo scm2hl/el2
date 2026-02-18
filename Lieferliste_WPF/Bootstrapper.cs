@@ -108,6 +108,7 @@ namespace Lieferliste_WPF
             containerRegistry.RegisterSingleton<IRegionManager, RegionManager>();
             containerRegistry.RegisterSingleton<IUserSettingsService, UserSettingsService>();
             containerRegistry.RegisterSingleton<ILoggerFactory, LoggerFactory>();
+
             containerRegistry.RegisterForNavigation<UserSettings>();
             containerRegistry.RegisterForNavigation<RoleEdit>();
             containerRegistry.RegisterForNavigation<MachinePlan>();

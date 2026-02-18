@@ -1,17 +1,14 @@
-﻿using System;
+﻿using MailKit.Net.Smtp;
+using MimeKit;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using MimeKit;
-using MailKit.Net.Smtp;
 
 namespace El2Core.Services
 {
     public interface INotifyBroker
     {
-        List<Abonnent> Abonnents { get; }
+        List<Abonnent> Abonnents { get; set; }
         bool GetAbonnentById(string id, out Abonnent abo);
         Task SendMessageAsync(string message_body, string sender);
         void AddAbonnent(Abonnent abonnent);
@@ -20,18 +17,19 @@ namespace El2Core.Services
     }
     public struct Abonnent
     {
+        public string Id { get; set; }
         public string Address { get; set; }
         public string Name { get; set; }
         public string[] Subsribes { get; set; }
-
     }
     public class NotifyBroker : INotifyBroker
     {
-        private readonly List<Abonnent> abonnents = [];
-        public List<Abonnent> Abonnents { get { return abonnents; } }
+
+        public List<Abonnent> Abonnents { get; set; } = [];
+        
         public bool GetAbonnentById(string id, out Abonnent abo)
         {
-            var a = Abonnents.SingleOrDefault(m => m.Name == id);
+            var a = Abonnents.SingleOrDefault(m => m.Id == id);
             if (a.Name != default)
             {
                 abo = a;
@@ -91,7 +89,7 @@ namespace El2Core.Services
 
         public bool UpdateAbonnent(Abonnent value)
         {
-            var abo = Abonnents.SingleOrDefault(m => m.Name == value.Name);
+            var abo = Abonnents.SingleOrDefault(m => m.Id == value.Id);
             if (abo.Name != default)
             {
                 if (abo.Subsribes == value.Subsribes)

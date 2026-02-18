@@ -225,10 +225,37 @@ namespace Lieferliste_WPF.ViewModels
             ImmutableArray.Create(new string[] { "Setup1", "Setup2" });
         public ICollectionView PersonalFilterView { get; private set; }
         public ObservableCollection<ProjectScheme> ProjectSchemes { get; private set; }
-        public bool MeMessage { get; set; } = false;
-        public bool TeMessage { get; set; } = false;
-        public bool MaMessage { get; set; } = false;
-        private NotifyBroker NotifyBroker => _container.Resolve<NotifyBroker>();
+        private bool meMessage = false;
+        public bool MeMessage
+        {
+            get { return meMessage; }
+            set
+            {
+                meMessage = value;
+                NotifyPropertyChanged(() => MeMessage);
+            }
+        }
+        private bool teMessage = false;
+        public bool TeMessage
+        {
+            get { return teMessage; }
+            set
+            {
+                teMessage = value;
+                NotifyPropertyChanged(() => TeMessage);
+            }
+        }
+        private bool maMessage = false;
+        public bool MaMessage
+        {
+            get { return maMessage; }
+            set
+            {
+                maMessage = value;
+                NotifyPropertyChanged(() => MaMessage);
+            }
+        }
+
         public UserSettingsViewModel(IUserSettingsService settingsService, IContainerExtension container, IEventAggregator eva)
         {
                 _ea = eva;
@@ -259,11 +286,11 @@ namespace Lieferliste_WPF.ViewModels
                 MeasureDocumentInfo = new MeasureDocumentInfo(container);
                 Mdocu = MeasureDocumentInfo.CreateDocumentInfos();
                 
-                if (NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
+                if (Globals.NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
                 { 
                     MeMessage = abo.Subsribes.Contains("MeBem");
                     TeMessage = abo.Subsribes.Contains("TeBem");
-                    MaMessage = abo.Subsribes.Contains("MeBem");
+                    MaMessage = abo.Subsribes.Contains("MaBem");
                 }
                 LoadFilters();
                 LoadProjectSchemes();
@@ -413,9 +440,9 @@ namespace Lieferliste_WPF.ViewModels
             }
             bool n = false;
             bool nn = false;
-            if (!NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
+            if (!Globals.NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
             {
-                abo = new Abonnent { Address = UserInfo.User.Email ?? string.Empty, Name = UserInfo.User.UsrName, Subsribes = [] };
+                abo = new Abonnent { Id = UserInfo.User.UserId, Address = UserInfo.User.Email ?? string.Empty, Name = UserInfo.User.UsrName, Subsribes = [] };
                 nn = true;
             }
 
@@ -427,17 +454,16 @@ namespace Lieferliste_WPF.ViewModels
                 if (MaMessage) subs.Add("MaBem");
 
                 abo.Subsribes = [.. subs];
-                if (nn) { NotifyBroker.AddAbonnent(abo); n = true; }
-                else n = NotifyBroker.UpdateAbonnent(abo);
+                if (nn) { Globals.NotifyBroker.AddAbonnent(abo); n = true; }
+                else n = Globals.NotifyBroker.UpdateAbonnent(abo);
             }
             else
             {
-                n = NotifyBroker.RemoveAbonnent(abo);
+                n = Globals.NotifyBroker.RemoveAbonnent(abo);
             }
             if (n)
-            {
-                
-                Globals.SaveNotify(NotifyBroker);
+            {    
+                Globals.SaveNotifyBroker();
             }
         }
         private bool OnPersonalFilterRemoveCanExecute(object arg)

@@ -217,8 +217,5 @@ namespace El2Core.Utils
   
         }
         public ArchivatorRule() { }
-    }
-    
-
-    
+    }   
 }

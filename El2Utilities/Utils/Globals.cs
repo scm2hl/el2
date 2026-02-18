@@ -26,11 +26,13 @@ namespace El2Core.Utils
         public User User { get; private set; }
         public string PC { get; }
         public List<Rule> Rules { get; private set; }
+        public static NotifyBroker NotifyBroker { get; } = new NotifyBroker();
         private static IContainerProvider Container;
         public Globals(IContainerProvider container)
         {
             Container = container;
             PC = Environment.MachineName;
+            
             LoadData();
             
         }
@@ -79,7 +81,6 @@ namespace El2Core.Utils
                 Rules = db.Rules.ToList();
             }
             
-
             var ext = Rules.Find(x => x.RuleName.Trim() == "Archivator");
             if (ext != null)
             {
@@ -96,10 +97,10 @@ namespace El2Core.Utils
             {
                 var serializer = XmlSerializerHelper.GetSerializer(typeof(List<Abonnent>));
                 TextReader xmlData = new StringReader(ext.RuleData);
-                var notify = serializer.Deserialize(xmlData);
-                if (notify == null) return;
-                var notifyBroker = Container.Resolve<NotifyBroker>();
-                notifyBroker.Abonnents.AddRange((IEnumerable<Abonnent>)notify);
+                var abos = serializer.Deserialize(xmlData);
+                if (abos == null) return;
+                  
+                NotifyBroker.Abonnents = (List<Abonnent>)abos;                
             }
 
         }
@@ -115,8 +116,7 @@ namespace El2Core.Utils
             SaveRule(rule);
         }
         public static void SaveRule(Rule rule)
-        { 
-            
+        {           
             using var db = Container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
             if (db.Rules.All(x => x.RuleName != rule.RuleName))
             {
@@ -132,7 +132,6 @@ namespace El2Core.Utils
         }
         public static void SaveProjectSchemes(List<ProjectScheme> projectSchemes)
         {
-
             var serializer = XmlSerializerHelper.GetSerializer(typeof(List<ProjectScheme>));
             StringWriter sw = new StringWriter();
             serializer.Serialize(sw, projectSchemes);
@@ -159,11 +158,11 @@ namespace El2Core.Utils
             Archivator.IsChanged = false;
         }
 
-        public static void SaveNotify(NotifyBroker notify)
+        public static void SaveNotifyBroker()
         {
-            var serializer = XmlSerializerHelper.GetSerializer(typeof(NotifyBroker));
+            var serializer = XmlSerializerHelper.GetSerializer(typeof(List<Abonnent>));
             StringWriter sw = new StringWriter();
-            serializer.Serialize(sw, notify.Abonnents);
+            serializer.Serialize(sw, NotifyBroker.Abonnents);
             Rule rule = new Rule();
             rule.RuleName = "Notification";
             rule.RuleValue = "NotifyBroker";
