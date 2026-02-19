@@ -15,7 +15,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 
 
-namespace ModuleDeliverList.Dialogs.ViewModels
+namespace El2Core.Dialogs.ViewModels
 {
 
     public class AttachmentDialogViewModel : IDropTarget, IDialogAware

@@ -1,6 +1,6 @@
 ﻿using MahApps.Metro.Controls.Dialogs;
 
-namespace ModuleDeliverList.Dialogs
+namespace El2Core.Dialogs
 {
     /// <summary>
     /// Interaction logic for AttachmentDialog.xaml
