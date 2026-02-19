@@ -3,9 +3,11 @@ using El2Core.Models;
 using El2Core.Utils;
 using GongSolutions.Wpf.DragDrop;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using Prism.Dialogs;
 using Prism.Ioc;
 using System;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -20,7 +22,7 @@ namespace ModuleDeliverList.Dialogs.ViewModels
 
     public class AttachmentDialogViewModel : IDropTarget, IDialogAware
     {
-        
+
         public AttachmentDialogViewModel(IContainerProvider container)
         {
             Container = container;
@@ -34,7 +36,7 @@ namespace ModuleDeliverList.Dialogs.ViewModels
 
         public string Title { get; } = "Anhang Vorgang";
         private Vorgang Vorgang { get; set; }
-        
+
         public DialogCloseListener RequestClose { get; }
 
         IContainerProvider Container;
@@ -79,7 +81,7 @@ namespace ModuleDeliverList.Dialogs.ViewModels
 
         private async void OnLinkedAttachmentExecuted(object obj)
         {
-            
+
             var f = await AttachmentFactory.GetFilePickerPath();
             if (string.IsNullOrEmpty(f))
             {
@@ -190,11 +192,13 @@ namespace ModuleDeliverList.Dialogs.ViewModels
             vrg.VorgangAttachments.Add(vatt);
             db.SaveChanges();
 
+
             var attDisp = dbfact.CreateDisplayAttachment(att.Link, att.IsLink);
             attDisp.Id = vatt.AttachId;
             _attachments.Add(attDisp);
         }
- 
+
+
     }
     internal class VrgDisplayAttachment : IDisplayAttachment
     {
@@ -223,6 +227,7 @@ namespace ModuleDeliverList.Dialogs.ViewModels
 
         public override IDisplayAttachment CreateDisplayAttachment(string link, bool isLink)
         {
+            
             var attachment = new VrgDisplayAttachment();
             var att = FloatAttachment(attachment, link, isLink);
             return att;
