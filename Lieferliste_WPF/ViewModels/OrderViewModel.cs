@@ -127,7 +127,11 @@ namespace Lieferliste_WPF.ViewModels
             {
                 using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
                 var v = db.Vorgangs.Single<Vorgang>(x => x.VorgangId == vrg.VorgangId);
-                v.BemM = vrg.BemM;
+                if (v.BemM != vrg.BemM)
+                {
+                    //_ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, "MaBem");
+                    v.BemM = vrg.BemM;
+                }
                 v.BemMa = vrg.BemMa;
                 v.BemT = vrg.BemT;
 

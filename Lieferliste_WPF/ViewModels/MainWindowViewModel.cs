@@ -51,6 +51,7 @@ namespace Lieferliste_WPF.ViewModels
         public ICommand FollowMsfCommand { get; private set; }
         public ICommand OpenReportCommand { get; private set; }
         public ICommand OpenNoteCommand { get; private set; }
+        public ICommand OpenAttachmentDialogCommand { get; private set; }
 
         private IApplicationCommands _applicationCommands;
         public IApplicationCommands ApplicationCommands
@@ -161,6 +162,7 @@ namespace Lieferliste_WPF.ViewModels
                 _applicationCommands.OpenMeasuringOperCommand.RegisterCommand(OpenMeasureOperCommand);
                 FollowMsfCommand = new ActionCommand(OnFollowMsfExecuted, OnFollowMsfCanExecute);
                 _applicationCommands.FollowMsfCommand.RegisterCommand(FollowMsfCommand);
+                OpenAttachmentDialogCommand = new ActionCommand(OnAttachmentExecuted, OnAttachmentCanExecute);
 
                 OpenLieferlisteCommand = new ActionCommand(OnOpenLieferlisteExecuted, OnOpenLieferlisteCanExecute);
                 OpenMachinePlanCommand = new ActionCommand(OnOpenMachinePlanExecuted, OnOpenMachinePlanCanExecute);
@@ -188,6 +190,32 @@ namespace Lieferliste_WPF.ViewModels
                 _Logger?.LogError("{message}", ex);
                 MessageBox.Show(ex.ToString());
             }
+        }
+
+        private bool OnAttachmentCanExecute(object arg)
+        {
+            if (arg is Vorgang vrg)
+            {
+                return vrg.VorgangAttachments.Count > 0;
+            }
+            return false;
+        }
+
+        private void OnAttachmentExecuted(object obj)
+        {
+            if (obj is Vorgang vrg)
+            {
+                var par = new DialogParameters();
+                par.Add("vrg", vrg);
+                _dialogService.ShowDialog("AttachmentDialog", par);
+            }
+            if (obj is OrderRb ord)
+            {
+                var par = new DialogParameters();
+                par.Add("vrg", ord);
+                _dialogService.ShowDialog("AttachmentDialog", par);
+            }
+
         }
 
         private bool OnOpenNoteCanExecute(object arg)
@@ -453,6 +481,7 @@ namespace Lieferliste_WPF.ViewModels
                     .Include(x => x.AidNavigation.MaterialNavigation)
                     .Include(x => x.AidNavigation.Pro)
                     .Include(x => x.RidNavigation)
+                    .Include(x => x.VorgangAttachments)
                     .Include(x => x.ArbPlSapNavigation)
                     .ThenInclude(x => x.Ressource)
                     .ThenInclude(x => x.WorkArea)

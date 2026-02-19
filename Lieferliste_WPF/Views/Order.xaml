@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:materialdesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
     xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
     xmlns:wpf="clr-namespace:WpfCustomControlLibrary;assembly=WpfCustomControlLibrary"
@@ -159,6 +160,10 @@
                                   Command="{Binding DeleteCommand}"
                                   CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu},
                             Path=PlacementTarget.SelectedItem}"/>
+                    <MenuItem Header="Anhang Dialog"
+                              Command="{Binding ApplicationCommands.OpenAttachmentDialogCommand}"
+                              CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu},
+                        Path=PlacementTarget.SelectedItem}"/>
                 </ContextMenu>
                 </ListBox.ContextMenu>
                 <ListBox.ItemTemplate>
@@ -211,9 +216,11 @@
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
-
-                            <TextBlock Grid.Column="1" Height="23" x:Name="txtKurzt" 
+                            <materialdesign:Badged Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                       VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Badge="{Binding VorgangAttachments.Count}"  >
+                                <TextBlock Grid.Column="1" Height="23" x:Name="txtKurzt" 
                                     Text="{Binding Text, Mode=OneWay}" Width="295"  ToolTip="Kurztext" />
+                            </materialdesign:Badged>
                             <TextBlock Grid.Column="2" Height="23" x:Name="txtEndTerm" Width="78" 
                                     Text="{Binding SpaetEnd, Converter={StaticResource DateConverter1}, Mode=OneWay}"
                                     FontSize="11" ToolTip="Endtermin" />

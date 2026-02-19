@@ -55,36 +55,47 @@ namespace El2Core.Services
 
         public async Task SendMessageAsync(string message_body, string sender)
         {
-  
 
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("Absender Name", "sender@beispiel.de"));
-            message.To.Add(new MailboxAddress("Empfänger Name", "empfaenger@beispiel.de"));
-            message.Subject = "Test E-Mail aus .NET";
-            message.Body = new TextPart("html") { Text = "<b>Hallo!</b> Dies ist eine Test-Mail." };
 
-            using (var client = new SmtpClient())
+            try
             {
-                // Verbindung zum SMTP-Server (z.B. Gmail, Outlook oder Firmenserver)
-                await client.ConnectAsync("smtp-mail.outlook365.de", 587, MailKit.Security.SecureSocketOptions.StartTls);
-               // await client.AuthenticateAsync("benutzername", "passwort");
-                await client.SendAsync(message);
-                await client.DisconnectAsync(true);
+                foreach (var abo in Abonnents.Where(x => x.Subsribes.Contains(sender)))
+                {
+                    var message = new MimeMessage();
+                    message.From.Add(new MailboxAddress("Absender Name", "sender@beispiel.de"));
+                    message.To.Add(new MailboxAddress("Empfänger Name", abo.Address));
+                    message.Subject = "Test E-Mail aus .NET";
+                    message.Body = new TextPart("html") { Text = "<b>Hallo!</b> Dies ist eine Test-Mail." };
+
+                    using (var client = new SmtpClient())
+                    {
+                        // Verbindung zum SMTP-Server (z.B. Gmail, Outlook oder Firmenserver)
+                        await client.ConnectAsync("smtp-mail.outlook.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                        // await client.AuthenticateAsync("benutzername", "passwort");
+                        await client.SendAsync(message);
+                        await client.DisconnectAsync(true);
+                    }
+
+                    //var abo = Abonnents.Where(m => m.Subsribes.Contains(sender));
+                    //var client = new SmtpClient
+                    //{
+                    //    UseDefaultCredentials = true
+                    //};
+                    //foreach (var a in abo)
+                    //{
+                    //    var mail_message = new MailMessage(Application.Current.MainWindow.Name, a.Address);
+                    //    mail_message.Subject = sender;
+                    //    mail_message.Body = message;
+
+                    //    client.Send(mail_message);
+                    //} 
+                }
             }
+            catch (System.Exception e)
+            {
 
-            //var abo = Abonnents.Where(m => m.Subsribes.Contains(sender));
-            //var client = new SmtpClient
-            //{
-            //    UseDefaultCredentials = true
-            //};
-            //foreach (var a in abo)
-            //{
-            //    var mail_message = new MailMessage(Application.Current.MainWindow.Name, a.Address);
-            //    mail_message.Subject = sender;
-            //    mail_message.Body = message;
-
-            //    client.Send(mail_message);
-            //}
+                throw;
+            }
         }
 
         public bool UpdateAbonnent(Abonnent value)

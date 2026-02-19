@@ -13,6 +13,7 @@ namespace CompositeCommands.Core
         CompositeCommand MachinePrintCommand { get; }
         CompositeCommand OpenMeasuringOperCommand { get; }
         CompositeCommand FollowMsfCommand { get; }
+        CompositeCommand OpenAttachmentDialogCommand { get; }
     }
 
     public class ApplicationCommands : IApplicationCommands
@@ -63,5 +64,7 @@ namespace CompositeCommands.Core
         public CompositeCommand OpenMeasuringOperCommand => _openMeasuringOperCommand;
         private CompositeCommand _followMsfCommand = new();
         public CompositeCommand FollowMsfCommand => _followMsfCommand;
+        private CompositeCommand _openAttachmentDialogCommand = new();
+        public CompositeCommand OpenAttachmentDialogCommand => _openAttachmentDialogCommand;
     }
 }
