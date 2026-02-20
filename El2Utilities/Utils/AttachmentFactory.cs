@@ -78,6 +78,7 @@ namespace El2Core.Utils
                         if (value != null)
                         {
                             string fileParam = value.ToString().Replace("\"", "");
+                                  
                             iconsInfo.Add(keyName, fileParam);
                         }
                         icoFileIcon.Close();
@@ -108,7 +109,7 @@ namespace El2Core.Utils
                 if (hs.ContainsKey(fi.Extension))
                 {
                     icon.BeginInit();
-                    icon.UriSource = new Uri(hs[fi.Extension].ToString());
+                    icon.UriSource = new Uri(hs[fi.Extension].ToString().Split(',')[0], UriKind.Relative);
                     icon.DecodePixelWidth = 200;
                     icon.EndInit();
                 }

@@ -226,7 +226,7 @@
                               CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}"/>
                     <MenuItem Header="Projekt priorisieren" Command="{Binding ProjectPrioCommand}"
                               CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}"/>
-                    <MenuItem Header="Anhang Dialog" Command="{Binding ApplicationCommands.AttachmentCommand}"
+                    <MenuItem Header="Anhang Dialog" Command="{Binding ApplicationCommands.OpenAttachmentDialogCommand}"
                               CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}"/>
                 </ContextMenu>
             </ListBox.ContextMenu>

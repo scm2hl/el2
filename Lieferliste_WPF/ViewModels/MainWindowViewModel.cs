@@ -163,6 +163,7 @@ namespace Lieferliste_WPF.ViewModels
                 FollowMsfCommand = new ActionCommand(OnFollowMsfExecuted, OnFollowMsfCanExecute);
                 _applicationCommands.FollowMsfCommand.RegisterCommand(FollowMsfCommand);
                 OpenAttachmentDialogCommand = new ActionCommand(OnAttachmentExecuted, OnAttachmentCanExecute);
+                _applicationCommands.OpenAttachmentDialogCommand.RegisterCommand(OpenAttachmentDialogCommand);
 
                 OpenLieferlisteCommand = new ActionCommand(OnOpenLieferlisteExecuted, OnOpenLieferlisteCanExecute);
                 OpenMachinePlanCommand = new ActionCommand(OnOpenMachinePlanExecuted, OnOpenMachinePlanCanExecute);
