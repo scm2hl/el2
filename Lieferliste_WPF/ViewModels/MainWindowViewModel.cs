@@ -194,11 +194,7 @@ namespace Lieferliste_WPF.ViewModels
 
         private bool OnAttachmentCanExecute(object arg)
         {
-            if (arg is Vorgang vrg)
-            {
-                return vrg.VorgangAttachments.Count > 0;
-            }
-            return false;
+            return true;
         }
 
         private void OnAttachmentExecuted(object obj)
@@ -215,7 +211,6 @@ namespace Lieferliste_WPF.ViewModels
                 par.Add("vrg", ord);
                 _dialogService.ShowDialog("AttachmentDialog", par);
             }
-
         }
 
         private bool OnOpenNoteCanExecute(object arg)
