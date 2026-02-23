@@ -71,7 +71,7 @@ namespace El2Core.Services
                     {
                         // Verbindung zum SMTP-Server (z.B. Gmail, Outlook oder Firmenserver)
                         await client.ConnectAsync("smtp-mail.outlook.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                        // await client.AuthenticateAsync("benutzername", "passwort");
+                        await client.AuthenticateAsync("michael.schatzl@at.bosch.com", "Bruck_Wasen111");
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
                     }
