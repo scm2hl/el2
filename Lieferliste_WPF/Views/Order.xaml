@@ -28,6 +28,7 @@
         <conv:RessourceToKwConverter x:Key="RessToKW"/>
         <conv:ActivateColorConverter x:Key="active" ActiveColor="{StaticResource ActiveProcess}"/>
         <conv:MultiObjectConverter x:Key="multiobj"/>
+        <conv:ZeroToNullConverter x:Key="Zero2Null"/>
         <System:Boolean x:Key="TrueValue">True</System:Boolean>
         <System:Boolean x:Key="FalseValue">False</System:Boolean>
         <System:DateTime x:Key="datetime"/>
@@ -200,10 +201,13 @@
                                 <RowDefinition/>
                                 <RowDefinition/>
                             </Grid.RowDefinitions>
-
-                            <TextBlock  Height="23" x:Name="txtEndTermin" Width="65" 
+                            <materialdesign:Badged Grid.Column="0" HorizontalAlignment="Left" HorizontalContentAlignment="Left"
+                                       VerticalAlignment="Top" VerticalContentAlignment="Top" Badge="{Binding VorgangAttachments.Count,
+                                Converter={StaticResource Zero2Null}}">
+                                <TextBlock  Height="23" x:Name="txtEndTermin" Width="65" 
                                     Text="{Binding Vnr, StringFormat=\{0:D4\}}"
                                     ToolTip="Vorgangsnummer" />
+                            </materialdesign:Badged>
                             <TextBlock Grid.Row="1" Height="23" x:Name="txtArbPlNr" Width="65"
                                     Text="{Binding ArbPlSap, Mode=OneWay}"
                                     ToolTip="Arbeitsplatz SAP" />
@@ -216,11 +220,10 @@
                                     </MultiBinding>
                                 </TextBlock.Text>
                             </TextBlock>
-                            <materialdesign:Badged Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                                       VerticalAlignment="Stretch" VerticalContentAlignment="Stretch" Badge="{Binding VorgangAttachments.Count}"  >
-                                <TextBlock Grid.Column="1" Height="23" x:Name="txtKurzt" 
-                                    Text="{Binding Text, Mode=OneWay}" Width="295"  ToolTip="Kurztext" />
-                            </materialdesign:Badged>
+   
+                            <TextBlock Grid.Column="1" Height="23" x:Name="txtKurzt" 
+                                Text="{Binding Text, Mode=OneWay}" Width="295"  ToolTip="Kurztext" />
+       
                             <TextBlock Grid.Column="2" Height="23" x:Name="txtEndTerm" Width="78" 
                                     Text="{Binding SpaetEnd, Converter={StaticResource DateConverter1}, Mode=OneWay}"
                                     FontSize="11" ToolTip="Endtermin" />
@@ -253,13 +256,13 @@
                                            Text="{Binding QuantityMiss, Mode=OneWay}" ToolTip="offene Menge"/>
                             <TextBlock Grid.Column="6" Height="23" x:Name="txtKst" Width="70"
 									Text="{Binding ArbPlSapNavigation.Ressource.WorkArea.Bereich, Mode=OneWay}" ToolTip="Bereich" />
-
+         
                             <GroupBox Grid.Column="7"  ToolTip="Kommentar Meister" 
-			                                      Header="{Binding BemM, Mode=OneWay,
-                                    Converter={StaticResource CommentConv}, ConverterParameter={StaticResource TrueValue}}">
+			                                    Header="{Binding BemM, Mode=OneWay,
+                                Converter={StaticResource CommentConv}, ConverterParameter={StaticResource TrueValue}}">
                                 <TextBox x:Name="bemm" Text="{Binding BemM, Mode=TwoWay, NotifyOnSourceUpdated=True,
-                                    Converter={StaticResource CommentConv}, ConverterParameter={StaticResource FalseValue}}"
-				                                     TextWrapping="Wrap" AcceptsReturn="True" >
+                                Converter={StaticResource CommentConv}, ConverterParameter={StaticResource FalseValue}}"
+				                                    TextWrapping="Wrap" AcceptsReturn="True" >
                                     <TextBox.IsEnabled>
                                         <MultiBinding Converter="{StaticResource Relpermiss}">
                                             <Binding Source="{x:Static const:Permissions.CommentMe}"/>
@@ -269,12 +272,13 @@
                                     <i:Interaction.Triggers>
                                         <i:EventTrigger EventName="SourceUpdated">
                                             <i:InvokeCommandAction Command="{Binding DataContext.BemChangedCommand,
-                                                    RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                                                      CommandParameter="{Binding}"/>
+                                                RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                                    CommandParameter="{Binding}"/>
                                         </i:EventTrigger>
                                     </i:Interaction.Triggers>
                                 </TextBox>
                             </GroupBox>
+           
                             <GroupBox Grid.Column="8"  ToolTip="Kommentar Teamleiter" 
 			                                      Header="{Binding BemT,
                                     Converter={StaticResource CommentConv}, ConverterParameter={StaticResource TrueValue}}">

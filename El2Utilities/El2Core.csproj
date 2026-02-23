@@ -53,7 +53,6 @@
 
   <ItemGroup>
     <PackageReference Include="EfCore.SchemaCompare" />
-    <PackageReference Include="FileAssociation2" />
     <PackageReference Include="gong-wpf-dragdrop" />
     <PackageReference Include="HtmlToXaml" />
     <PackageReference Include="log4net" />
@@ -98,6 +97,10 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\unknown-file.png" />
   </ItemGroup>
 
 </Project>
