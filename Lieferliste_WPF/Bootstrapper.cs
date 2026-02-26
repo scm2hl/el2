@@ -49,13 +49,14 @@ namespace Lieferliste_WPF
             _Logger = loggerFactory.CreateLogger<Bootstrapper>();
             Application.Current.DispatcherUnhandledException += Current_DispatcherUnhandledException;
             Application.Current.Exit += Current_Exit;
+            _Logger.LogInformation("Shell Create 1");
 
             var settingsService = Container.Resolve<UserSettingsService>();
             settingsService.Upgrade();
 
             ThemeManager.Current.ChangeTheme(App.Current, settingsService.Theme);
             App.GlobalFontSize = settingsService.FontSize;
-
+            _Logger.LogInformation("Shell Create 2");
             return Container.Resolve<MainWindow>();
         }
 
@@ -108,6 +109,7 @@ namespace Lieferliste_WPF
             containerRegistry.RegisterSingleton<IRegionManager, RegionManager>();
             containerRegistry.RegisterSingleton<IUserSettingsService, UserSettingsService>();
             containerRegistry.RegisterSingleton<ILoggerFactory, LoggerFactory>();
+            containerRegistry.Register<INotifyBroker, NotifyBroker>();
 
             containerRegistry.RegisterForNavigation<UserSettings>();
             containerRegistry.RegisterForNavigation<RoleEdit>();

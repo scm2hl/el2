@@ -44,6 +44,7 @@
 	<PropertyGroup>
 		<GenerateRuntimeConfigDevFile>true</GenerateRuntimeConfigDevFile>
 		<LangVersion>preview</LangVersion>
+		<UserSecretsId>d8a5271a-ee57-4dc3-b8ce-55ffefbb1176</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -63,6 +64,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" />
+    <PackageReference Include="Microsoft.Graph" />
     <PackageReference Include="MimeKit" />
     <PackageReference Include="Prism.Core" />
     <PackageReference Include="Prism.Plugin.Logging.Abstractions" />

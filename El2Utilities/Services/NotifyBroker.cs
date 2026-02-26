@@ -1,5 +1,7 @@
 ﻿using MailKit.Net.Smtp;
+using Microsoft.Extensions.Configuration;
 using MimeKit;
+using Prism.Ioc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,9 +23,11 @@ namespace El2Core.Services
         public string Address { get; set; }
         public string Name { get; set; }
         public string[] Subsribes { get; set; }
+        
     }
     public class NotifyBroker : INotifyBroker
     {
+        private static IConfiguration? _container;
 
         public List<Abonnent> Abonnents { get; set; } = [];
         
@@ -39,8 +43,7 @@ namespace El2Core.Services
             {
                 abo = default;
                 return false;
-            }
-            
+            }           
         }
 
         public void AddAbonnent(Abonnent abonnent)
@@ -55,14 +58,15 @@ namespace El2Core.Services
 
         public async Task SendMessageAsync(string message_body, string sender)
         {
-
+            var configuration = new ConfigurationBuilder();
 
             try
             {
                 foreach (var abo in Abonnents.Where(x => x.Subsribes.Contains(sender)))
                 {
+                    
                     var message = new MimeMessage();
-                    message.From.Add(new MailboxAddress("Absender Name", "sender@beispiel.de"));
+                    message.From.Add(new MailboxAddress("Absender Name", "michael.schatzl@at.bosch.com"));
                     message.To.Add(new MailboxAddress("Empfänger Name", abo.Address));
                     message.Subject = "Test E-Mail aus .NET";
                     message.Body = new TextPart("html") { Text = "<b>Hallo!</b> Dies ist eine Test-Mail." };
@@ -70,8 +74,9 @@ namespace El2Core.Services
                     using (var client = new SmtpClient())
                     {
                         // Verbindung zum SMTP-Server (z.B. Gmail, Outlook oder Firmenserver)
-                        await client.ConnectAsync("smtp-mail.outlook.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                        await client.AuthenticateAsync("michael.schatzl@at.bosch.com", "Bruck_Wasen111");
+                       //var pass = _container["SMTP_Pass"];
+                        await client.ConnectAsync("smtp.app.bosch.com", 587, MailKit.Security.SecureSocketOptions.Auto);
+                        await client.AuthenticateAsync("HLS2HL@bosch.com", "RaKDRya5m3oHJ5Q5oAOORaKDRya5m3oHJ5Q5oAOO");
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
                     }

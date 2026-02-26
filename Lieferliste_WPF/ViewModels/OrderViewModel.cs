@@ -129,11 +129,19 @@ namespace Lieferliste_WPF.ViewModels
                 var v = db.Vorgangs.Single<Vorgang>(x => x.VorgangId == vrg.VorgangId);
                 if (v.BemM != vrg.BemM)
                 {
-                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, "MaBem");
+                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, "MeBem");
                     v.BemM = vrg.BemM;
                 }
-                v.BemMa = vrg.BemMa;
-                v.BemT = vrg.BemT;
+                if (v.BemMa != vrg.BemMa)
+                {
+                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, "MaBem");
+                    v.BemMa = vrg.BemMa;
+                }
+                if (v.BemT != vrg.BemT)
+                {
+                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, "TeBem");
+                    v.BemT = vrg.BemT;
+                }
 
                 db.SaveChanges();
             }

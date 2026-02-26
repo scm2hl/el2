@@ -185,7 +185,7 @@ namespace Lieferliste_WPF.ViewModels
         {
             if (value is string val)
             {
-                if (val.IsNullOrEmpty()) { return new ValidationResult(false, "Der Eintrag darf nicht leer sein"); }
+                if (string.IsNullOrEmpty(val)) { return new ValidationResult(false, "Der Eintrag darf nicht leer sein"); }
             }
             return ValidationResult.ValidResult;
         }

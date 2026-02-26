@@ -529,7 +529,7 @@ namespace ModulePlanning.ViewModels
             {
                 if (commandParameter is string change)
                 {
-                    if (change.Length > 3 || change.IsNullOrEmpty())
+                    if (change.Length > 3 || string.IsNullOrEmpty(change))
                     {
                         _searchFilterText = change;
                         ProcessCV.Refresh();
