@@ -75,18 +75,11 @@ namespace El2Core.Utils
                     //movingtasks.Add(t);
 
                 }
-                catch (AggregateException ex) { }
-                catch (ArgumentException ex) { }
-                catch (FileNotFoundException ex)
-                {
-                }
-                catch (IOException ex)
-                {
-
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                }
+                catch (AggregateException ex) { throw; }
+                catch (ArgumentException ex) { throw; }
+                catch (FileNotFoundException ex) { throw; }
+                catch (IOException ex) { throw; }
+                catch (UnauthorizedAccessException ex) { throw; }
                 catch (Exception ex)
                 {
                     throw;

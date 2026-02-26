@@ -336,10 +336,12 @@ namespace ModuleProducts.ViewModels
                                 ArchivProcessingCount--;
                                 continue;
                             }
+                        try
+                        {
                             var p = Path.Combine(doku[DocumentPart.RootPath], doku[DocumentPart.SavePath], doku[DocumentPart.Folder]);
 
                             var result = Archivator.ArchivateAsync(new DirectoryInfo(p), rulenr);
-                            
+
                             if (result.IsCompleted && (result.Result.State == Archivator.ArchivState.Archivated ||
                                 result.Result.State == Archivator.ArchivState.NoFiles))
                                 CoreFunction.DeleteDirectoryWithWait(p, true);
@@ -366,7 +368,13 @@ namespace ModuleProducts.ViewModels
                             }
                             ord.ArchivState = result.Result.State;
                             db.Update(o);
-                        _ = await db.SaveChangesAsync();
+                            _ = await db.SaveChangesAsync();
+                        }
+                        catch (Exception ex)
+                        {
+
+                            _Logger.LogInformation(ex.Message);
+                        }
 
                         }
                         ArchivProcessingCount--;
