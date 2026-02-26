@@ -26,12 +26,13 @@ namespace El2Core.Utils
         public User User { get; private set; }
         public string PC { get; }
         public List<Rule> Rules { get; private set; }
-        public static NotifyBroker NotifyBroker { get; } = new NotifyBroker();
+        public static NotifyBroker NotifyBroker { get; } = new();
         private static IContainerProvider Container;
         public Globals(IContainerProvider container)
         {
             Container = container;
             PC = Environment.MachineName;
+            //NotifyBroker.SetContainer(container);
             
             LoadData();
             

@@ -7,7 +7,6 @@ using El2Core.ViewModelBase;
 using Lieferliste_WPF.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using ModulePlanning.Planning;
 using Prism.Dialogs;
 using Prism.Events;
@@ -322,7 +321,7 @@ namespace Lieferliste_WPF.ViewModels
             }
             else if (obj is string s) { param = s; }
             else if (obj is PspNode<Shape> shape) { param = shape.Node.ToString(); }
-            if (param.IsNullOrEmpty()) { return; }
+            if (string.IsNullOrEmpty(param)) { return; }
 
             var par = new DialogParameters();
             par.Add("projectNo", param);

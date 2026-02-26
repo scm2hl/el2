@@ -543,7 +543,7 @@ namespace ModuleDeliverList.ViewModels
         {
             if (commandParameter is string search)
 
-                if (!search.IsNullOrEmpty() && search.Length >= 3)
+                if (!string.IsNullOrEmpty(search) && search.Length >= 3)
                     SearchFilterText = search;
         }
 
