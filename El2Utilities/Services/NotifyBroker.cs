@@ -55,8 +55,6 @@ namespace El2Core.Services
 
         public async Task SendMessageAsync(string message_body, string sender)
         {
-
-
             try
             {
                 foreach (var abo in Abonnents.Where(x => x.Subsribes.Contains(sender)))
