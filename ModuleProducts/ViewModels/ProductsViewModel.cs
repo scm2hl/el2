@@ -322,7 +322,6 @@ namespace ModuleProducts.ViewModels
                         ord.Closed &&
                         ord.Completed < DateTime.Now.AddDays(-Archivator.DelayDays))
                         {
-
                             var doku = firstPartInfo.CreateDocumentInfos([mat.TTNR, ord.OrderNr]);
                             int rulenr = 0;
                             bool matched = false;
