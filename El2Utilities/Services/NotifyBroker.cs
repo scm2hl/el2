@@ -57,7 +57,7 @@ namespace El2Core.Services
 
         public async Task SendMessageAsync(string message_body, string sender)
         {
-            var configuration = new ConfigurationBuilder();
+
 
             try
             {
