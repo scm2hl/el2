@@ -277,11 +277,17 @@ namespace ModuleProducts.ViewModels
         private bool OnCanArchivateExecute(object arg)
         {
             
-            return PermissionsProvider.GetInstance().GetUserPermission(Permissions.Archivate);
+            return PermissionsProvider.GetInstance().GetUserPermission(Permissions.Archivate) && !IsArchivating;
         }
         private void OnArchivateExecute(object obj)
         {
             IsArchivating = true;
+            ArchivProcessingCount = 0;
+            Archivated = 0;
+            ArchivState2Count = 0;
+            ArchivState3Count = 0;
+            ArchivState4Count = 0;
+            MovedFiles = 0;
             ArchivComplete = OnArchivateExecuteAsync(obj).IsCompleted;
         }
         private async Task OnArchivateExecuteAsync(object obj)
@@ -336,46 +342,45 @@ namespace ModuleProducts.ViewModels
                                 ArchivProcessingCount--;
                                 continue;
                             }
-                        try
-                        {
-                            var p = Path.Combine(doku[DocumentPart.RootPath], doku[DocumentPart.SavePath], doku[DocumentPart.Folder]);
-                            _Logger.LogInformation($"Archivate { doku[DocumentPart.SavePath] }");
-                            var result = Archivator.ArchivateAsync(new DirectoryInfo(p), rulenr);
-
-                            if (result.IsCompleted && (result.Result.State == Archivator.ArchivState.Archivated ||
-                                result.Result.State == Archivator.ArchivState.NoFiles))
-                                CoreFunction.DeleteDirectoryWithWait(p, true);
-
-                            var o = db.OrderRbs.Single(x => x.Aid == ord.OrderNr);
-
-                            switch (result.Result.State)
+                            try
                             {
-                                case Archivator.ArchivState.Archivated:
-                                    Archivated++;
-                                    MovedFiles += result.Result.MovedFiles;
-                                    o.ArchivPath = Path.Combine(result.Result.Location, ord.OrderNr);
-                                    o.ArchivState = (int)result.Result.State;
-                                    ord.OrderLink = new ValueTuple<string, string, int, string>(mat.TTNR, ord.OrderNr, (int)result.Result.State, o.ArchivPath);
-                                    break;
-                                case Archivator.ArchivState.NoFiles:
-                                    ArchivState2Count++;
-                                    o.ArchivState = (int)result.Result.State;
-                                    break;
-                                case Archivator.ArchivState.NoDirectory:
-                                    ArchivState3Count++;
-                                    o.ArchivState = (int)result.Result.State;
-                                    break;
+                                var p = Path.Combine(doku[DocumentPart.RootPath], doku[DocumentPart.SavePath], doku[DocumentPart.Folder]);
+                                _Logger.LogInformation($"Archivate { p }");
+                                var result = await Archivator.ArchivateAsync(new DirectoryInfo(p), rulenr);
+
+                                if (result.State == Archivator.ArchivState.Archivated ||
+                                    result.State == Archivator.ArchivState.NoFiles)
+                                    CoreFunction.DeleteDirectoryWithWait(p, true);
+
+                                var o = db.OrderRbs.Single(x => x.Aid == ord.OrderNr);
+
+                                switch (result.State)
+                                {
+                                    case Archivator.ArchivState.Archivated:
+                                        Archivated++;
+                                        MovedFiles += result.MovedFiles;
+                                        o.ArchivPath = Path.Combine(result.Location, ord.OrderNr);
+                                        o.ArchivState = (int)result.State;
+                                        ord.OrderLink = new ValueTuple<string, string, int, string>(mat.TTNR, ord.OrderNr, (int)result.Result.State, o.ArchivPath);
+                                        break;
+                                    case Archivator.ArchivState.NoFiles:
+                                        ArchivState2Count++;
+                                        o.ArchivState = (int)result.State;
+                                        break;
+                                    case Archivator.ArchivState.NoDirectory:
+                                        ArchivState3Count++;
+                                        o.ArchivState = (int)result.State;
+                                        break;
+                                }
+                                ord.ArchivState = result.State;
+                                db.Update(o);
+                                _ = await db.SaveChangesAsync();
                             }
-                            ord.ArchivState = result.Result.State;
-                            db.Update(o);
-                            _ = await db.SaveChangesAsync();
-                        }
-                        catch (Exception ex)
-                        {
+                            catch (Exception ex)
+                            {
 
-                            _Logger.LogInformation(ex.Message);
-                        }
-
+                                _Logger.LogInformation(ex.Message);
+                            }
                         }
                         ArchivProcessingCount--;
                     }
@@ -383,6 +388,7 @@ namespace ModuleProducts.ViewModels
 
             _Logger.LogInformation("Archiviert: {0} NoFiles(2): {1} NoDirectory(3): {2} NoRules(4): {3} copied Files {4}",
                 Archivated, ArchivState2Count, ArchivState3Count, ArchivState4Count, MovedFiles);
+            IsArchivating = false;
         }
  
         private bool OnFilterPredicate(object obj)

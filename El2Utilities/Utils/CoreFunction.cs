@@ -44,22 +44,26 @@ namespace El2Core.Utils
                 try
                 {
                     Directory.Delete(path, recursive);
-                    return; // Success
+                    
+                    if ((DateTime.UtcNow - startTime).TotalMilliseconds >= timeoutMs)
+                    {
+                        throw new TimeoutException($"Could not delete directory '{path}' within {timeoutMs} ms.");
+                    }
+                    Thread.Sleep(retryDelayMs);
+                    return; // Successfully deleted
                 }
                 catch (IOException)
                 {
-                    // File or directory is in use
+                    throw new IOException($"Directory '{path}' is in use or has open handles. Ensure all files are closed and try again.");
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    // Could be due to file locks or permissions
+                    throw new UnauthorizedAccessException($"Insufficient permissions to delete directory '{path}'. Ensure you have the necessary rights and try again.");
                 }
-
-                if ((DateTime.UtcNow - startTime).TotalMilliseconds > timeoutMs)
-                    throw new TimeoutException($"Could not delete directory '{path}' within {timeoutMs} ms.");
-
-                Thread.Sleep(retryDelayMs);
+   
+                
             }
+            
         }
     }
 }
