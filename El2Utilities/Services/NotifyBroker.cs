@@ -1,7 +1,6 @@
 ﻿using MailKit.Net.Smtp;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
-using Prism.Ioc;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

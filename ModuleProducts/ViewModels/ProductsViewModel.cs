@@ -337,7 +337,7 @@ namespace ModuleProducts.ViewModels
                                 continue;
                             }
                             var p = Path.Combine(doku[DocumentPart.RootPath], doku[DocumentPart.SavePath], doku[DocumentPart.Folder]);
-
+                            _Logger.LogInformation($"Archivate { doku[DocumentPart.SavePath] }");
                             var result = Archivator.ArchivateAsync(new DirectoryInfo(p), rulenr);
                             
                             if (result.IsCompleted && (result.Result.State == Archivator.ArchivState.Archivated ||
@@ -371,9 +371,7 @@ namespace ModuleProducts.ViewModels
                         }
                         ArchivProcessingCount--;
                     }
-                }
-            
-            
+                }            
 
             _Logger.LogInformation("Archiviert: {0} NoFiles(2): {1} NoDirectory(3): {2} NoRules(4): {3} copied Files {4}",
                 Archivated, ArchivState2Count, ArchivState3Count, ArchivState4Count, MovedFiles);
