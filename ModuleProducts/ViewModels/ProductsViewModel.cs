@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -292,8 +293,27 @@ namespace ModuleProducts.ViewModels
         }
         private async Task OnArchivateExecuteAsync(object obj)
         {
-            
+            int maxConcurrentTasks = 5;
             int apc = 0;
+            var tasks = new List<Task>();
+            var semaphore = new SemaphoreSlim(maxConcurrentTasks);
+
+            //// Start each task with concurrency control
+            //tasks.Add(Task.Run(async () =>
+            //{
+            //    await semaphore.WaitAsync();
+            //    try
+            //    {
+            //        return await DoWorkAsync(taskId);
+            //    }
+            //    finally
+            //    {
+            //        semaphore.Release();
+            //    }
+            //}));
+
+            //// Wait for all tasks to complete and collect results
+            //int[] results = await Task.WhenAll(tasks);
 
             using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
             foreach (var m in ProductsView)
