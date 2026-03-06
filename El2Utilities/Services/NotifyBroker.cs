@@ -75,9 +75,9 @@ namespace El2Core.Services
                     using (var client = new MailKit.Net.Smtp.SmtpClient())
                     {
                         // Verbindung zum SMTP-Server (z.B. Gmail, Outlook oder Firmenserver)
-                       //var pass = _container["SMTP_Pass"];
+                        //var pass = _container["SMTP_Pass"];
                         await client.ConnectAsync("smtp.app.bosch.com", 587, MailKit.Security.SecureSocketOptions.Auto);
-                        
+
                         client.Authenticate("HLS2HL", "RaKDRya5m3oHJ5Q5oAOORaKDRya5m3oHJ5Q5oAOO");
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);

@@ -101,7 +101,7 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
 
         IConfiguration configuration = builder.Build();
         var defaultconnection = configuration.GetConnectionString("ConnectionBosch");
-        optionsBuilder.UseSqlServer(defaultconnection).EnableThreadSafetyChecks();
+        optionsBuilder.UseSqlServer(defaultconnection, sqlServerOptions => sqlServerOptions.CommandTimeout(60)).EnableThreadSafetyChecks();
         base.OnConfiguring(optionsBuilder);
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
