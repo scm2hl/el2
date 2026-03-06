@@ -380,7 +380,7 @@ namespace ModuleProducts.ViewModels
                                         MovedFiles += result.MovedFiles;
                                         o.ArchivPath = Path.Combine(result.Location, ord.OrderNr);
                                         o.ArchivState = (int)result.State;
-                                        ord.OrderLink = new ValueTuple<string, string, int, string>(mat.TTNR, ord.OrderNr, (int)result.Result.State, o.ArchivPath);
+                                        ord.OrderLink = new ValueTuple<string, string, int, string>(mat.TTNR, ord.OrderNr, (int)result.State, o.ArchivPath);
                                         break;
                                     case Archivator.ArchivState.NoFiles:
                                         ArchivState2Count++;
