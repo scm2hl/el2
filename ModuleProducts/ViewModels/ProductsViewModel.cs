@@ -5,6 +5,7 @@ using El2Core.Utils;
 using El2Core.ViewModelBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -173,9 +174,9 @@ namespace ModuleProducts.ViewModels
 
         private RelayCommand? _SearchCommand;
         public RelayCommand SearchCommand => _SearchCommand ??= new RelayCommand(OnTextSearch);
-        public ICommand ArchivateCommand => new ActionCommand(OnArchivateExecute, OnCanArchivateExecute);
+        public ICommand ArchivateCommand => new ActionCommand(_ => OnArchivateExecute(), OnCanArchivateExecute);
         public ICommand DateSelectedCommand => new ActionCommand(OnDateSelectedExecute, OnCanDateSelectedExecute);
-        public ICommand CloseArchivMessageCommand => new ActionCommand(OnCloseArchivMessageExecuted, OnCanCloseArchivMessageExecute);
+        public ICommand CloseArchivMessageCommand => new ActionCommand(_ => OnCloseArchivMessageExecuted(), OnCanCloseArchivMessageExecute);
 
 
 
@@ -212,35 +213,45 @@ namespace ModuleProducts.ViewModels
             {
                 using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
 
+                // Get all relevant Vorgangs (Aid, ArbPlSap)
                 var onr = await db.Vorgangs
-                    .Where(x => x.ArbPlSap != null && x.ArbPlSap.Length >=3)
-                    .Select(x => new ValueTuple<string, string> (x.Aid, x.ArbPlSap)).Distinct()
+                    .Where(x => x.ArbPlSap != null && x.ArbPlSap.Length >= 3)
+                    .Select(x => new { x.Aid, x.ArbPlSap })
+                    .Distinct()
                     .ToListAsync();
 
-                var a = onr
-                    .Where(x => UserInfo.User.AccountCostUnits.Any(y => y.CostId.ToString().Equals(x.Item2[..3])))
-                    .Select(x => x.Item1).Distinct()
-                    .ToList();
+                // Build a HashSet for fast lookup of allowed Aids
+                var allowedAids = new HashSet<string>(
+                    onr
+                        .Where(x => UserInfo.User.AccountCostUnits.Any(y => y.CostId.ToString().Equals(x.ArbPlSap[..3])))
+                        .Select(x => x.Aid)
+                );
 
-                var mat = await db.TblMaterials
+                // Query materials with at least one allowed OrderRb
+                var materials = await db.TblMaterials
                     .Include(x => x.OrderRbs)
-                    .ThenInclude(x => x.Vorgangs)
-                    .Where(x => x.OrderRbs.Any(y => a.Contains(y.Aid)))
+                        .ThenInclude(x => x.Vorgangs)
+                    .Where(x => x.OrderRbs.Any(y => allowedAids.Contains(y.Aid)))
                     .ToListAsync();
 
-                foreach (var m in mat)
+                // Clear and repopulate _Materials
+                _Materials.Clear();
+                foreach (var m in materials)
                 {
-   
-                    var p = new ProductMaterial(m.Ttnr, m.Bezeichng, [.. m.OrderRbs.IntersectBy(a, x => x.Aid)]);
-                    _Materials.Add(p);
-        
+                    var filteredOrders = m.OrderRbs.Where(o => allowedAids.Contains(o.Aid)).ToList();
+                    if (filteredOrders.Count > 0)
+                    {
+                        var p = new ProductMaterial(m.Ttnr, m.Bezeichng, filteredOrders);
+                        _Materials.Add(p);
+                    }
                 }
+
                 ProductsView = new ListCollectionView(_Materials);
                 ProductsView.Filter += OnFilterPredicate;
             }
             catch (Exception e)
             {
-                _Logger.LogError("{message}", e.ToString());
+                _Logger.LogError("OnLoadMaterialsAsync Exception: {Message}\n{StackTrace}", e.Message, e.StackTrace);
             }
             return ProductsView;
         }
@@ -293,118 +304,132 @@ namespace ModuleProducts.ViewModels
         }
         private async Task OnArchivateExecuteAsync(object obj)
         {
-            int maxConcurrentTasks = 5;
-            int apc = 0;
-            var tasks = new List<Task>();
+            int maxConcurrentTasks = 5; 
             var semaphore = new SemaphoreSlim(maxConcurrentTasks);
+            var isArchivated = new ConcurrentBag<(string, string, int, string)>();
+            var tasks = new List<Task>();
 
-            //// Start each task with concurrency control
-            //tasks.Add(Task.Run(async () =>
-            //{
-            //    await semaphore.WaitAsync();
-            //    try
-            //    {
-            //        return await DoWorkAsync(taskId);
-            //    }
-            //    finally
-            //    {
-            //        semaphore.Release();
-            //    }
-            //}));
-
-            //// Wait for all tasks to complete and collect results
-            //int[] results = await Task.WhenAll(tasks);
-
-            using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+            // Gather all eligible orders first
+            var eligibleOrders = new List<(ProductMaterial mat, ProductOrder ord)>();
             foreach (var m in ProductsView)
             {
-                foreach (var o in (m as ProductMaterial).ProdOrders)
+                var mat = (ProductMaterial)m;
+                foreach (ProductOrder ord in mat.ProdOrders)
                 {
-                    ProductOrder s = (ProductOrder)o;
-                    if (s.ArchivState == Archivator.ArchivState.None &&
-                        s.Closed &&
-                        s.Completed < DateTime.Now.AddDays(-Archivator.DelayDays))
-
-                        apc++;
-                }
-            }
-            ArchivProcessingCount = apc;
-
-                foreach (var m in ProductsView)
-                {
-
-                    ProductMaterial mat = (ProductMaterial)m;
-
-                    foreach (var item in mat.ProdOrders)
-                    {
-                    ProductOrder ord = (ProductOrder)item;
-                        if (ord.ArchivState == Archivator.ArchivState.None &&
+                    if (ord.ArchivState == Archivator.ArchivState.None &&
                         ord.Closed &&
                         ord.Completed < DateTime.Now.AddDays(-Archivator.DelayDays))
-                        {
-                            var doku = firstPartInfo.CreateDocumentInfos([mat.TTNR, ord.OrderNr]);
-                            int rulenr = 0;
-                            bool matched = false;
-                            foreach (var rule in Archivator.ArchiveRules)
-                            {
-                                string? input = (rule.MatchTarget.Equals(Archivator.ArchivatorTarget.TTNR)) ? mat.TTNR : ord.OrderNr;
-                                if (Regex.IsMatch(input, rule.RegexString))
-                                {
-                                    matched = true;
-                                    break;
-                                }
-                                rulenr++;
-                            }
-                            if (!matched)
-                            {
-                                ArchivState4Count++;
-                                ArchivProcessingCount--;
-                                continue;
-                            }
-                            try
-                            {
-                                var p = Path.Combine(doku[DocumentPart.RootPath], doku[DocumentPart.SavePath], doku[DocumentPart.Folder]);
-                                _Logger.LogInformation($"Archivate { p }");
-                                var result = await Archivator.ArchivateAsync(new DirectoryInfo(p), rulenr);
-
-                                if (result.State == Archivator.ArchivState.Archivated ||
-                                    result.State == Archivator.ArchivState.NoFiles)
-                                    CoreFunction.DeleteDirectoryWithWait(p, true);
-
-                                var o = db.OrderRbs.Single(x => x.Aid == ord.OrderNr);
-
-                                switch (result.State)
-                                {
-                                    case Archivator.ArchivState.Archivated:
-                                        Archivated++;
-                                        MovedFiles += result.MovedFiles;
-                                        o.ArchivPath = Path.Combine(result.Location, ord.OrderNr);
-                                        o.ArchivState = (int)result.State;
-                                        ord.OrderLink = new ValueTuple<string, string, int, string>(mat.TTNR, ord.OrderNr, (int)result.State, o.ArchivPath);
-                                        break;
-                                    case Archivator.ArchivState.NoFiles:
-                                        ArchivState2Count++;
-                                        o.ArchivState = (int)result.State;
-                                        break;
-                                    case Archivator.ArchivState.NoDirectory:
-                                        ArchivState3Count++;
-                                        o.ArchivState = (int)result.State;
-                                        break;
-                                }
-                                ord.ArchivState = result.State;
-                                db.Update(o);
-                                _ = await db.SaveChangesAsync();
-                            }
-                            catch (Exception ex)
-                            {
-
-                                _Logger.LogInformation(ex.Message);
-                            }
-                        }
-                        ArchivProcessingCount--;
+                    {
+                        eligibleOrders.Add((mat, ord));
                     }
-                }            
+                }
+            }
+            ArchivProcessingCount = eligibleOrders.Count;
 
+            // Shared counters for thread-safe updates
+            int archivated = 0, state2 = 0, state3 = 0, state4 = 0, movedFiles = 0;
+
+            foreach (var (mat, ord) in eligibleOrders)
+            {
+                await semaphore.WaitAsync();
+                tasks.Add(Task.Run(async () =>
+                {
+                    (string, string, int, string)? link = null;
+                    try
+                    {
+                        var doku = firstPartInfo.CreateDocumentInfos([mat.TTNR, ord.OrderNr]);
+                        int rulenr = 0;
+                        bool matched = false;
+                        foreach (var rule in Archivator.ArchiveRules)
+                        {
+                            string? input = rule.MatchTarget.Equals(Archivator.ArchivatorTarget.TTNR) ? mat.TTNR : ord.OrderNr;
+                            if (Regex.IsMatch(input, rule.RegexString))
+                            {
+                                matched = true;
+                                break;
+                            }
+                            rulenr++;
+                        }
+                        if (!matched)
+                        {
+                            Interlocked.Increment(ref state4);
+                            return;
+                        }
+
+                        var p = Path.Combine(doku[DocumentPart.RootPath], doku[DocumentPart.SavePath], doku[DocumentPart.Folder]);
+                        _Logger.LogInformation($"Archivate {p}");
+
+                        var result = await Archivator.ArchivateAsync(new DirectoryInfo(p), rulenr);
+
+                        if (result.State == Archivator.ArchivState.Archivated ||
+                            result.State == Archivator.ArchivState.NoFiles)
+                        {
+                            CoreFunction.DeleteDirectoryWithWait(p, true);
+                        }
+
+                        using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                        var o = db.OrderRbs.Single(x => x.Aid == ord.OrderNr);
+
+                        switch (result.State)
+                        {
+                            case Archivator.ArchivState.Archivated:
+                                Interlocked.Increment(ref archivated);
+                                Interlocked.Add(ref movedFiles, result.MovedFiles);
+                                o.ArchivPath = Path.Combine(result.Location, ord.OrderNr);
+                                o.ArchivState = (int)result.State;
+                                link = (mat.TTNR, ord.OrderNr, (int)result.State, o.ArchivPath);
+                                break;
+                            case Archivator.ArchivState.NoFiles:
+                                Interlocked.Increment(ref state2);
+                                o.ArchivState = (int)result.State;
+                                break;
+                            case Archivator.ArchivState.NoDirectory:
+                                Interlocked.Increment(ref state3);
+                                o.ArchivState = (int)result.State;
+                                break;
+                        }
+                        if (link != null)
+                            isArchivated.Add(link.Value);
+                        else
+                            isArchivated.Add((mat.TTNR, ord.OrderNr, (int)result.State, string.Empty));
+
+                        db.Update(o);
+                        await db.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _Logger.LogInformation(ex.Message);
+                    }
+                    finally
+                    {
+                        // Decrement ArchivProcessingCount as each task completes
+                        Interlocked.Decrement(ref _ArchivProcessingCount);
+                        NotifyPropertyChanged(() => ArchivProcessingCount);
+                        semaphore.Release();
+                    }
+                }));
+            }
+
+            await Task.WhenAll(tasks);
+
+            // Update UI-bound properties on the UI thread
+            Archivated = archivated;
+            ArchivState2Count = state2;
+            ArchivState3Count = state3;
+            ArchivState4Count = state4;
+            MovedFiles = movedFiles;
+            ArchivProcessingCount = 0;
+
+            // Update ProductOrder states
+            foreach (var link in isArchivated)
+            {
+                var mat = ProductsView.Cast<ProductMaterial>().Single(x => x.TTNR == link.Item1);
+                var ord = mat.ProdOrders.Cast<ProductOrder>().Single(x => x.OrderNr == link.Item2);
+                ord.ArchivState = (Archivator.ArchivState)link.Item3;
+                ord.ArchivPath = link.Item4;
+                ord.OrderLink = (link.Item1, link.Item2, link.Item3, link.Item4);
+            }
+            ProductsView.Refresh();
             _Logger.LogInformation("Archiviert: {0} NoFiles(2): {1} NoDirectory(3): {2} NoRules(4): {3} copied Files {4}",
                 Archivated, ArchivState2Count, ArchivState3Count, ArchivState4Count, MovedFiles);
             IsArchivating = false;
