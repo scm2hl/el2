@@ -174,9 +174,9 @@ namespace ModuleProducts.ViewModels
 
         private RelayCommand? _SearchCommand;
         public RelayCommand SearchCommand => _SearchCommand ??= new RelayCommand(OnTextSearch);
-        public ICommand ArchivateCommand => new ActionCommand(_ => OnArchivateExecute(), OnCanArchivateExecute);
+        public ICommand ArchivateCommand => new ActionCommand(OnArchivateExecute, OnCanArchivateExecute);
         public ICommand DateSelectedCommand => new ActionCommand(OnDateSelectedExecute, OnCanDateSelectedExecute);
-        public ICommand CloseArchivMessageCommand => new ActionCommand(_ => OnCloseArchivMessageExecuted(), OnCanCloseArchivMessageExecute);
+        public ICommand CloseArchivMessageCommand => new ActionCommand(OnCloseArchivMessageExecuted, OnCanCloseArchivMessageExecute);
 
 
 

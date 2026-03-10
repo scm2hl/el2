@@ -6,22 +6,22 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="DotNetKit.Wpf.AutoCompleteComboBox" Version="2.0.2" />
-    <PackageVersion Include="EfCore.SchemaCompare" Version="9.0.0" />
+    <PackageVersion Include="EfCore.SchemaCompare" Version="10.0.0" />
     <PackageVersion Include="FileAssociation2" Version="22.12.21.18" />
     <PackageVersion Include="gong-wpf-dragdrop" Version="4.0.0" />
     <PackageVersion Include="HtmlToXaml" Version="1.0.0" />
     <PackageVersion Include="LiveCharts.Wpf" Version="0.9.7" />
-    <PackageVersion Include="log4net" Version="3.2.0" />
+    <PackageVersion Include="log4net" Version="3.3.0" />
     <PackageVersion Include="MahApps.Metro" Version="2.4.11" />
     <PackageVersion Include="MahApps.Metro.IconPacks" Version="6.2.1" />
-    <PackageVersion Include="MailKit" Version="4.15.0" />
+    <PackageVersion Include="MailKit" Version="4.15.1" />
     <PackageVersion Include="MaterialDesignThemes.MahApps" Version="5.3.0" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Graph" Version="5.103.0" />
-    <PackageVersion Include="MimeKit" Version="4.15.0" />
+    <PackageVersion Include="MimeKit" Version="4.15.1" />
     <PackageVersion Include="MSTest.TestAdapter" Version="4.1.0" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.1.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.1.0" />

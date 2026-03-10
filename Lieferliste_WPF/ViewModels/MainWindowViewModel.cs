@@ -183,7 +183,7 @@ namespace Lieferliste_WPF.ViewModels
                 _workareaDocumentInfo = new WorkareaDocumentInfo(container);
 
 
-                //DbOperations();
+               //DbOperations();
             }
             catch (Exception ex)
             {
@@ -930,13 +930,21 @@ namespace Lieferliste_WPF.ViewModels
 
             //gl.SaveProjectSchemes(schemes);
             var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
-            var orders = db.OrderRbs
-                .Where(x => x.ArchivState == 1 && x.ArchivPath.Length != 0);
 
-            foreach (var order in orders)
+
+            DirectoryInfo dir = new DirectoryInfo("Q:\\Archiv\\Technical_Functions\\420_Musterbau\\35J\\");
+            foreach (var order in dir.GetDirectories())
             {
-                order.ArchivPath =  "Q:\\Archiv\\Technical_Functions\\420_Musterbau\\10J\\" + order.Aid;
-                db.Update(order);
+                var d = db.OrderRbs.SingleOrDefault(x => x.Aid == order.Name);
+                if (d != null)
+                {
+                    if (order.FullName.Equals(d.ArchivPath)) continue;
+                    _Logger.LogInformation($"{order.Name} __ {d.ArchivPath} - {d.ArchivState}");
+                    d.ArchivPath = order.FullName;
+                    d.ArchivState = 1;
+
+                    db.Update(d); 
+                }
 
             }
             db.SaveChanges();
