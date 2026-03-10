@@ -85,43 +85,7 @@ namespace El2Core.Utils
                     throw;
                 }
             }
-            //if (files.Count > 0)
-            //{
-            //    arch = Directory.CreateDirectory(Path.Combine(Location, dir.Name));
-
-            //    _ = MoveFilesAsync([.. files], arch.FullName, 0);
-            //}
-            //foreach (var d in dir.GetDirectories())
-            //{
-
-            //    files.Clear();
-            //    if (FileExtensions == null)
-            //    {
-            //        files.AddRange([.. d.GetFiles()]);
-            //    }
-            //    else
-            //    {
-            //        foreach (var ext in FileExtensions)
-            //        {
-            //            files.AddRange(d.GetFiles($"*{ext}"));
-            //        }
-            //    }
-            //    if (files.Count > 0)
-            //    {
-            //        if (arch == null || !arch.Exists)
-            //        {
-            //            arch = Directory.CreateDirectory(Path.Combine(Location, dir.Name));
-            //        }
-
-            //        var subArch = Directory.CreateDirectory(Path.Combine(arch.FullName, d.Name));
-            //        ValueTuple<int, int> result = new (0,0);
-            //        do
-            //        {
-            //           result = MoveFilesAsync([.. files], subArch.FullName, result.Item2).Result;
-            //           MovedFiles += result.Item1;
-            //        } while (result.Item2 > 0);
-            //    }
-            //}
+ 
             if (movingtasks.Count > 0)
             {
                 Task.WaitAll(movingtasks);

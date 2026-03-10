@@ -10,7 +10,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -211,39 +210,42 @@ namespace ModuleProducts.ViewModels
         {
             try
             {
+                
                 using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                var materials = await db.GetProcedures().ProductMaterialsAsync(UserInfo.User.UserId);
+                //var o = await pr.ProductMaterialsAsync(UserInfo.User.UserId);
+                //var c = o.Count;
+                //// Get all relevant Vorgangs (Aid, ArbPlSap)
+                //var onr = await db.Vorgangs
+                //    .Where(x => x.ArbPlSap != null && x.ArbPlSap.Length >= 3)
+                //    .Select(x => new { x.Aid, x.ArbPlSap })
+                //    .Distinct()
+                //    .ToListAsync();
 
-                // Get all relevant Vorgangs (Aid, ArbPlSap)
-                var onr = await db.Vorgangs
-                    .Where(x => x.ArbPlSap != null && x.ArbPlSap.Length >= 3)
-                    .Select(x => new { x.Aid, x.ArbPlSap })
-                    .Distinct()
-                    .ToListAsync();
+                //// Build a HashSet for fast lookup of allowed Aids
+                //var allowedAids = new HashSet<string>(
+                //    onr
+                //        .Where(x => UserInfo.User.AccountCostUnits.Any(y => y.CostId.ToString().Equals(x.ArbPlSap[..3])))
+                //        .Select(x => x.Aid)
+                //);
 
-                // Build a HashSet for fast lookup of allowed Aids
-                var allowedAids = new HashSet<string>(
-                    onr
-                        .Where(x => UserInfo.User.AccountCostUnits.Any(y => y.CostId.ToString().Equals(x.ArbPlSap[..3])))
-                        .Select(x => x.Aid)
-                );
-
-                // Query materials with at least one allowed OrderRb
-                var materials = await db.TblMaterials
-                    .Include(x => x.OrderRbs)
-                        .ThenInclude(x => x.Vorgangs)
-                    .Where(x => x.OrderRbs.Any(y => allowedAids.Contains(y.Aid)))
-                    .ToListAsync();
+                //// Query materials with at least one allowed OrderRb
+                //var materials = await db.TblMaterials
+                //    .Include(x => x.OrderRbs)
+                //        .ThenInclude(x => x.Vorgangs)
+                //    .Where(x => x.OrderRbs.Any(y => allowedAids.Contains(y.Aid)))
+                //    .ToListAsync();
 
                 // Clear and repopulate _Materials
                 _Materials.Clear();
                 foreach (var m in materials)
                 {
-                    var filteredOrders = m.OrderRbs.Where(o => allowedAids.Contains(o.Aid)).ToList();
-                    if (filteredOrders.Count > 0)
-                    {
-                        var p = new ProductMaterial(m.Ttnr, m.Bezeichng, filteredOrders);
+                    //var filteredOrders = m.AID.Where(o => allowedAids.Contains(o.Aid)).ToList();
+                    //if (filteredOrders.Count > 0)
+                    //{
+                        var p = new ProductMaterial(m.TTNR, m.Bezeichng, filteredOrders);
                         _Materials.Add(p);
-                    }
+                    //}
                 }
 
                 ProductsView = new ListCollectionView(_Materials);
@@ -432,7 +434,7 @@ namespace ModuleProducts.ViewModels
             ProductsView.Refresh();
             _Logger.LogInformation("Archiviert: {0} NoFiles(2): {1} NoDirectory(3): {2} NoRules(4): {3} copied Files {4}",
                 Archivated, ArchivState2Count, ArchivState3Count, ArchivState4Count, MovedFiles);
-            IsArchivating = false;
+            
         }
  
         private bool OnFilterPredicate(object obj)
