@@ -238,13 +238,15 @@ namespace ModuleProducts.ViewModels
 
                 // Clear and repopulate _Materials
                 _Materials.Clear();
-                foreach (var m in materials)
+                foreach (var m in materials.GroupBy(x => x.TTNR))
                 {
+                    var a = m.OrderBy(x => x.VNR).Last().Quantityyield;
+                    var msf = m.Where(x => x.MSF != null).Select(y => y);
                     //var filteredOrders = m.AID.Where(o => allowedAids.Contains(o.Aid)).ToList();
                     //if (filteredOrders.Count > 0)
                     //{
-                        var p = new ProductMaterial(m.TTNR, m.Bezeichng, filteredOrders);
-                        _Materials.Add(p);
+                        //var p = new ProductMaterial(m.Key, m.Bezeichng, filteredOrders);
+                        //_Materials.Add(p);
                     //}
                 }
 
