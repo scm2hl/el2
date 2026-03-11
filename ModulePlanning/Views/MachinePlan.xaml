@@ -89,13 +89,13 @@
         <ListBox x:Name="machines" ScrollViewer.HorizontalScrollBarVisibility="Auto" Grid.Row="1"
                  ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding MachineTask.Result}"
                  Visibility="{Binding MachineTask.IsSuccessfullyCompleted, Converter={StaticResource BooleanToVisibilityConverter}}"
-                 VirtualizingPanel.IsVirtualizing="True" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                 VirtualizingPanel.IsVirtualizing="false" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                  dd:DragDrop.IsDragSource="True"
                  dd:DragDrop.IsDropTarget="True"
                  dd:DragDrop.DropHandler="{Binding}">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <VirtualizingStackPanel x:Name="stackPanel" Orientation="Horizontal" />
+                    <StackPanel x:Name="stackPanel" Orientation="Horizontal" />
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
             <ListBox.ItemContainerStyle>

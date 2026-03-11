@@ -411,7 +411,8 @@ namespace ModulePlanning.ViewModels
             var uiContext = TaskScheduler.FromCurrentSynchronizationContext();
 
             var proc = await GetVorgangsAsync(null);
-            var mach = await _DbCtx.Ressources
+            using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+            var mach = await db.Ressources
                 .Include(x => x.WorkArea)
                 .Include(x => x.RessourceCostUnits)
                 .ToListAsync();
@@ -473,8 +474,7 @@ namespace ModulePlanning.ViewModels
       
             NotifyPropertyChanged(() => ProcessCV);
             NotifyPropertyChanged(() => ParkingCV);
-            if(RessCV != null)
-                    RessCV.Filter = f => (f as PlanMachine)?.WorkArea?.WorkAreaId == _currentWorkArea &&
+            RessCV?.Filter = f => (f as PlanMachine)?.WorkArea?.WorkAreaId == _currentWorkArea &&
                         (f as PlanMachine).Vis;
             ParkingCV.Filter = f => (f as Vorgang)?.Rid == _currentWorkArea * -1;
             ProcessViewSource.Filter += ProcessCV_Filter;

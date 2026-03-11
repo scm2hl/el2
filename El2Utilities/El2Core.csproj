@@ -45,6 +45,7 @@
 		<GenerateRuntimeConfigDevFile>true</GenerateRuntimeConfigDevFile>
 		<LangVersion>preview</LangVersion>
 		<UserSecretsId>d8a5271a-ee57-4dc3-b8ce-55ffefbb1176</UserSecretsId>
+		<NuGetAuditLevel>moderate</NuGetAuditLevel>
 	</PropertyGroup>
 
 	<ItemGroup>

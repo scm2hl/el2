@@ -37,8 +37,9 @@ namespace ModulePlanning.UserControls
                 var list = dtx.ProcessesCV as ListCollectionView;
                 if (list.IsAddingNew) { list.CommitNew(); }
                 if (list.IsEditingItem) { list.CommitEdit(); }
-                dtx.ProcessesCV.SortDescriptions.Clear();
-                dtx.ProcessesCV.SortDescriptions.Add(new SortDescription("SortPos", ListSortDirection.Ascending));
+                
+                //dtx.ProcessesCV.SortDescriptions.Clear();
+                //dtx.ProcessesCV.SortDescriptions.Add(new SortDescription("SortPos", ListSortDirection.Ascending));
             }
         }
 
