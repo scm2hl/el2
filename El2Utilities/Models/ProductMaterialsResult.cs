@@ -19,8 +19,6 @@ namespace El2Core.Models
         public DateTime? Eckstart { get; set; }
         public DateTime? Eckende { get; set; }
         public DateTime? timestamp { get; set; }
-        [StringLength(10)]
-        public string? AuftragFarbe { get; set; }
         [StringLength(255)]
         public string? DummyMat { get; set; }
         [StringLength(50)]
@@ -30,36 +28,17 @@ namespace El2Core.Models
         [StringLength(255)]
         public string? LieferTermin { get; set; }
         public bool abgeschlossen { get; set; }
-        [StringLength(255)]
-        public string? Prio { get; set; }
         public bool fertig { get; set; }
-        public bool Dringend { get; set; }
         [StringLength(255)]
         public string? Bemerkung { get; set; }
         [StringLength(255)]
         public string? SysStatus { get; set; }
-        [StringLength(255)]
-        public string? MarkCode { get; set; }
-        public short VNR { get; set; }
-        [StringLength(255)]
-        public string? ArbPlSAP { get; set; }
+        public int? Quantity { get; set; }
+        public DateTime? CompleteDate { get; set; }
+        public int ArchivState { get; set; }
         [StringLength(150)]
-        public string? Text { get; set; }
-        public DateTime? SpaetStart { get; set; }
-        public DateTime? SpaetEnd { get; set; }
-        public float? BEAZE { get; set; }
-        public float? RSTZE { get; set; }
-        public float? WRTZE { get; set; }
-        [StringLength(255)]
-        public string? VrgSysStatus { get; set; }
-        public DateTime? Termin { get; set; }
-        [StringLength(2147483647)]
-        public string? Bem_M { get; set; }
-        [StringLength(2147483647)]
-        public string? Bem_T { get; set; }
-        [StringLength(2147483647)]
-        public string? Bem_MA { get; set; }
-        public bool aktuell { get; set; }
+        public string? ArchivPath { get; set; }
+        public short VNR { get; set; }
         [Column("Quantity-scrap")]
         public int? Quantityscrap { get; set; }
         [Column("Quantity-yield")]
@@ -68,12 +47,6 @@ namespace El2Core.Models
         public int? Quantitymiss { get; set; }
         [Column("Quantity-rework")]
         public int? Quantityrework { get; set; }
-        public float? ProcessTime { get; set; }
-        public DateTime? ActualStartDate { get; set; }
-        public DateTime? ActualEndDate { get; set; }
-        public int? RID { get; set; }
-        [StringLength(2147483647)]
-        public string? CommentMach { get; set; }
         [Column("MSF-InWork")]
         public bool MSFInWork { get; set; }
         [StringLength(50)]

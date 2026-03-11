@@ -70,6 +70,7 @@
     <PackageReference Include="Prism.Core" />
     <PackageReference Include="Prism.Plugin.Logging.Abstractions" />
     <PackageReference Include="Prism.Unity" />
+    <PackageReference Include="System.ObjectModel" />
   </ItemGroup>
 
   <ItemGroup>

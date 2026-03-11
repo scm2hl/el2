@@ -213,41 +213,12 @@ namespace ModuleProducts.ViewModels
                 
                 using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
                 var materials = await db.GetProcedures().ProductMaterialsAsync(UserInfo.User.UserId);
-                //var o = await pr.ProductMaterialsAsync(UserInfo.User.UserId);
-                //var c = o.Count;
-                //// Get all relevant Vorgangs (Aid, ArbPlSap)
-                //var onr = await db.Vorgangs
-                //    .Where(x => x.ArbPlSap != null && x.ArbPlSap.Length >= 3)
-                //    .Select(x => new { x.Aid, x.ArbPlSap })
-                //    .Distinct()
-                //    .ToListAsync();
 
-                //// Build a HashSet for fast lookup of allowed Aids
-                //var allowedAids = new HashSet<string>(
-                //    onr
-                //        .Where(x => UserInfo.User.AccountCostUnits.Any(y => y.CostId.ToString().Equals(x.ArbPlSap[..3])))
-                //        .Select(x => x.Aid)
-                //);
-
-                //// Query materials with at least one allowed OrderRb
-                //var materials = await db.TblMaterials
-                //    .Include(x => x.OrderRbs)
-                //        .ThenInclude(x => x.Vorgangs)
-                //    .Where(x => x.OrderRbs.Any(y => allowedAids.Contains(y.Aid)))
-                //    .ToListAsync();
-
-                // Clear and repopulate _Materials
                 _Materials.Clear();
                 foreach (var m in materials.GroupBy(x => x.TTNR))
-                {
-                    var a = m.OrderBy(x => x.VNR).Last().Quantityyield;
-                    var msf = m.Where(x => x.MSF != null).Select(y => y);
-                    //var filteredOrders = m.AID.Where(o => allowedAids.Contains(o.Aid)).ToList();
-                    //if (filteredOrders.Count > 0)
-                    //{
-                        //var p = new ProductMaterial(m.Key, m.Bezeichng, filteredOrders);
-                        //_Materials.Add(p);
-                    //}
+                { 
+                    var p = new ProductMaterial(m.Key, m.First().Bezeichng, [.. m]);
+                    _Materials.Add(p);               
                 }
 
                 ProductsView = new ListCollectionView(_Materials);
@@ -487,23 +458,25 @@ namespace ModuleProducts.ViewModels
             public string? Description { get; }
 
             public ICollectionView ProdOrders { get; private set; }
-            public ProductMaterial(string ttnr, string? description, List<OrderRb> orders)
+            public ProductMaterial(string ttnr, string? description, List<ProductMaterialsResult> orders)
             {
                 TTNR = ttnr;
                 Description = description;
                 List<ProductOrder> products = [];
-                foreach (var order in orders)
-                {
-                    if (order.Vorgangs.Count > 0)
+                foreach (var order in orders.GroupBy(x => x.AID))
+                {   
+                    
+                    if (order.Any())
                     {
-                        var d = order.Vorgangs.MaxBy(static x => x.Vnr)?.QuantityYield;
-                        var s = order.Vorgangs.Sum(x => x.QuantityScrap);
-                        var r = order.Vorgangs.Sum(x => x.QuantityRework);
-                        var dic = new ValueTuple<string, string, int, string>(ttnr, order.Aid, order.ArchivState, order.ArchivPath);
-                        var msf = order.Vorgangs.Where(x => x.Msf != null).Select(x => x.Msf).ToArray();
+                        var ord = order.First();
+                        var d = order.MaxBy(static x => x.VNR)?.Quantityyield;
+                        var s = order.Sum(x => x.Quantityscrap);
+                        var r = order.Sum(x => x.Quantityrework);
+                        var dic = new ValueTuple<string, string, int, string?>(ttnr, order.Key, ord.ArchivState, ord.ArchivPath);
+                        var msf = order.Where(x => x.MSF != null).Select(x => x.MSF).ToArray();
                         
-                        products.Add(new ProductOrder(dic, order.Aid, order.Quantity, order.Eckstart, order.Eckende,
-                            d, s, r, order.Abgeschlossen, msf, order.CompleteDate, (Archivator.ArchivState)order.ArchivState));
+                        products.Add(new ProductOrder(dic, order.Key, ord.Quantity, ord.Eckstart, ord.Eckende,
+                            d, s, r, ord.abgeschlossen, msf, ord.CompleteDate, (Archivator.ArchivState)ord.ArchivState));
                     }
                 }
                 ProdOrders = CollectionViewSource.GetDefaultView(products);

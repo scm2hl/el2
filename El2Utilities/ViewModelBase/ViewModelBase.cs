@@ -1,9 +1,11 @@
-﻿namespace El2Core.ViewModelBase
-{
-    using System;
-    using System.ComponentModel;
-    using System.Linq.Expressions;
+﻿
 
+using System;
+using System.ComponentModel;
+using System.Linq.Expressions;
+
+namespace El2Core.ViewModelBase
+{
     public abstract class ViewModelBase : INotifyPropertyChanged
     {
 

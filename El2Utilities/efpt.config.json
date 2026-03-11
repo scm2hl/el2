@@ -1,11 +1,11 @@
 ﻿{
-   "CodeGenerationMode": 5,
+   "CodeGenerationMode": 6,
    "ContextClassName": "DB_COS_LIEFERLISTE_SQLContext",
    "ContextNamespace": null,
    "FilterSchemas": false,
    "IncludeConnectionString": false,
    "IrregularWords": null,
-   "MinimumProductVersion": "2.6.1301",
+   "MinimumProductVersion": "2.6.1382",
    "ModelNamespace": null,
    "OutputContextPath": "",
    "OutputPath": "Models",
@@ -208,5 +208,6 @@
    "UseSchemaNamespaces": false,
    "UseSpatial": false,
    "UseT4": false,
-   "UseT4Split": false
+   "UseT4Split": false,
+   "UseTypedTvpParameters": true
 }
