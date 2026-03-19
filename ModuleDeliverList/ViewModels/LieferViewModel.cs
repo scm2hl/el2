@@ -6,7 +6,6 @@ using El2Core.Utils;
 using El2Core.ViewModelBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Prism.Dialogs;
 using Prism.Events;
 using Prism.Ioc;

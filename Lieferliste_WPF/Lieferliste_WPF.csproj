@@ -156,6 +156,7 @@
     <None Remove="Images\user-profiles.png" />
     <None Remove="Images\waste.jpg" />
     <None Remove="Images\waste2.jpg" />
+    <None Remove="Log4Net.config" />
     <None Remove="VersionAutoIncrementer.tt" />
     <None Remove="VersionAutoIncrementer.txt" />
   </ItemGroup>
@@ -165,6 +166,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="el4-application.ico" />
+    <Content Include="Log4Net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -295,12 +299,6 @@
 
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Log4Net.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 <!---->	
 	<PropertyGroup>
