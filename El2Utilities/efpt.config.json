@@ -98,6 +98,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[ProxyOrder]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Response]",
          "ObjectType": 0
       },

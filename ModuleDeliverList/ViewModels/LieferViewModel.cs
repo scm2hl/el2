@@ -419,8 +419,7 @@ namespace ModuleDeliverList.ViewModels
                                     Application.Current.Dispatcher.Invoke(AddRelevantProcess, (rbId.Item1, v.VorgangId));                                 
                             }
                         }
-                    }
-                    
+                    }                   
                 });
             }
             catch (Exception ex)

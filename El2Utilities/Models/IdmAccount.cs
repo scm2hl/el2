@@ -26,4 +26,6 @@ public partial class IdmAccount
     public virtual ICollection<EmployeeNote> EmployeeNotes { get; set; } = new List<EmployeeNote>();
 
     public virtual ICollection<MeasureRess> MeasureResses { get; set; } = new List<MeasureRess>();
+
+    public virtual ICollection<ProxyOrder> ProxyOrders { get; set; } = new List<ProxyOrder>();
 }

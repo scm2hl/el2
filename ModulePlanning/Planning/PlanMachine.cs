@@ -446,8 +446,7 @@ namespace ModulePlanning.Planning
                                             _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(pr);
                                         ProcessesCV.Refresh();
                                     }
-                                }
-                                    
+                                }                                 
                             }
                             else if (_db.Vorgangs.Find(idTuple.Value.Item2)?.Rid == Rid)
                             {

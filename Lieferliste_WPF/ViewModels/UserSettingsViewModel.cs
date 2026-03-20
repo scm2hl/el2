@@ -285,16 +285,17 @@ namespace Lieferliste_WPF.ViewModels
                 Wdocu = WorkareaDocumentInfo.CreateDocumentInfos();
                 MeasureDocumentInfo = new MeasureDocumentInfo(container);
                 Mdocu = MeasureDocumentInfo.CreateDocumentInfos();
-                
-                if (Globals.NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
-                { 
-                    MeMessage = abo.Subsribes.Contains("MeBem");
-                    TeMessage = abo.Subsribes.Contains("TeBem");
-                    MaMessage = abo.Subsribes.Contains("MaBem");
-                }
+
                 LoadFilters();
                 LoadProjectSchemes();
                 LoadRules();
+                if (Globals.NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
+                { 
+                    MeMessage = abo.Subsribes.Contains(SubscribeType.MeBem);
+                    TeMessage = abo.Subsribes.Contains(SubscribeType.TeBem);
+                    MaMessage = abo.Subsribes.Contains(SubscribeType.MaBem);
+                }
+
             }
             catch (Exception e)
             {
@@ -448,20 +449,20 @@ namespace Lieferliste_WPF.ViewModels
 
             if (MeMessage || TeMessage || MaMessage)
             {
-                var subs = new List<string>();
-                if (MeMessage) subs.Add("MeBem");
-                if (TeMessage) subs.Add("TeBem");
-                if (MaMessage) subs.Add("MaBem");
+                var subs = new List<SubscribeType>();
+                if (MeMessage) subs.Add(SubscribeType.MeBem);
+                if (TeMessage) subs.Add(SubscribeType.TeBem);
+                if (MaMessage) subs.Add(SubscribeType.MaBem);
 
                 abo.Subsribes = [.. subs];
-                if (nn) { Globals.NotifyBroker.AddAbonnent(abo); n = true; }
+                if (nn) { Globals.NotifyBroker.AddAbonnent(abo); nn = true; }
                 else n = Globals.NotifyBroker.UpdateAbonnent(abo);
             }
             else
             {
                 n = Globals.NotifyBroker.RemoveAbonnent(abo);
             }
-            if (n)
+            if (n || nn)
             {    
                 Globals.SaveNotifyBroker();
             }

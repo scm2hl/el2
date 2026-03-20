@@ -2,6 +2,7 @@
 using CompositeCommands.Core;
 using El2Core.Constants;
 using El2Core.Models;
+using El2Core.Services;
 using El2Core.Utils;
 using El2Core.ViewModelBase;
 using Prism.Dialogs;
@@ -129,17 +130,17 @@ namespace Lieferliste_WPF.ViewModels
                 var v = db.Vorgangs.Single<Vorgang>(x => x.VorgangId == vrg.VorgangId);
                 if (v.BemM != vrg.BemM)
                 {
-                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, "MeBem");
+                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, SubscribeType.MeBem);
                     v.BemM = vrg.BemM;
                 }
                 if (v.BemMa != vrg.BemMa)
                 {
-                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, "MaBem");
+                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemMa, SubscribeType.MaBem);
                     v.BemMa = vrg.BemMa;
                 }
                 if (v.BemT != vrg.BemT)
                 {
-                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemM, "TeBem");
+                    _ = Globals.NotifyBroker.SendMessageAsync(vrg.BemT, SubscribeType.TeBem);
                     v.BemT = vrg.BemT;
                 }
 

@@ -8,7 +8,6 @@ using System.Collections.Immutable;
 using System.Data;
 using System.IO;
 using System.Linq;
-using static El2Core.Utils.Archivator;
 using static El2Core.Utils.RuleInfo;
 using Rule = El2Core.Models.Rule;
 

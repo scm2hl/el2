@@ -53,6 +53,8 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
 
     public virtual DbSet<ProjectAttachment> ProjectAttachments { get; set; }
 
+    public virtual DbSet<ProxyOrder> ProxyOrders { get; set; }
+
     public virtual DbSet<Response> Responses { get; set; }
 
     public virtual DbSet<Ressource> Ressources { get; set; }
@@ -586,6 +588,38 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
             entity.HasOne(d => d.ProjectPspNavigation).WithMany(p => p.ProjectAttachments)
                 .HasForeignKey(d => d.ProjectPsp)
                 .HasConstraintName("FK_ProjectAttachment_Project");
+        });
+
+        modelBuilder.Entity<ProxyOrder>(entity =>
+        {
+            entity.HasKey(e => e.OrderId).HasFillFactor(95);
+
+            entity.ToTable("ProxyOrder");
+
+            entity.Property(e => e.OrderId)
+                .ValueGeneratedNever()
+                .HasColumnName("OrderID");
+            entity.Property(e => e.AccId)
+                .HasMaxLength(80)
+                .IsUnicode(false)
+                .HasDefaultValue(".", "DF_ProxyOrder_AccID")
+                .HasColumnName("AccID");
+            entity.Property(e => e.CommentText).IsUnicode(false);
+            entity.Property(e => e.CostId).HasColumnName("CostID");
+            entity.Property(e => e.Created).HasColumnType("smalldatetime");
+            entity.Property(e => e.ProjId)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("ProjID");
+            entity.Property(e => e.RbId)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("RbID");
+
+            entity.HasOne(d => d.Acc).WithMany(p => p.ProxyOrders)
+                .HasForeignKey(d => d.AccId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_ProxyOrder_idm_accounts");
         });
 
         modelBuilder.Entity<Response>(entity =>
