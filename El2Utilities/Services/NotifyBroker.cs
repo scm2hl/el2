@@ -1,7 +1,5 @@
-﻿using MailKit.Net.Smtp;
-using El2Core.Utils;
+﻿using El2Core.Utils;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 using MimeKit;
 using System;
 using System.Collections.Generic;
