@@ -129,6 +129,7 @@
                 <ColumnDefinition Width="100*"/>
             </Grid.ColumnDefinitions>
 
+            </Grid.Resources>
             <Controls:SelectableTextBlock Grid.Row="0"  Grid.Column="0" x:Name="txtPlanT" 
                      ToolTip="Plantermin lt. SAP"
                      Text="{Binding EckEnd, Converter={StaticResource KwConv}, ConverterParameter=1, ElementName=luc}"  />
