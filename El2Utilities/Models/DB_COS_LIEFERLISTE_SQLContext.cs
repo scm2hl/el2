@@ -164,7 +164,8 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("costunitID");
             entity.Property(e => e.Description).HasMaxLength(50);
-            entity.Property(e => e.PlanRelevance).HasColumnName("plan_relevance");
+            entity.Property(e => e.Invalid).HasColumnName("invalid");
+            entity.Property(e => e.Locked).HasColumnName("locked");
         });
 
         modelBuilder.Entity<EmploySelection>(entity =>

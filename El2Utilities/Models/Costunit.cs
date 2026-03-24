@@ -11,7 +11,9 @@ public partial class Costunit
 
     public string? Description { get; set; }
 
-    public bool PlanRelevance { get; set; }
+    public bool Locked { get; set; }
+
+    public bool Invalid { get; set; }
 
     public virtual ICollection<AccountCost> AccountCosts { get; set; } = new List<AccountCost>();
 

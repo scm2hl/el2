@@ -33,9 +33,10 @@
     <PackageReference Include="gong-wpf-dragdrop" />
     <PackageReference Include="MahApps.Metro.IconPacks" />
     <PackageReference Include="MaterialDesignThemes.MahApps" />
-    <PackageReference Include="OpenXmlPowerTools" NoWarn="NU1701" />
+    <PackageReference Include="OpenXmlPowerTools" />
     <PackageReference Include="Prism.Unity" />
     <PackageReference Include="System.Net.Http" />
+    <PackageReference Include="System.Private.Uri" />
     <PackageReference Include="System.Text.RegularExpressions" />
   </ItemGroup>
 
