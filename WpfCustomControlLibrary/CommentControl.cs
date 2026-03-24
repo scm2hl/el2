@@ -1,6 +1,8 @@
-﻿using System;
+﻿using MahApps.Metro.Converters;
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace WpfCustomControlLibrary
@@ -40,14 +42,33 @@ namespace WpfCustomControlLibrary
         private TextBox _textBox;
         private Canvas _canvas;
         private bool _IsInUse = false;
-
+        
         static CommentControl()
         {
-
+           
             DefaultStyleKeyProperty.OverrideMetadata(typeof(CommentControl), new FrameworkPropertyMetadata(typeof(CommentControl)));
         }
 
+        // Routed event raised when the CommentString changes
+        public static readonly RoutedEvent CommentChangedEvent = EventManager.RegisterRoutedEvent(
+            "CommentChanged", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(CommentControl));
 
+        // CLR wrapper for the routed event
+        public event RoutedEventHandler CommentChanged
+        {
+            add { AddHandler(CommentChangedEvent, value); }
+            remove { RemoveHandler(CommentChangedEvent, value); }
+        }
+
+        public string CommentId
+        {
+            get { return (string)GetValue(CommentIdProperty); }
+            set { SetValue(CommentIdProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for CommentId.
+        public static readonly DependencyProperty CommentIdProperty =
+            DependencyProperty.Register("CommentId", typeof(string), typeof(CommentControl), new PropertyMetadata(default(string)));
 
         public string CommentString
         {
@@ -58,10 +79,11 @@ namespace WpfCustomControlLibrary
         // Using a DependencyProperty as the backing store for CommentString.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty CommentStringProperty =
             DependencyProperty.Register("CommentString", typeof(string), typeof(CommentControl),
-                new PropertyMetadata(default, OnCommentChanged));
+                new PropertyMetadata(default, OnCommentStringChanged));
+
 
         public new double FontSize
-        {
+        {   
             get { return (double)GetValue(FontSizeProperty); }
             set { SetValue(FontSizeProperty, value); }
         }
@@ -115,6 +137,34 @@ namespace WpfCustomControlLibrary
             DependencyProperty.Register("IsEditable", typeof(bool), typeof(CommentControl),
                 new PropertyMetadata(DefaultValue, OnIsEditableChanged));
 
+
+
+
+        public SolidColorBrush BackGround
+        {
+            get { return (SolidColorBrush)GetValue(BackGroundProperty); }
+            set { SetValue(BackGroundProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for BackGround.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty BackGroundProperty =
+            DependencyProperty.Register(nameof(BackGround), typeof(SolidColorBrush), typeof(CommentControl), new PropertyMetadata(Brushes.Transparent));
+
+
+
+        public SolidColorBrush HeaderBrush
+        {
+            get { return (SolidColorBrush)GetValue(HeaderBrushProperty); }
+            set { SetValue(HeaderBrushProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for HeaderBrush.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty HeaderBrushProperty =
+            DependencyProperty.Register(nameof(HeaderBrush), typeof(SolidColorBrush), typeof(CommentControl), new PropertyMetadata(Brushes.Gold));
+
+
+
+
         private static void OnIsEditableChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var cmt = (CommentControl)d;
@@ -133,18 +183,25 @@ namespace WpfCustomControlLibrary
             _textBox.IsReadOnly = true;
             _textBox.SizeChanged += txSizeChanged;
             GotFocus += OnGotFocus;
-            LostFocus += OnLostFocus; 
+            LostFocus += OnLostFocus;
             
+            RaiseEvent(new RoutedEventArgs(LoadedEvent, this));
         }
 
 
-        private static void OnCommentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnCommentStringChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             
             var cmt = (CommentControl)d;
+            // If the value didn't change, do nothing
+            var oldStr = e.OldValue as string;
+            var newStr = e.NewValue as string;
+            if (string.Equals(oldStr, newStr, StringComparison.Ordinal))
+                return;
+
             if (!cmt._IsInUse)
             {
-                if (e.NewValue is string s)
+                if (newStr is string s)
                 {
                     var st = s.Split((char)29);
                     if (st.Length == 2)
@@ -154,6 +211,7 @@ namespace WpfCustomControlLibrary
                     }
                 }
             }
+
         }
 
         private void OnGotFocus(object sender, RoutedEventArgs e)
@@ -172,6 +230,9 @@ namespace WpfCustomControlLibrary
                     HeaderText = $"[{User} - {DateTime.Now.ToShortDateString()}]";
                     CommentText = _textBox.Text ;
                     CommentString = string.Format("{0}{1}{2}", HeaderText, (char)29, _textBox.Text);
+
+                    // Raise routed event to notify listeners that the comment changed
+                    RaiseEvent(new RoutedEventArgs(CommentChangedEvent, this));
                 }
             }
             else
@@ -188,7 +249,7 @@ namespace WpfCustomControlLibrary
             var txt = sender as TextBox;
             _canvas.Width = e.NewSize.Width;
             _canvas.Height = 15 + e.NewSize.Height;
-
+            
         }
     }
 }

@@ -226,9 +226,9 @@ namespace ModulePlanning.Planning
             ProcessesCVSource.Source = Processes;
             ProcessesCVSource.SortDescriptions.Add(new SortDescription("SortPos", ListSortDirection.Ascending));
             ProcessesCVSource.IsLiveSortingRequested = true;
-            ProcessesCVSource.LiveSortingProperties.Add("SortPos");
+            //ProcessesCVSource.LiveSortingProperties.Add("SortPos");
             ProcessesCV = ProcessesCVSource.View;
-            ProcessesCV.SortDescriptions.Add(new SortDescription("SortPos", ListSortDirection.Ascending));
+            //ProcessesCV.SortDescriptions.Add(new SortDescription("SortPos", ListSortDirection.Ascending));
   
             ProcessesCV.CollectionChanged += OnProcessesChanged;
             var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();

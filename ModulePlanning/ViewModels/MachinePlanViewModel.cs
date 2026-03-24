@@ -8,7 +8,6 @@ using El2Core.ViewModelBase;
 using GongSolutions.Wpf.DragDrop;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using ModulePlanning.Planning;
 using System.Collections;
 using System.Collections.ObjectModel;

@@ -1,7 +1,5 @@
-﻿using El2Core.Services;
-using ModulePlanning.Planning;
+﻿using ModulePlanning.Planning;
 using System.ComponentModel;
-using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -22,10 +20,8 @@ namespace ModulePlanning.UserControls
         {
             if(e.PropertyName == "ScrollItem")
             {
-                var pl = FindName("Planed1") as DataGrid;
-
-                if(pl == null) { pl = FindName("Planed2") as DataGrid; }
-                if(pl != null) { pl.ScrollIntoView((sender as PlanMachine)?.ScrollItem); }
+                var pl = FindName("Planed1") as DataGrid ?? FindName("Planed2") as DataGrid;
+                pl?.ScrollIntoView((sender as PlanMachine)?.ScrollItem);
             }
         }
 
@@ -38,8 +34,8 @@ namespace ModulePlanning.UserControls
                 if (list.IsAddingNew) { list.CommitNew(); }
                 if (list.IsEditingItem) { list.CommitEdit(); }
                 
-                //dtx.ProcessesCV.SortDescriptions.Clear();
-                //dtx.ProcessesCV.SortDescriptions.Add(new SortDescription("SortPos", ListSortDirection.Ascending));
+                dtx.ProcessesCV.SortDescriptions.Clear();
+                dtx.ProcessesCV.SortDescriptions.Add(new SortDescription("SortPos", ListSortDirection.Ascending));
             }
         }
 

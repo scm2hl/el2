@@ -1,4 +1,5 @@
 ﻿
+using El2Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -575,7 +576,29 @@ namespace ModuleDeliverList.UserControls
             }
         }
 
+        private void CommentControl_CommentChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is WpfCustomControlLibrary.CommentControl cc)
+            {
+                var id = cc.CommentId;
+                var txt = cc.CommentString;
+                if (!string.IsNullOrEmpty(txt))
+                {
+                    El2Core.Services.SubscribeType type = id switch
+                    {
+                        "BemMe" => El2Core.Services.SubscribeType.MeBem,
+                        "BemTe" => El2Core.Services.SubscribeType.TeBem,
+                        "BemMa" => El2Core.Services.SubscribeType.MaBem,
+                        _ => default
+                    };
 
+                    if (!Equals(type, default(El2Core.Services.SubscribeType)))
+                    {
+                        _ = Globals.NotifyBroker.SendMessageAsync($"{txt}", type);
+                    }
+                }
+            }
+        }
     }
 
 

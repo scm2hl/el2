@@ -8,14 +8,14 @@
                     <Grid>
                         <Canvas x:Name="PART_CanvasSize">
                             <TextBlock  x:Name="PART_CommentInfo" Text="{TemplateBinding HeaderText}"
-                                    Background="Gold"
+                                    Background="{TemplateBinding HeaderBrush}"
                                     VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
                                     Padding="1"
                                     Width="{TemplateBinding Width}" Height="15" FontSize="10">
       
                             </TextBlock>
                             <TextBox  x:Name="PART_TextBox" Canvas.Top="15" Text="{TemplateBinding CommentText}"
-                                    Background="Transparent" Padding="2" FontSize="{TemplateBinding FontSize}"
+                                    Background="{TemplateBinding BackGround}" Padding="2" FontSize="{TemplateBinding FontSize}"
                                     Width="{TemplateBinding Width}" IsEnabled="False"
                                     TextWrapping="Wrap" AcceptsReturn="True" TextAlignment="Left"
                                     VerticalAlignment="Top" HorizontalAlignment="Stretch"/>

@@ -251,7 +251,8 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
 
-                            <wpfControl:CommentControl CommentString="{Binding BemT, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            <wpfControl:CommentControl CommentString="{Binding BemT, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" CommentId="BemTe"
+                                                       CommentChanged="CommentControl_CommentChanged"
                                                        User="{Binding DataContext.UserIdent, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                        Width="200" FontSize="14">
                                 <wpfControl:CommentControl.IsEditable>

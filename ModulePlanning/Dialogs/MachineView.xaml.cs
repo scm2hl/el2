@@ -1,5 +1,6 @@
 ﻿using El2Core.Converters;
 using El2Core.Models;
+using El2Core.Utils;
 using ModulePlanning.Planning;
 using System;
 using System.Windows;
@@ -45,6 +46,16 @@ namespace ModulePlanning.Dialogs
         {
             var dp = sender as DatePicker;
             if (dp?.DataContext is Vorgang vrg) { vrg.Termin = dp?.SelectedDate; }
+        }
+
+        private void CommentControl_CommentChanged(object sender, RoutedEventArgs e)
+        {
+            if (sender is WpfCustomControlLibrary.CommentControl cc)
+            {
+                var id = cc.CommentId;
+                var txt = cc.CommentString;
+                _ = Globals.NotifyBroker.SendMessageAsync(string.Format("{0}", txt), El2Core.Services.SubscribeType.TeBem);
+            }
         }
     }
 }

@@ -103,8 +103,18 @@
             <Setter Property="Padding" Value="1"/>
             <Setter Property="Width" Value="150"/>
         </Style>
+        <Style TargetType="wpfControl:CommentControl">
+            <Setter Property="Grid.RowSpan" Value="3"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="1"/>
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="Height" Value="100"/>
+            <Setter Property="BackGround" Value="White"/>
+        </Style>
 
- 
     </UserControl.Resources>
     <Border Focusable="True" BorderThickness="1" BorderBrush="Black" >
         <VirtualizingStackPanel  x:Name="Liefer"  Background="Transparent" >
@@ -128,9 +138,8 @@
                 <ColumnDefinition Width="450"/>
                 <ColumnDefinition Width="100*"/>
             </Grid.ColumnDefinitions>
-
-            </Grid.Resources>
-            <Controls:SelectableTextBlock Grid.Row="0"  Grid.Column="0" x:Name="txtPlanT" 
+               
+                <Controls:SelectableTextBlock Grid.Row="0"  Grid.Column="0" x:Name="txtPlanT" 
                      ToolTip="Plantermin lt. SAP"
                      Text="{Binding EckEnd, Converter={StaticResource KwConv}, ConverterParameter=1, ElementName=luc}"  />
             <TextBox x:Name="txtLiefT" ToolTip="Liefertermin lt. Meister"  Grid.Row="1" Text="{Binding LieferTermin, Mode=TwoWay, ElementName=luc}"
@@ -193,7 +202,7 @@
                     </Grid.ColumnDefinitions>
 
 
-                    <GroupBox ToolTip="Kommentar Meister"  VerticalAlignment="Stretch" MinWidth="30" MaxWidth="390"
+                    <!--<GroupBox ToolTip="Kommentar Meister"  VerticalAlignment="Stretch" MinWidth="30" MaxWidth="390"
                           Header="{Binding Comment_Me, ElementName=luc,
             Converter={StaticResource CommentConv}, ConverterParameter={StaticResource TrueValue}}">
                         <materialdesign:Badged Badge="{Binding AttachmentCount, ElementName=luc}"
@@ -211,18 +220,24 @@
                                     </TextBox.IsEnabled>
                                 </TextBox>
                             </materialdesign:Badged>
-                    </GroupBox>
-                    <!--<wpfControl:CommentControl CommentString="{Binding Comment_Me, Mode=TwoWay, ElementName=luc, UpdateSourceTrigger=PropertyChanged}"
+                    </GroupBox>-->
+                    
+                    <materialdesign:Badged Badge="{Binding AttachmentCount, ElementName=luc}"
+                         BadgePlacementMode="TopLeft" MinWidth="30" MaxWidth="390" ToolTip="Kommentar Meister"
+                         VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"
+                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                        <wpfControl:CommentControl CommentString="{Binding Comment_Me, Mode=TwoWay, ElementName=luc, UpdateSourceTrigger=PropertyChanged}"
                                                     User="{Binding DataContext.UserIdent, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    FontSize="14">
-                        <wpfControl:CommentControl.IsEditable>
-                            <MultiBinding Converter="{StaticResource Relpermiss}">
-                                <Binding Source="{x:Static const:Permissions.CommentMe}"/>
-                                <Binding Path="ArbPlSapNavigation.Ressource.WorkAreaId"/>
-                            </MultiBinding>
-                        </wpfControl:CommentControl.IsEditable>
-                    </wpfControl:CommentControl>-->
-                    <GroupBox Grid.Column="1"  ToolTip="Kommentar Teamleiter" MinWidth="30"  MaxWidth="380"  
+                                                    CommentId="BemMe" CommentChanged="CommentControl_CommentChanged">
+                            <wpfControl:CommentControl.IsEditable>
+                                <MultiBinding Converter="{StaticResource Relpermiss}">
+                                    <Binding Source="{x:Static const:Permissions.CommentMe}"/>
+                                    <Binding Path="ArbPlSapNavigation.Ressource.WorkAreaId"/>
+                                </MultiBinding>
+                            </wpfControl:CommentControl.IsEditable>
+                        </wpfControl:CommentControl>
+                    </materialdesign:Badged>
+                    <!--<GroupBox Grid.Column="1"  ToolTip="Kommentar Teamleiter" MinWidth="30"  MaxWidth="380"  
                           Header="{Binding Comment_Te, ElementName=luc,
             Converter={StaticResource CommentConv}, ConverterParameter={StaticResource TrueValue}}">
                         <TextBox x:Name="txtT" Text="{Binding Comment_Te, ElementName=luc,
@@ -235,8 +250,18 @@
                                 </MultiBinding>
                             </TextBox.IsEnabled>
                         </TextBox>
-            </GroupBox>
-            <GroupBox Grid.Column="2"  ToolTip="Kommentar Mitarbeiter" MinWidth="30" MaxWidth="390" 
+            </GroupBox>-->
+                    <wpfControl:CommentControl CommentString="{Binding Comment_Te, Mode=TwoWay, ElementName=luc, UpdateSourceTrigger=PropertyChanged}"
+                                          User="{Binding DataContext.UserIdent, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          CommentId="BemTe" CommentChanged="CommentControl_CommentChanged" Grid.Column="1">
+                        <wpfControl:CommentControl.IsEditable>
+                            <MultiBinding Converter="{StaticResource Relpermiss}">
+                                <Binding Source="{x:Static const:Permissions.CommentTe}"/>
+                                <Binding Path="ArbPlSapNavigation.Ressource.WorkAreaId"/>
+                            </MultiBinding>
+                        </wpfControl:CommentControl.IsEditable>
+                    </wpfControl:CommentControl>
+                    <!--<GroupBox Grid.Column="2"  ToolTip="Kommentar Mitarbeiter" MinWidth="30" MaxWidth="390" 
                           Header="{Binding Comment_Ma, ElementName=luc,
             Converter={StaticResource CommentConv}, ConverterParameter={StaticResource TrueValue}}">
                         <TextBox x:Name="txtMa" Text="{Binding Comment_Ma, ElementName=luc,
@@ -249,7 +274,17 @@
                                 </MultiBinding>
                             </TextBox.IsEnabled>
                         </TextBox>
-            </GroupBox>
+            </GroupBox>-->
+                    <wpfControl:CommentControl CommentString="{Binding Comment_Ma, Mode=TwoWay, ElementName=luc, UpdateSourceTrigger=PropertyChanged}"
+                                          User="{Binding DataContext.UserIdent, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          CommentId="BemMa" CommentChanged="CommentControl_CommentChanged" Grid.Column="2">
+                        <wpfControl:CommentControl.IsEditable>
+                            <MultiBinding Converter="{StaticResource Relpermiss}">
+                                <Binding Source="{x:Static const:Permissions.CommentMa}"/>
+                                <Binding Path="ArbPlSapNavigation.Ressource.WorkAreaId"/>
+                            </MultiBinding>
+                        </wpfControl:CommentControl.IsEditable>
+                    </wpfControl:CommentControl>
                 </Grid>
                 <VirtualizingStackPanel Grid.Column="6" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal">
 
