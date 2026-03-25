@@ -1,6 +1,7 @@
 ﻿using El2Core.Converters;
 using El2Core.Models;
 using El2Core.Utils;
+using ModulePlanning.Dialogs.ViewModels;
 using ModulePlanning.Planning;
 using System;
 using System.Windows;
@@ -54,7 +55,12 @@ namespace ModulePlanning.Dialogs
             {
                 var id = cc.CommentId;
                 var txt = cc.CommentString;
-                _ = Globals.NotifyBroker.SendMessageAsync(string.Format("{0}", txt), El2Core.Services.SubscribeType.TeBem);
+                var pl = (MachineViewVM)this.DataContext;
+                var vrg = (Vorgang)pl.PlanMachine.ProcessesCV.CurrentItem;
+                var refTxt = string.Join(" - ", vrg.AidNavigation.Material, vrg.AidNavigation.MaterialNavigation?.Bezeichng, vrg.Aid, vrg.Vnr, vrg.Text);
+                var msg = string.Join((char)29, txt, refTxt);
+                
+                _ = Globals.NotifyBroker.SendMessageAsync(string.Format("{0}", msg), El2Core.Services.SubscribeType.TeBem);
             }
         }
     }

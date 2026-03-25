@@ -223,7 +223,7 @@
                     </GroupBox>-->
                     
                     <materialdesign:Badged Badge="{Binding AttachmentCount, ElementName=luc}"
-                         BadgePlacementMode="TopLeft" MinWidth="30" MaxWidth="390" ToolTip="Kommentar Meister"
+                         BadgePlacementMode="Left" MinWidth="30" MaxWidth="390" ToolTip="Kommentar Meister"
                          VerticalAlignment="Stretch" VerticalContentAlignment="Stretch"
                          HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                         <wpfControl:CommentControl CommentString="{Binding Comment_Me, Mode=TwoWay, ElementName=luc, UpdateSourceTrigger=PropertyChanged}"

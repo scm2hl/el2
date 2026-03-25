@@ -214,7 +214,7 @@
                           ItemsSource="{Binding OrderTask.Result}"
                           HorizontalContentAlignment="Stretch" Tag="{Binding Path=ItemTemplate, RelativeSource={RelativeSource self}}"
              IsSynchronizedWithCurrentItem="True" ItemContainerStyle="{StaticResource _ListBoxItemStyle}"
-             VirtualizingPanel.VirtualizationMode="Recycling">
+             VirtualizingPanel.VirtualizationMode="Standard">
 
             <ListBox.ContextMenu>
                 <ContextMenu ItemsPanel="{StaticResource advancedComboxItemsPanelTemplate}" VirtualizingPanel.IsVirtualizing="True">
