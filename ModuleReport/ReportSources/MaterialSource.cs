@@ -3,7 +3,13 @@ using El2Core.Utils;
 using El2Core.ViewModelBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Prism.Events;
+using Prism.Ioc;
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ModuleReport.ReportSources
 {

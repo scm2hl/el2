@@ -2,6 +2,8 @@
 using El2Core.Utils;
 using GongSolutions.Wpf.DragDrop;
 using ModulePlanning.Planning;
+using Prism.Dialogs;
+using System.Threading;
 using System.Windows.Input;
 
 namespace ModulePlanning.Dialogs.ViewModels

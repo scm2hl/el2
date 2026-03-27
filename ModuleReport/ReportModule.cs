@@ -1,4 +1,6 @@
 using ModuleReport.ReportSources;
+using Prism.Ioc;
+using Prism.Modularity;
 
 namespace ModuleReport
 {

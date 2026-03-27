@@ -1,5 +1,7 @@
 ﻿using CompositeCommands.Core;
 using ControlzEx.Theming;
+using El2Core.Dialogs;
+using El2Core.Dialogs.ViewModels;
 using El2Core.Models;
 using El2Core.Services;
 using El2Core.Utils;
@@ -10,8 +12,6 @@ using Lieferliste_WPF.ViewModels;
 using Lieferliste_WPF.Views;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using El2Core.Dialogs;
-using El2Core.Dialogs.ViewModels;
 using ModuleDeliverList.Views;
 using ModuleMeasuring.Views;
 using ModulePlanning.Dialogs;
@@ -36,27 +36,35 @@ using Unity;
 namespace Lieferliste_WPF
 {
 
-    [System.Runtime.Versioning.SupportedOSPlatform("windows10.0")]
+    [System.Runtime.Versioning.SupportedOSPlatform("windows11.0")]
     internal class Bootstrapper : PrismBootstrapper
     {
         private ILogger? _Logger;
 
         protected override DependencyObject CreateShell()
         {
-            var loggerFactory = Container.Resolve<ILoggerFactory>();
-            loggerFactory.AddLog4Net();
-            log4net.Config.XmlConfigurator.Configure(new FileInfo("Log4Net.config"));
-            _Logger = loggerFactory.CreateLogger<Bootstrapper>();
-            Application.Current.DispatcherUnhandledException += Current_DispatcherUnhandledException;
-            Application.Current.Exit += Current_Exit;
+            try
+            {
+                var loggerFactory = Container.Resolve<ILoggerFactory>();
+                loggerFactory.AddLog4Net();
+                log4net.Config.XmlConfigurator.Configure(new FileInfo("Log4Net.config"));
+                _Logger = loggerFactory.CreateLogger<Bootstrapper>();
+                Application.Current.DispatcherUnhandledException += Current_DispatcherUnhandledException;
+                Application.Current.Exit += Current_Exit;
 
-            var settingsService = Container.Resolve<UserSettingsService>();
-            settingsService.Upgrade();
+                var settingsService = Container.Resolve<UserSettingsService>();
+                settingsService.Upgrade();
 
-            ThemeManager.Current.ChangeTheme(App.Current, settingsService.Theme);
-            App.GlobalFontSize = settingsService.FontSize;
+                ThemeManager.Current.ChangeTheme(App.Current, settingsService.Theme);
+                App.GlobalFontSize = settingsService.FontSize;
 
-            return Container.Resolve<MainWindow>();
+                return Container.Resolve<MainWindow>();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message,"CreateShell", MessageBoxButton.OK);
+                throw;
+            }
         }
 
         private void Current_Exit(object sender, ExitEventArgs e)
@@ -79,77 +87,84 @@ namespace Lieferliste_WPF
   
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            
-            //var builder = new ConfigurationBuilder()
-            //    .SetBasePath(Directory.GetCurrentDirectory())
-            //    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            try
+            {
 
-            //IConfiguration configuration = builder.Build();
-            //var defaultconnection = configuration.GetConnectionString("ConnectionBosch");
-            //var builderopt = new DbContextOptionsBuilder<DB_COS_LIEFERLISTE_SQLContext>()
-            //    .UseSqlServer(defaultconnection)
-            //    .EnableThreadSafetyChecks(true);
+                //var builder = new ConfigurationBuilder()
+                //    .SetBasePath(Directory.GetCurrentDirectory())
+                //    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
-            
-            //var builder = new ConfigurationBuilder()
-            //    .SetBasePath(Directory.GetCurrentDirectory())
-            //    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-            //IConfiguration configuration = builder.Build();
-            //var defaultconnection = configuration.GetConnectionString("ConnectionHome");
-            //var builderopt = new DbContextOptionsBuilder<DB_COS_LIEFERLISTE_SQLContext>()
-            //    .UseSqlServer(defaultconnection)
-            //    .EnableThreadSafetyChecks(true);
-            //containerRegistry.RegisterSingleton<DB_COS_LIEFERLISTE_SQLContext>();
-            containerRegistry.Register<DbContext, DB_COS_LIEFERLISTE_SQLContext>();
-            containerRegistry.RegisterSingleton<IApplicationCommands, ApplicationCommands>();
-            containerRegistry.RegisterSingleton<IHolidayLogic, HolidayLogic>();
-            containerRegistry.RegisterSingleton<IProcessStripeService, ProcessStripeService>();
-            containerRegistry.RegisterSingleton<IRegionManager, RegionManager>();
-            containerRegistry.RegisterSingleton<IUserSettingsService, UserSettingsService>();
-            containerRegistry.RegisterSingleton<ILoggerFactory, LoggerFactory>();
-            containerRegistry.Register<INotifyBroker, NotifyBroker>();
-
-            containerRegistry.RegisterForNavigation<UserSettings>();
-            containerRegistry.RegisterForNavigation<RoleEdit>();
-            containerRegistry.RegisterForNavigation<MachinePlan>();
-            containerRegistry.RegisterForNavigation<MachineEdit>();
-            containerRegistry.RegisterForNavigation<UserEdit>();
-            containerRegistry.RegisterForNavigation<Seclusions>();
-            containerRegistry.RegisterForNavigation<Liefer>();
-            containerRegistry.RegisterForNavigation<ShowWorkArea>();
-            containerRegistry.RegisterForNavigation<MeasuringRoom>();
-            containerRegistry.RegisterForNavigation<MeasuringDocuments>();
-            containerRegistry.RegisterForNavigation<TimeLine>();
-            containerRegistry.RegisterForNavigation<HolidayEdit>();
-            containerRegistry.RegisterForNavigation<ShiftPlanEdit>();
-            containerRegistry.RegisterForNavigation<ReportMainView>();
-            containerRegistry.RegisterForNavigation<Products>();
-            containerRegistry.RegisterForNavigation<EmployNote>();
-            
-            containerRegistry.RegisterSingleton<IPlanMachineFactory, PlanMachineFactory>();
-            containerRegistry.RegisterSingleton<IPlanWorkerFactory, PlanWorkerFactory>();
-            containerRegistry.RegisterDialog<Order>();
-            containerRegistry.RegisterDialog<MachineView, MachineViewVM>();
-            containerRegistry.RegisterDialog<WorkerView, WorkerViewVM>();
-            containerRegistry.RegisterDialog<Projects>();
-            containerRegistry.RegisterDialog<AddNewWorkArea, AddNewWorkAreaVM>();
-            containerRegistry.RegisterDialog<HistoryDialog, HistoryDialogVM>();
-            containerRegistry.RegisterDialog<DocumentDialog, DocumentDialogVM>();
-            containerRegistry.RegisterDialog<CorrectionDialog, CorrectionDialogVM>();
-            containerRegistry.RegisterDialog<DetailCoverDialog, DetailCoverVM>();
-            containerRegistry.RegisterDialog<InputDialog, InputDialogVM>();
-            containerRegistry.RegisterDialog<ProjectEdit, ProjectEditViewModel>();
-            containerRegistry.RegisterDialog<AttachmentDialog, AttachmentDialogViewModel>();
-            containerRegistry.RegisterDialog<InputStoppage, InputStoppageVM>();
-            containerRegistry.RegisterDialog<ProcessTimeDialog, ProcessTimeDialogVM>();
+                //IConfiguration configuration = builder.Build();
+                //var defaultconnection = configuration.GetConnectionString("ConnectionBosch");
+                //var builderopt = new DbContextOptionsBuilder<DB_COS_LIEFERLISTE_SQLContext>()
+                //    .UseSqlServer(defaultconnection)
+                //    .EnableThreadSafetyChecks(true);
 
 
-            Globals gl = new(Container);
-            containerRegistry.RegisterInstance(Globals.CreateUserInfo(Container));
-            RuleInfo rule = new(gl.Rules);
-            containerRegistry.RegisterInstance(rule);
+                //var builder = new ConfigurationBuilder()
+                //    .SetBasePath(Directory.GetCurrentDirectory())
+                //    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
+                //IConfiguration configuration = builder.Build();
+                //var defaultconnection = configuration.GetConnectionString("ConnectionHome");
+                //var builderopt = new DbContextOptionsBuilder<DB_COS_LIEFERLISTE_SQLContext>()
+                //    .UseSqlServer(defaultconnection)
+                //    .EnableThreadSafetyChecks(true);
+                //containerRegistry.RegisterSingleton<DB_COS_LIEFERLISTE_SQLContext>();
+                containerRegistry.Register<DbContext, DB_COS_LIEFERLISTE_SQLContext>();
+                containerRegistry.RegisterSingleton<IApplicationCommands, ApplicationCommands>();
+                containerRegistry.RegisterSingleton<IHolidayLogic, HolidayLogic>();
+                containerRegistry.RegisterSingleton<IProcessStripeService, ProcessStripeService>();
+                containerRegistry.RegisterSingleton<IRegionManager, RegionManager>();
+                containerRegistry.RegisterSingleton<IUserSettingsService, UserSettingsService>();
+                containerRegistry.RegisterSingleton<ILoggerFactory, LoggerFactory>();
+                containerRegistry.Register<INotifyBroker, NotifyBroker>();
+
+                containerRegistry.RegisterForNavigation<UserSettings>();
+                containerRegistry.RegisterForNavigation<RoleEdit>();
+                containerRegistry.RegisterForNavigation<MachinePlan>();
+                containerRegistry.RegisterForNavigation<MachineEdit>();
+                containerRegistry.RegisterForNavigation<UserEdit>();
+                containerRegistry.RegisterForNavigation<Seclusions>();
+                containerRegistry.RegisterForNavigation<Liefer>();
+                containerRegistry.RegisterForNavigation<ShowWorkArea>();
+                containerRegistry.RegisterForNavigation<MeasuringRoom>();
+                containerRegistry.RegisterForNavigation<MeasuringDocuments>();
+                containerRegistry.RegisterForNavigation<TimeLine>();
+                containerRegistry.RegisterForNavigation<HolidayEdit>();
+                containerRegistry.RegisterForNavigation<ShiftPlanEdit>();
+                containerRegistry.RegisterForNavigation<ReportMainView>();
+                containerRegistry.RegisterForNavigation<Products>();
+                containerRegistry.RegisterForNavigation<EmployNote>();
+
+                containerRegistry.RegisterSingleton<IPlanMachineFactory, PlanMachineFactory>();
+                containerRegistry.RegisterSingleton<IPlanWorkerFactory, PlanWorkerFactory>();
+                containerRegistry.RegisterDialog<Order>();
+                containerRegistry.RegisterDialog<MachineView, MachineViewVM>();
+                containerRegistry.RegisterDialog<WorkerView, WorkerViewVM>();
+                containerRegistry.RegisterDialog<Projects>();
+                containerRegistry.RegisterDialog<AddNewWorkArea, AddNewWorkAreaVM>();
+                containerRegistry.RegisterDialog<HistoryDialog, HistoryDialogVM>();
+                containerRegistry.RegisterDialog<DocumentDialog, DocumentDialogVM>();
+                containerRegistry.RegisterDialog<CorrectionDialog, CorrectionDialogVM>();
+                containerRegistry.RegisterDialog<DetailCoverDialog, DetailCoverVM>();
+                containerRegistry.RegisterDialog<InputDialog, InputDialogVM>();
+                containerRegistry.RegisterDialog<ProjectEdit, ProjectEditViewModel>();
+                containerRegistry.RegisterDialog<AttachmentDialog, AttachmentDialogViewModel>();
+                containerRegistry.RegisterDialog<InputStoppage, InputStoppageVM>();
+                containerRegistry.RegisterDialog<ProcessTimeDialog, ProcessTimeDialogVM>();
+
+
+                Globals gl = new(Container);
+                containerRegistry.RegisterInstance(Globals.CreateUserInfo(Container));
+                RuleInfo rule = new(gl.Rules);
+                containerRegistry.RegisterInstance(rule);
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message,"RegisterTypes", MessageBoxButton.OK);              
+                throw;
+            }
         }
         protected virtual void ConfigureContainer()
         {
@@ -165,6 +180,7 @@ namespace Lieferliste_WPF
             moduleCatalog.AddModule<ModuleReport.ReportModule>();
             moduleCatalog.AddModule<ModuleProducts.ProductsModule>();
             moduleCatalog.AddModule<ModuleShift.ShiftModule>();
+            moduleCatalog.AddModule<El2Core.El2CoreModul>();
         }
     }
 }

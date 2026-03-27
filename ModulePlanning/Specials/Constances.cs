@@ -1,5 +1,5 @@
-﻿using System.Collections.Immutable;
-using System.Windows.Controls;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace ModulePlanning.Specials
 {

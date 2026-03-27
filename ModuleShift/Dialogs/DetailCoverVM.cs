@@ -2,6 +2,9 @@
 using El2Core.Models;
 using El2Core.Utils;
 using El2Core.ViewModelBase;
+using Prism.Commands;
+using Prism.Dialogs;
+using System;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -9,7 +12,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Input;
 
 namespace ModuleShift.Dialogs
 {

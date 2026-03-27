@@ -1,5 +1,7 @@
 ﻿using El2Core.Models;
 using El2Core.Utils;
+using Prism.Dialogs;
+using System;
 
 namespace ModulePlanning.Dialogs.ViewModels
 {

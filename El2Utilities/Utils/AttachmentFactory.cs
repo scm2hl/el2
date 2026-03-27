@@ -10,10 +10,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using static El2Core.Utils.AttachmentFactory;
 
 
 namespace El2Core.Utils
 {
+
     public abstract class AttachmentFactory
     {
         // SHGetFileInfo flags
@@ -200,9 +202,9 @@ namespace El2Core.Utils
 
             return string.Empty;
         }
-
-
+  
     }
+
     public interface IDisplayAttachment
     {
         int Id { get; set; }

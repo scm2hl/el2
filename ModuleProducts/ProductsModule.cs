@@ -1,3 +1,4 @@
+using Prism.Ioc;
 using Prism.Modularity;
 namespace ModuleProducts
 {

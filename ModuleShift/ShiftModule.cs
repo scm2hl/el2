@@ -1,5 +1,8 @@
 
 
+using Prism.Ioc;
+using Prism.Modularity;
+
 namespace ModuleShift
 {
     public class ShiftModule : IModule

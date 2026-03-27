@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace Lieferliste_WPF
 {
@@ -58,9 +60,17 @@ namespace Lieferliste_WPF
             //ThemeManager.Current.AddTheme(new Theme("DarkOrange", "DarkOrange", "Dark", "Orange", Colors.Orange, Brushes.Orange, true, false));
             //ThemeManager.Current.AddTheme(new Theme("DarkSeaGreen", "DarkSeaGreen", "Dark", "SeaGreen", Colors.SeaGreen, Brushes.SeaGreen, true, false));
 
-
-            var bootstrapper = new Bootstrapper();
-            bootstrapper.Run();
+            try
+            {
+                var bootstrapper = new Bootstrapper();
+                bootstrapper.Run();
+            }
+            catch (Exception ex)
+            {
+                if (MessageBox.Show(ex.Message,"ERROR", MessageBoxButton.OK, MessageBoxImage.Error) == MessageBoxResult.OK)
+                
+                    throw;
+            }
         }
 
     }

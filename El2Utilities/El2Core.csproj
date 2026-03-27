@@ -4,8 +4,8 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <PlatformTarget>x64</PlatformTarget>
+
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <Platforms>AnyCPU;x64;x86</Platforms>
     <SignAssembly>False</SignAssembly>
     <AssemblyOriginatorKeyFile>C:\Users\scm2hl\Documents\Certificates\Lieferliste_WPF_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
@@ -46,6 +46,9 @@
 		<LangVersion>preview</LangVersion>
 		<UserSecretsId>d8a5271a-ee57-4dc3-b8ce-55ffefbb1176</UserSecretsId>
 		<NuGetAuditLevel>moderate</NuGetAuditLevel>
+		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+		<AssemblyVersion></AssemblyVersion>
+		<FileVersion></FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

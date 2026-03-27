@@ -188,7 +188,7 @@ namespace Lieferliste_WPF.ViewModels
             catch (Exception ex)
             {
                 _Logger?.LogError("{message}", ex);
-                MessageBox.Show(ex.ToString());
+                MessageBox.Show(ex.ToString(), "MainWindow Ctr", MessageBoxButton.OK);
             }
         }
 

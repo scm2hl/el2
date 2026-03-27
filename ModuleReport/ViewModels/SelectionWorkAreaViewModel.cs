@@ -2,7 +2,11 @@
 using El2Core.Utils;
 using El2Core.ViewModelBase;
 using Microsoft.EntityFrameworkCore;
+using Prism.Events;
+using Prism.Ioc;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 namespace ModuleReport.ViewModels
 {

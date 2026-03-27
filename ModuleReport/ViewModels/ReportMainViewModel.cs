@@ -2,6 +2,9 @@
 using El2Core.Utils;
 using El2Core.ViewModelBase;
 using ModuleReport.Views;
+using Prism.Events;
+using Prism.Ioc;
+using Prism.Navigation.Regions;
 using System.Windows.Input;
 
 namespace ModuleReport.ViewModels

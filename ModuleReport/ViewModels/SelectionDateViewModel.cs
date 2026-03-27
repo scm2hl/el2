@@ -1,4 +1,7 @@
 ﻿using El2Core.Utils;
+using Prism.Events;
+using System;
+using System.Collections.Generic;
 using vhCalendar;
 
 namespace ModuleReport.ViewModels

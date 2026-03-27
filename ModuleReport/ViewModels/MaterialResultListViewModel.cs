@@ -1,8 +1,11 @@
 ﻿using El2Core.Utils;
 using El2Core.ViewModelBase;
 using ModuleReport.ReportSources;
-using System.Collections.Specialized;
+using Prism.Events;
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Data;
 

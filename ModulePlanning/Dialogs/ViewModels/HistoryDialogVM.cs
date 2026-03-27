@@ -1,6 +1,10 @@
 ﻿using CompositeCommands.Core;
 using El2Core.Models;
+using Prism.Commands;
+using Prism.Dialogs;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Data;
 
 namespace ModulePlanning.Dialogs.ViewModels
