@@ -40,7 +40,7 @@ namespace ModulePlanning.Specials
 
         private bool[] GetManipulateMask(bool[] weekplan, DateTime start)
         {
-            var stopes = stoppages.Where(x => start < x.Endtime && start.Date == x.Endtime.Date);
+            var stopes = stoppages.Where(x => start < x.Endtime && (start.Date <= x.Endtime.Date && start.Date >= x.Starttime.Date));
             var ret = weekplan.ToArray();
             foreach (var stop in stopes)
             {

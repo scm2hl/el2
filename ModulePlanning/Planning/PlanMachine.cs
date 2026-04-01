@@ -424,7 +424,7 @@ namespace ModulePlanning.Planning
             { 
                 Task.Run(() =>
                 {
-                    //using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                    using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
 
                     foreach ((string, string)? idTuple in vorgangIdList)
                     {
@@ -456,9 +456,9 @@ namespace ModulePlanning.Planning
                                     }
                                 }                                 
                             }
-                            else if (_db.Vorgangs.Find(idTuple.Value.Item2)?.Rid == Rid)
+                            else if (db.Vorgangs.Find(idTuple.Value.Item2)?.Rid == Rid)
                             {
-                                using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                                
                                 var vo = db.Vorgangs
                                     .Include(x => x.AidNavigation)
                                     .ThenInclude(x => x.MaterialNavigation)
