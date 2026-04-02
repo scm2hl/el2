@@ -6,6 +6,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
+//using System;
+//using System.Net;
+//using System.Net.Mail;
+//using System.Threading.Tasks;
+
 using System.Threading.Tasks;
 
 namespace El2Core.Services
@@ -65,6 +70,48 @@ namespace El2Core.Services
         {
             return Abonnents.Remove(abonnent);
         }
+
+        //public async Task SendEmailAsync(string toEmail, string subject, string body)
+        //{
+        //    // Annahme: SMTP-Server von Bosch. Passen Sie diesen bei Bedarf an.
+        //    string smtpHost = "smtp.bosch.com";
+        //    int smtpPort = 587; // Standard-Port für TLS
+
+        //    // --- Platzhalter für RB-PAM-Authentifizierung ---
+        //    // Hier sollten Sie Ihre Logik zum Abrufen der Anmeldeinformationen 
+        //    // aus RB-PAM oder einem anderen sicheren Speicher (z.B. Azure Key Vault) einfügen.
+        //    // Ersetzen Sie die folgenden Zeilen durch Ihren Code zum Abrufen von Benutzername und Passwort.
+        //    string userName = "Ihr-Sysuser-Oder-Email";
+        //    string password = "Ihr-Abgerufenes-Passwort";
+        //    // --- Ende des Platzhalters ---
+
+        //    var smtpClient = new SmtpClient(smtpHost)
+        //    {
+        //        Port = smtpPort,
+        //        Credentials = new NetworkCredential(userName, password),
+        //        EnableSsl = true, // Wichtig für eine sichere Verbindung
+        //    };
+
+        //    var mailMessage = new MailMessage
+        //    {
+        //        From = new MailAddress(userName),
+        //        Subject = subject,
+        //        Body = body,
+        //        IsBodyHtml = true, // Auf 'true' setzen, wenn der Body HTML enthält
+        //    };
+        //    mailMessage.To.Add(toEmail);
+
+        //    try
+        //    {
+        //        await smtpClient.SendMailAsync(mailMessage);
+        //        Console.WriteLine("E-Mail erfolgreich versendet.");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Gibt die Fehlermeldung aus, wenn das Senden fehlschlägt.
+        //        Console.WriteLine($"Fehler beim Senden der E-Mail: {ex.Message}");
+        //    }
+        //}
 
         public async Task SendMessageAsync(string message_body, SubscribeType sender)
         {
