@@ -144,6 +144,7 @@ namespace El2Core.Utils
             for (int i = year; i <= year + 1; i++)
             {
                 var easter = GetEasterSunday(i);
+                dict.Add(DateOnly.FromDateTime(easter), new Holiday(easter, "Ostersonntag", 2, "de-AT"));
                 if (holiRule.FixHoliday != null)
                 {
                     foreach (var d in holiRule.FixHoliday)

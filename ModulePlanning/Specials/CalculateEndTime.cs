@@ -82,7 +82,11 @@ namespace ModulePlanning.Specials
             if (startDay != 0)
             {
                 if (holidayLogic.IsHolyday(start)) {tmpWeekPlan.AsSpan(0, 1320).Fill(false);} //clear the shift unless nightshift_2
-                if (holidayLogic.IsHolyday(start.AddDays(1))) tmpWeekPlan.AsSpan(1320, 120).Fill(false); //clear the nightshift_2
+                ///summary
+                ///extensionrule for nightshift if two holidays successively
+                ///summary
+                if (holidayLogic.IsHolyday(start.AddDays(-1)) && holidayLogic.IsHolyday(start)) tmpWeekPlan.AsSpan(1320, 120).Fill(false); //clear the nightshift_2
+                if (startDay == 2 && holidayLogic.IsHolyday(start.AddDays(-1)) && holidayLogic.IsHolyday(start.AddDays(-2))) tmpWeekPlan.AsSpan(0, 300).Fill(false); //clear the nightshift_1
             }
             else { if (holidayLogic.IsHolyday(start.AddDays(1))) tmpWeekPlan.AsSpan(1260, 180).Fill(false); } //clear the nightshift_sun
             tmpWeekPlan = GetManipulateMask(tmpWeekPlan, start);
