@@ -101,6 +101,8 @@ public partial class Vorgang : ModelBase
 
     public string? Msf { get; set; }
 
+    public bool Prepare { get; set; }
+
     public virtual OrderRb AidNavigation { get; set; } = null!;
 
     public virtual WorkSap? ArbPlSapNavigation { get; set; }

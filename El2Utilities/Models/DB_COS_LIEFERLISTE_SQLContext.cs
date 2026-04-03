@@ -1065,6 +1065,9 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                 .HasMaxLength(50)
                 .HasColumnName("MSF");
             entity.Property(e => e.MsfInWork).HasColumnName("MSF-InWork");
+            entity.Property(e => e.Prepare)
+                .HasDefaultValue(true, "DF_Vorgang_prepare")
+                .HasColumnName("prepare");
             entity.Property(e => e.ProcessingUom)
                 .HasMaxLength(16)
                 .IsFixedLength()
