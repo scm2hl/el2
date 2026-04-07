@@ -4,6 +4,7 @@
       xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
       xmlns:conv="clr-namespace:El2Core.Converters;assembly=El2Core"
       xmlns:const="clr-namespace:El2Core.Constants;assembly=El2Core"
+      xmlns:dd="urn:gong-wpf-dragdrop"
       xmlns:controlzex="urn:controlzex"
       xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
       xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -91,15 +92,7 @@
                     </TextBox>
                     <Label Content="Zeitformat (Arbeitszeiten)"/>
                     <ComboBox ItemsSource="{Binding TimeFormats}" SelectedItem="{Binding EmployTimeFormat}"/>
-                    <Label Content="Abonnement"/>
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Meister Bemerkung"/>
-                        <CheckBox IsChecked="{Binding MeMessage}" Margin="5,0"/>
-                        <TextBlock Text="Teamleiter Bemerkung"/>
-                        <CheckBox IsChecked="{Binding TeMessage}" Margin="5,0"/>
-                        <TextBlock Text="Mitarbeiter Bemerkung"/>
-                        <CheckBox IsChecked="{Binding MaMessage}" Margin="5,0"/>
-                    </StackPanel>
+    
                 </StackPanel>
 
             </TabItem>
@@ -136,7 +129,7 @@
                         <Rectangle Grid.Column="1" Grid.RowSpan="2" Fill="{DynamicResource MahApps.Brushes.Accent}"/>
                         <Rectangle Grid.Column="3" Grid.RowSpan="2" Fill="{DynamicResource MahApps.Brushes.Accent}"/>
                         <StackPanel Grid.Row="1" Grid.Column="2" >
- 
+
                             <materialDesign:Chip>
                                 <StackPanel Orientation="Horizontal">
                                     <Label Content="RowDetails"/>
@@ -152,7 +145,7 @@
                             </Label>
                             <TextBox Text="{Binding Path=SizePercent}"/>
                         </StackPanel>
-    
+
                     </Grid>
 
                 </StackPanel>
@@ -165,27 +158,28 @@
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="40*"/>
-                        <ColumnDefinition Width="200*"/>
-                        <ColumnDefinition/>
+                        <ColumnDefinition Width="39*"/>
+                        <ColumnDefinition Width="126*"/>
+                        <ColumnDefinition Width="825*"/>
+                        <ColumnDefinition Width="4*"/>
                     </Grid.ColumnDefinitions>
-                    <Label Grid.ColumnSpan="2" Background="Aquamarine" HorizontalContentAlignment="Center">
-    
+                    <Label Grid.ColumnSpan="4" Background="Aquamarine" HorizontalContentAlignment="Center" Margin="0,0,4,0">
+
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Personal Special Filter"/>
                             <materialDesign:PackIcon Kind="User"/>
                         </StackPanel>
-             
+
                     </Label>
-                    <ListBox Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding PersonalFilterView}" Margin="10" MinWidth="80" IsSynchronizedWithCurrentItem="True"
-                                     Background="AntiqueWhite">
+                    <ListBox Grid.Row="1" Grid.RowSpan="2" ItemsSource="{Binding PersonalFilterView}" Margin="10,10,10,10" MinWidth="80" IsSynchronizedWithCurrentItem="True"
+                                     Background="AntiqueWhite" Grid.ColumnSpan="2">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding}" TextWrapping="Wrap" MaxWidth="70"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="1" >
+                    <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Margin="0,0,4,0" >
 
 
                         <TextBox Text="{Binding PersonalFilterName}" Margin="10,0,10,0" MinWidth="60" ToolTip="Name des Filters"/>
@@ -311,10 +305,10 @@
                                     <TextBlock Text="Speicher Ordner:"/>
                                     <materialDesign:PackIcon Kind="Settings"/>
                                 </StackPanel>
-                                </Label>
-                                <TextBox Text="{Binding Vdocu[11]}"/>
+                            </Label>
+                            <TextBox Text="{Binding Vdocu[11]}"/>
                         </StackPanel>
-         
+
                     </TabItem>
                     <TabItem Header="Messen">
                         <StackPanel>
@@ -362,8 +356,8 @@
                                     <TextBlock Text="Material Regular Expression:"/>
                                     <materialDesign:PackIcon Kind="Settings"/>
                                 </StackPanel>
-                                </Label>
-                                <TextBox Text="{Binding Wdocu[3]}"/>
+                            </Label>
+                            <TextBox Text="{Binding Wdocu[3]}"/>
                             <Label>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Dummy Regular Expression:"/>
@@ -389,8 +383,8 @@
                                 </Label>
                                 <TextBox Text="{Binding RuleMsfDomain}"/>
                             </StackPanel>
-      
-                           
+
+
                         </StackPanel>
                     </TabItem>
                 </TabControl>
@@ -398,6 +392,57 @@
             <TabItem Header="Projekte">
                 <DataGrid ItemsSource="{Binding ProjectSchemes}" IsEnabled="{Binding Converter={StaticResource permiss},
 							ConverterParameter={x:Static const:Permissions.ProjectScheme}}" />
+            </TabItem>
+            <TabItem Header="Abonnenten">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="10*" />
+                    </Grid.RowDefinitions>
+  
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Meister Bemerkung"/>
+                        <CheckBox IsChecked="{Binding MeMessage}" Margin="5,0"/>
+                        <TextBlock Text="Teamleiter Bemerkung"/>
+                        <CheckBox IsChecked="{Binding TeMessage}" Margin="5,0"/>
+                        <TextBlock Text="Mitarbeiter Bemerkung"/>
+                        <CheckBox IsChecked="{Binding MaMessage}" Margin="5,0"/>
+                    </StackPanel>
+                    <TextBox Grid.Row="1" Text="{Binding SearchCost, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" Margin="5" MinWidth="200"
+                             Background="AliceBlue"/>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal">
+
+                        <ListBox ItemsSource="{Binding RessourcesView}" Margin="5" MinWidth="200" IsSynchronizedWithCurrentItem="True"
+                                 Background="AntiqueWhite"
+                                 dd:DragDrop.IsDragSource="True"
+                                 dd:DragDrop.IsDropTarget="True"
+                                 dd:DragDrop.DropHandler="{Binding}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Inventarnummer}" TextWrapping="Wrap" MaxWidth="160" Margin="5"/>
+                                        <TextBlock Text="{Binding RessName}" TextWrapping="Wrap" MaxWidth="160"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <ListBox Grid.Column="1" ItemsSource="{Binding AboRessourcesView}" Margin="5" MinWidth="200" IsSynchronizedWithCurrentItem="True"
+                                 Background="AntiqueWhite"
+                                 dd:DragDrop.IsDragSource="True"
+                                 dd:DragDrop.IsDropTarget="True"
+                                 dd:DragDrop.DropHandler="{Binding}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Inventarnummer}" TextWrapping="Wrap" MaxWidth="160" Margin="5"/>
+                                        <TextBlock Text="{Binding RessName}" TextWrapping="Wrap" MaxWidth="160"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+                </Grid>
             </TabItem>
             <TabItem Header="Archivator" IsEnabled="{Binding Converter={StaticResource permiss},
                 ConverterParameter={x:Static const:Permissions.Archivate}}">
@@ -412,7 +457,7 @@
                         <ColumnDefinition Width="170"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
- 
+
                     <StackPanel Grid.Column="1">
                         <Label>
                             <StackPanel Orientation="Horizontal">
@@ -457,9 +502,9 @@
                           Background="AntiqueWhite" >
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-      
-                                 <TextBlock Text="{Binding Path=Name}" TextWrapping="Wrap" MaxWidth="160"/>
-  
+
+                                <TextBlock Text="{Binding Path=Name}" TextWrapping="Wrap" MaxWidth="160"/>
+
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

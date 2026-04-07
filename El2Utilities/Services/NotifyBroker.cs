@@ -1,4 +1,5 @@
-﻿using El2Core.Utils;
+﻿using El2Core.Models;
+using El2Core.Utils;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 using System;
@@ -30,6 +31,7 @@ namespace El2Core.Services
         public string Address { get; set; }
         public string Name { get; set; }
         public SubscribeType[] Subsribes { get; set; }
+        public List<int> Machines { get; set; }
         
     }
     public enum SubscribeType
@@ -47,7 +49,7 @@ namespace El2Core.Services
     {
         private static IConfiguration? _container;
         public List<Abonnent> Abonnents { get; set; } = new List<Abonnent>();
-        
+        public bool IsChanged { get; set; }
         public bool GetAbonnentById(string id, out Abonnent abo)
         {
             var idx = Abonnents.FindIndex(a => a.Id == id);
@@ -118,9 +120,17 @@ namespace El2Core.Services
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("HlP Lieferliste", "Lieferliste.HlP@at.bosch.com"));
 
+            var mb = message_body?.Split((char)29) ?? Array.Empty<string>();
+            var first = mb.Length > 0 ? mb[0] : string.Empty;
+            var second = mb.Length > 1 ? mb[1] : string.Empty;
+            var third = mb.Length > 2 ? mb[2] : string.Empty;
+            var fourth = mb.Length > 3 ? mb[3] : string.Empty;
+            _ = int.TryParse(fourth, out int machineId);
+
             // Add recipients who subscribed to this type
             foreach (var abo in Abonnents.Where(x => x.Subsribes != null && x.Subsribes.Contains(sender)))
             {
+                if (abo.Machines.Contains(machineId))
                 message.To.Add(new MailboxAddress(abo.Name, abo.Address));
             }
 
@@ -128,10 +138,7 @@ namespace El2Core.Services
                 return;
 
             message.Subject = "Abonnierte Nachricht";
-            var mb = message_body?.Split((char)29) ?? Array.Empty<string>();
-            var first = mb.Length > 0 ? mb[0] : string.Empty;
-            var second = mb.Length > 1 ? mb[1] : string.Empty;
-            var third = mb.Length > 2 ? mb[2] : string.Empty;
+
             message.Body = new TextPart("html") { Text = $"<b>Hallo! Abonnents<p>Nachricht von {sender.Description()}</p></b><p>{first} hat folgendes geschrieben.</p>" +
                 $"<p>{second}</p><p></p>Referenz: {third}" };
 
@@ -152,7 +159,8 @@ namespace El2Core.Services
 
             var existing = Abonnents[idx];
             // If subscriptions are the same (reference or sequence), nothing to do
-            if (existing.Subsribes == value.Subsribes || (existing.Subsribes != null && value.Subsribes != null && existing.Subsribes.SequenceEqual(value.Subsribes)))
+            if (existing.Subsribes == value.Subsribes || (existing.Subsribes != null && value.Subsribes != null && existing.Subsribes.SequenceEqual(value.Subsribes))
+                && existing.Machines == value.Machines)
                 return false;
 
             // Replace the item in the list (Abonnent is a struct)

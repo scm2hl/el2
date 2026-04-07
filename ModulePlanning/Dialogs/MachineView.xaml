@@ -183,7 +183,7 @@
             </DataGrid.CellStyle>
 
             <DataGrid.Columns>
-                
+
                 <DataGridTemplateColumn>
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate >
@@ -232,8 +232,8 @@
                                             <Binding Path="ArbPlSapNavigation.Ressource.WorkAreaId"/>
                                         </MultiBinding>
                                     </wpfControl:ExtendDatePicker.IsEnabled>
-                                  </wpfControl:ExtendDatePicker>
-                 
+                                </wpfControl:ExtendDatePicker>
+
                                 <TextBlock Text="{Binding Path=SelectedDate, Converter={StaticResource KW}, ElementName=TlTermin}" HorizontalAlignment="Center"/>
                             </StackPanel>
                         </DataTemplate>
@@ -262,11 +262,11 @@
                                     </MultiBinding>
                                 </wpfControl:CommentControl.IsEditable>
                             </wpfControl:CommentControl>
-       
+
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-   
+
                 <DataGridTextColumn Header="Mge" Binding="{Binding AidNavigation.Quantity}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Rck" Binding="{Binding QuantityYield}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="offen" Binding="{Binding QuantityMiss}" IsReadOnly="True"/>
@@ -297,6 +297,22 @@
                         </Style>
                     </DataGridTextColumn.CellStyle>
                 </DataGridTextColumn>
+                <DataGridTemplateColumn Header="Rst" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding Prepare, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="Rüsten">
+                                <CheckBox.IsEnabled>
+                                    <MultiBinding Converter="{StaticResource Relpermiss}">
+                                        <Binding Source="{x:Static const:Permissions.Prepare}"/>
+                                        <Binding Path="ArbPlSapNavigation.Ressource.WorkAreaId"/>
+                                    </MultiBinding>
+                                </CheckBox.IsEnabled>
+                            </CheckBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+       
                 <DataGridTextColumn Header="Ende Berechnet" Binding="{Binding Extends}" IsReadOnly="True">
                     <DataGridTextColumn.CellStyle>
                         <Style TargetType="DataGridCell">

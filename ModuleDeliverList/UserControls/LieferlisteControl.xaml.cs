@@ -584,8 +584,9 @@ namespace ModuleDeliverList.UserControls
                 var id = cc.CommentId;
                 var txt = cc.CommentString;
                 var lc = cc.DataContext as Vorgang;
-                var refTxt = string.Join(" - ", lc.AidNavigation.Material, lc.AidNavigation.MaterialNavigation?.Bezeichng, lc.Aid, lc.Vnr, lc.Text);
-                var msg = string.Join((char)29,txt, refTxt);
+                var refTxt = string.Join(" - ", lc.AidNavigation.Material, lc.AidNavigation.MaterialNavigation?.Bezeichng,
+                    lc.Aid, lc.Vnr, lc.Text, lc.RidNavigation.Inventarnummer, lc.RidNavigation.RessName);
+                var msg = string.Join((char)29,txt, refTxt, lc.Rid);
                 if (!string.IsNullOrEmpty(txt))
                 {
                     El2Core.Services.SubscribeType type = id switch

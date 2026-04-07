@@ -9,6 +9,14 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-            
+        <DataGrid ItemsSource="{Binding Proxies}" AutoGenerateColumns="False" CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding OrderId}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Kostenträger" Binding="{Binding CostTarget}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Beschreibung" Binding="{Binding CommentText}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Ertellt" Binding="{Binding Created}" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </UserControl>

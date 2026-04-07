@@ -57,8 +57,9 @@ namespace ModulePlanning.Dialogs
                 var txt = cc.CommentString;
                 var pl = (MachineViewVM)this.DataContext;
                 var vrg = (Vorgang)pl.PlanMachine.ProcessesCV.CurrentItem;
-                var refTxt = string.Join(" - ", vrg.AidNavigation.Material, vrg.AidNavigation.MaterialNavigation?.Bezeichng, vrg.Aid, vrg.Vnr, vrg.Text);
-                var msg = string.Join((char)29, txt, refTxt);
+                var refTxt = string.Join(" - ", vrg.AidNavigation.Material, vrg.AidNavigation.MaterialNavigation?.Bezeichng,
+                    vrg.Aid, vrg.Vnr, vrg.Text, vrg.RidNavigation.Inventarnummer, vrg.RidNavigation.RessName);
+                var msg = string.Join((char)29, txt, refTxt, vrg.Rid);
                 
                 _ = Globals.NotifyBroker.SendMessageAsync(string.Format("{0}", msg), El2Core.Services.SubscribeType.TeBem);
             }

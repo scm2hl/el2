@@ -319,7 +319,7 @@ namespace ModulePlanning.Planning
                     var procT = vorgang.Beaze == null ? 0.0 : (short)vorgang.Beaze;
                     var quant = (short)vorgang.AidNavigation.Quantity;
                     var miss = vorgang.QuantityMissNeo == null ? 0.0 : (short)vorgang.QuantityMissNeo;
-                    if (vorgang.Responses.Count == 0) 
+                    if (vorgang.Prepare) 
                     {
                         duration = (procT + r + c) / quant * miss;
                         vorgang.Formula = string.Format("Formel: (Beaze + Rstze + Korrektur) / Menge * offen\n({0}+{1}+{2})/{3}*{4}",

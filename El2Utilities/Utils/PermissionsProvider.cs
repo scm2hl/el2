@@ -42,20 +42,19 @@ namespace El2Core.Utils
 
         public bool GetUserPermission(string permission)
         {
+            if (permission.StartsWith('!')) //negation of permission
+            {
+                return !_permissions.Contains(permission[1..]);
+            }
             return _permissions.Contains(permission);
         }
         public bool GetRelativeUserPermission(string permission, int workAreaId)
         {
-            if(_permissions.Contains(permission))
+            if(GetUserPermission(permission))
             {
                 return _fullAccesses.Contains(workAreaId);
             }
             return false;
-        }
-
-        public bool GetUserPermission(object delMeasureDocu)
-        {
-            throw new NotImplementedException();
         }
     }
 }

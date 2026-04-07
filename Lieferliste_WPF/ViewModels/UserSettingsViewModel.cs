@@ -4,6 +4,8 @@ using El2Core.Models;
 using El2Core.Services;
 using El2Core.Utils;
 using El2Core.ViewModelBase;
+using GongSolutions.Wpf.DragDrop;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Prism.Events;
 using Prism.Ioc;
@@ -14,13 +16,14 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Lieferliste_WPF.ViewModels
 {
-    internal class UserSettingsViewModel : ViewModelBase, INotifyDataErrorInfo
+    internal class UserSettingsViewModel : ViewModelBase, INotifyDataErrorInfo, IDropTarget
     {
         private ObservableCollection<string> _ExplorerFilter = new();
         public ICollectionView ExplorerFilter { get; }
@@ -222,9 +225,13 @@ namespace Lieferliste_WPF.ViewModels
             }
         }
         public ImmutableArray<string> PlanedSetups { get; } =
-            ImmutableArray.Create(new string[] { "Setup1", "Setup2" });
+            ["Setup1", "Setup2"];
         public ICollectionView PersonalFilterView { get; private set; }
         public ObservableCollection<ProjectScheme> ProjectSchemes { get; private set; }
+        private ObservableCollection<Ressource> Ressources;
+        private readonly ObservableCollection<Ressource> AboRessources;
+        public ICollectionView AboRessourcesView { get; private set; }
+        public ICollectionView RessourcesView { get; private set; }
         private bool meMessage = false;
         public bool MeMessage
         {
@@ -232,6 +239,7 @@ namespace Lieferliste_WPF.ViewModels
             set
             {
                 meMessage = value;
+                Globals.NotifyBroker.IsChanged = true;
                 NotifyPropertyChanged(() => MeMessage);
             }
         }
@@ -242,6 +250,7 @@ namespace Lieferliste_WPF.ViewModels
             set
             {
                 teMessage = value;
+                Globals.NotifyBroker.IsChanged = true;
                 NotifyPropertyChanged(() => TeMessage);
             }
         }
@@ -252,6 +261,7 @@ namespace Lieferliste_WPF.ViewModels
             set
             {
                 maMessage = value;
+                Globals.NotifyBroker.IsChanged = true;
                 NotifyPropertyChanged(() => MaMessage);
             }
         }
@@ -289,21 +299,48 @@ namespace Lieferliste_WPF.ViewModels
                 LoadFilters();
                 LoadProjectSchemes();
                 LoadRules();
+                LoadRessources();
                 if (Globals.NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
-                { 
+                {
                     MeMessage = abo.Subsribes.Contains(SubscribeType.MeBem);
                     TeMessage = abo.Subsribes.Contains(SubscribeType.TeBem);
                     MaMessage = abo.Subsribes.Contains(SubscribeType.MaBem);
+                    AboRessources = [];
+                    foreach (var mach in abo.Machines)
+                    {
+                        AboRessources.Add(Ressources.Single(x => x.RessourceId == mach));                        
+                    }
+                    AboRessourcesView = CollectionViewSource.GetDefaultView(AboRessources);
                 }
-
             }
             catch (Exception e)
             {
                 _logger.LogError(e.Message);
-            }
-            
+            }         
         }
 
+        private void LoadRessources()
+        {
+            using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
+            {
+                
+                Ressources = [.. db.Ressources.Where(x => x.Inventarnummer != null).OrderByDescending(x => x.WorkAreaId).Include(x => x.RessourceCostUnits)];
+                RessourcesView = CollectionViewSource.GetDefaultView(Ressources);
+                RessourcesView.Filter = (obj) =>
+                {
+                    if (string.IsNullOrEmpty(SearchCost))
+                    { return true; }
+                    if (int.TryParse(SearchCost, out int costId))
+                    {
+                        if (obj is Ressource res)
+                        {
+                            return res.RessourceCostUnits.Any(x => x.CostId == costId);
+                        }
+                    }
+                    return false;
+                };
+            }
+        }
         private void LoadRules()
         {
 
@@ -415,7 +452,7 @@ namespace Lieferliste_WPF.ViewModels
         {
             if (_settingsService != null && _filterContainer != null)
             {
-                return _settingsService.IsChanged || _filterContainer.IsChanged || Archivator.IsChanged;
+                return _settingsService.IsChanged || _filterContainer.IsChanged || Archivator.IsChanged || Globals.NotifyBroker.IsChanged ;
             }
             return false;
         }
@@ -455,6 +492,7 @@ namespace Lieferliste_WPF.ViewModels
                 if (MaMessage) subs.Add(SubscribeType.MaBem);
 
                 abo.Subsribes = [.. subs];
+                abo.Machines = [.. AboRessources.Select(x => x.RessourceId)];
                 if (nn) { Globals.NotifyBroker.AddAbonnent(abo); nn = true; }
                 else n = Globals.NotifyBroker.UpdateAbonnent(abo);
             }
@@ -465,6 +503,7 @@ namespace Lieferliste_WPF.ViewModels
             if (n || nn)
             {    
                 Globals.SaveNotifyBroker();
+                Globals.NotifyBroker.IsChanged = false;
             }
         }
         private bool OnPersonalFilterRemoveCanExecute(object arg)
@@ -658,6 +697,17 @@ namespace Lieferliste_WPF.ViewModels
 
         }
         public bool HasErrors { get {  return _errors.Count > 0; } }
+        private string _searchCost;
+        public string SearchCost
+        {
+            get { return _searchCost; }
+            set
+            {
+                _searchCost = value;
+                RessourcesView.Refresh();
+            }
+        }
+
         Dictionary<string, List<string>> _errors = [];
         private bool KwValidationRule(int KW, out string ? errorMessage)
         {
@@ -681,6 +731,30 @@ namespace Lieferliste_WPF.ViewModels
                 IsValid = false;
             }
             return IsValid;
+        }
+
+        public void DragOver(IDropInfo dropInfo)
+        {
+            if (dropInfo.TargetCollection != dropInfo.DragInfo.SourceCollection)
+            {
+                dropInfo.DropTargetAdorner = DropTargetAdorners.Insert;
+                dropInfo.Effects = DragDropEffects.Move;
+            }
+        }
+
+        public void Drop(IDropInfo dropInfo)
+        {
+            var sourceItem = dropInfo.Data as Ressource;
+            var targetCollection = dropInfo.TargetCollection as ListCollectionView;
+            var sourceCollection = dropInfo.DragInfo.SourceCollection as ListCollectionView;
+
+            sourceCollection?.Remove(sourceItem);
+            targetCollection?.AddNewItem(sourceItem);
+            targetCollection?.CommitNew();
+
+            sourceCollection?.Refresh();
+            targetCollection?.Refresh();
+            Globals.NotifyBroker.IsChanged = true;
         }
     }
 }

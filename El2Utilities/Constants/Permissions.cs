@@ -86,5 +86,7 @@
         public const string RetriveOrder = "OO10";
         public const string CloseOrder = "OO09";
         public const string Archivate = "ARCHIVATE";
+        public const string Prepare = "PREP";
+        public const string PrepareInvers = "!PREP";
     }
 }

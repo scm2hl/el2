@@ -22,7 +22,7 @@ using System.Windows.Input;
 
 namespace Lieferliste_WPF.ViewModels
 {
-    internal class EmployNoteViewModel : ViewModelBase
+    internal class EmployNoteViewModel : ViewModelBase, IDbTarget
     {
         public EmployNoteViewModel(IContainerProvider containerProvider, UserSettingsService usrSettingsService,
             IDialogService dialogService, IApplicationCommands applicationCommands)
@@ -224,6 +224,8 @@ namespace Lieferliste_WPF.ViewModels
                 NotifyPropertyChanged(() => SumTimes);
             }
         }
+
+        public object Target { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         private bool OnProcessTimeChangeCanExecute(object arg)
         {
