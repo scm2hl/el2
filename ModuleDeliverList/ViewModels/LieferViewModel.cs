@@ -155,7 +155,6 @@ namespace ModuleDeliverList.ViewModels
         public enum CmbFilter
         {
             [Description("Leer")]
-            // ReSharper disable once InconsistentNaming
             NOT_SET = 0,
             [Description("ausgeblendet")]
             INVISIBLE,

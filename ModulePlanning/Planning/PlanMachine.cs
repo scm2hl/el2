@@ -280,6 +280,7 @@ namespace ModulePlanning.Planning
         {
             try
             {
+                
                 if (_SelectedRadioButton == 0) return;
                 _shiftPlanService ??= new Specials.ShiftPlanService(Rid, _container);
                 DateTime start = DateTime.Now;
@@ -288,7 +289,7 @@ namespace ModulePlanning.Planning
                     var dur = GetProcessDuration(p);
                     var l = _shiftPlanService.GetEndDateTime(dur, start);
                     var diff = l.Subtract(start);
-
+                    
                     if (diff.TotalMinutes == 0) p.Extends = "---";
                     else
                     {

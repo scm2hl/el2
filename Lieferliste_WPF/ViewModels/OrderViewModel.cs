@@ -127,8 +127,8 @@ namespace Lieferliste_WPF.ViewModels
         {
             if (obj is Vorgang vrg)
             {
-                var refTxt = string.Join(" - ", vrg.AidNavigation.Material, vrg.AidNavigation.MaterialNavigation.Bezeichng,
-                    vrg.Aid, vrg.Vnr, vrg.Text, vrg.RidNavigation.Inventarnummer, vrg.RidNavigation?.RessName);
+                var refTxt = string.Join(" - ", vrg.AidNavigation.Material, vrg.AidNavigation.MaterialNavigation?.Bezeichng,
+                    vrg.Aid, vrg.Vnr, vrg.Text, vrg.RidNavigation?.Inventarnummer, vrg.RidNavigation?.RessName);
          
                 using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
                 var v = db.Vorgangs.Single<Vorgang>(x => x.VorgangId == vrg.VorgangId);
