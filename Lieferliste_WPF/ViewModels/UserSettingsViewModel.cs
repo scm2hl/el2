@@ -228,10 +228,10 @@ namespace Lieferliste_WPF.ViewModels
             ["Setup1", "Setup2"];
         public ICollectionView PersonalFilterView { get; private set; }
         public ObservableCollection<ProjectScheme> ProjectSchemes { get; private set; }
-        private ObservableCollection<Ressource> Ressources;
-        private readonly ObservableCollection<Ressource> AboRessources;
-        public ICollectionView AboRessourcesView { get; private set; }
-        public ICollectionView RessourcesView { get; private set; }
+        private ObservableCollection<string> Workplaces;
+        private readonly ObservableCollection<string> AboWorkplaces = [];
+        public ICollectionView AboWorkPlacesView { get; private set; }
+        public ICollectionView WorkplacesView { get; private set; }
         private bool meMessage = false;
         public bool MeMessage
         {
@@ -265,6 +265,7 @@ namespace Lieferliste_WPF.ViewModels
                 NotifyPropertyChanged(() => MaMessage);
             }
         }
+        public Abonnent? Abonnent { get; private set; }
 
         public UserSettingsViewModel(IUserSettingsService settingsService, IContainerExtension container, IEventAggregator eva)
         {
@@ -299,19 +300,18 @@ namespace Lieferliste_WPF.ViewModels
                 LoadFilters();
                 LoadProjectSchemes();
                 LoadRules();
-                LoadRessources();
+                LoadWorkplaces();
+                
                 if (Globals.NotifyBroker.GetAbonnentById(UserInfo.User.UserId, out Abonnent abo))
                 {
                     MeMessage = abo.Subsribes.Contains(SubscribeType.MeBem);
                     TeMessage = abo.Subsribes.Contains(SubscribeType.TeBem);
                     MaMessage = abo.Subsribes.Contains(SubscribeType.MaBem);
-                    AboRessources = [];
-                    foreach (var mach in abo.Machines)
-                    {
-                        AboRessources.Add(Ressources.Single(x => x.RessourceId == mach));                        
-                    }
-                    AboRessourcesView = CollectionViewSource.GetDefaultView(AboRessources);
+                    
+                    AboWorkplaces = abo.WorkPlaces.ToObservableCollection();
+                    
                 }
+                AboWorkPlacesView = CollectionViewSource.GetDefaultView(AboWorkplaces);
             }
             catch (Exception e)
             {
@@ -319,25 +319,22 @@ namespace Lieferliste_WPF.ViewModels
             }         
         }
 
-        private void LoadRessources()
+        private void LoadWorkplaces()
         {
             using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
             {
                 
-                Ressources = [.. db.Ressources.Where(x => x.Inventarnummer != null).OrderByDescending(x => x.WorkAreaId).Include(x => x.RessourceCostUnits)];
-                RessourcesView = CollectionViewSource.GetDefaultView(Ressources);
-                RessourcesView.Filter = (obj) =>
+                Workplaces = [.. db.WorkSaps.Select(x => x.WorkSapId)];
+                WorkplacesView = CollectionViewSource.GetDefaultView(Workplaces);
+                WorkplacesView.Filter = (obj) =>
                 {
-                    if (string.IsNullOrEmpty(SearchCost))
+                    var wp = obj as string;
+                    if (string.IsNullOrEmpty(SearchWorkplace))
                     { return true; }
-                    if (int.TryParse(SearchCost, out int costId))
-                    {
-                        if (obj is Ressource res)
-                        {
-                            return res.RessourceCostUnits.Any(x => x.CostId == costId);
-                        }
-                    }
-                    return false;
+                    if (wp != null)
+                        return wp.Contains(SearchWorkplace);
+
+                    return true;
                 };
             }
         }
@@ -492,7 +489,7 @@ namespace Lieferliste_WPF.ViewModels
                 if (MaMessage) subs.Add(SubscribeType.MaBem);
 
                 abo.Subsribes = [.. subs];
-                abo.Machines = [.. AboRessources.Select(x => x.RessourceId)];
+                abo.WorkPlaces = AboWorkplaces.ToList();
                 if (nn) { Globals.NotifyBroker.AddAbonnent(abo); nn = true; }
                 else n = Globals.NotifyBroker.UpdateAbonnent(abo);
             }
@@ -697,14 +694,14 @@ namespace Lieferliste_WPF.ViewModels
 
         }
         public bool HasErrors { get {  return _errors.Count > 0; } }
-        private string _searchCost;
-        public string SearchCost
+        private string _searchWorkplace;
+        public string SearchWorkplace
         {
-            get { return _searchCost; }
+            get { return _searchWorkplace; }
             set
             {
-                _searchCost = value;
-                RessourcesView.Refresh();
+                _searchWorkplace = value;
+                WorkplacesView.Refresh();
             }
         }
 
@@ -744,7 +741,7 @@ namespace Lieferliste_WPF.ViewModels
 
         public void Drop(IDropInfo dropInfo)
         {
-            var sourceItem = dropInfo.Data as Ressource;
+            var sourceItem = dropInfo.Data as string;
             var targetCollection = dropInfo.TargetCollection as ListCollectionView;
             var sourceCollection = dropInfo.DragInfo.SourceCollection as ListCollectionView;
 

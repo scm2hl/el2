@@ -128,23 +128,23 @@ namespace Lieferliste_WPF.ViewModels
             if (obj is Vorgang vrg)
             {
                 var refTxt = string.Join(" - ", vrg.AidNavigation.Material, vrg.AidNavigation.MaterialNavigation?.Bezeichng,
-                    vrg.Aid, vrg.Vnr, vrg.Text, vrg.RidNavigation?.Inventarnummer, vrg.RidNavigation?.RessName);
+                    vrg.Aid, vrg.Vnr, vrg.Text, vrg.ArbPlSap);
          
                 using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
                 var v = db.Vorgangs.Single<Vorgang>(x => x.VorgangId == vrg.VorgangId);
                 if (v.BemM != vrg.BemM)
                 {
-                    _ = Globals.NotifyBroker.SendMessageAsync(string.Join((char)29, vrg.BemM, refTxt, vrg.Rid), SubscribeType.MeBem);
+                    _ = Globals.NotifyBroker.SendMessageAsync(string.Join((char)29, vrg.BemM, refTxt, vrg.ArbPlSap), SubscribeType.MeBem);
                     v.BemM = vrg.BemM;
                 }
                 if (v.BemMa != vrg.BemMa)
                 {
-                    _ = Globals.NotifyBroker.SendMessageAsync(string.Join((char)29, vrg.BemMa, refTxt, vrg.Rid), SubscribeType.MaBem);
+                    _ = Globals.NotifyBroker.SendMessageAsync(string.Join((char)29, vrg.BemMa, refTxt, vrg.ArbPlSap), SubscribeType.MaBem);
                     v.BemMa = vrg.BemMa;
                 }
                 if (v.BemT != vrg.BemT)
                 {
-                    _ = Globals.NotifyBroker.SendMessageAsync(string.Join((char)29, vrg.BemT, refTxt, vrg.Rid), SubscribeType.TeBem);
+                    _ = Globals.NotifyBroker.SendMessageAsync(string.Join((char)29, vrg.BemT, refTxt, vrg.ArbPlSap), SubscribeType.TeBem);
                     v.BemT = vrg.BemT;
                 }
 

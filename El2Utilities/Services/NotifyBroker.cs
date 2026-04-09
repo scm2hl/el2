@@ -31,7 +31,7 @@ namespace El2Core.Services
         public string Address { get; set; }
         public string Name { get; set; }
         public SubscribeType[] Subsribes { get; set; }
-        public List<int> Machines { get; set; }
+        public List<string> WorkPlaces { get; set; }
         
     }
     public enum SubscribeType
@@ -125,12 +125,11 @@ namespace El2Core.Services
             var second = mb.Length > 1 ? mb[1] : string.Empty;
             var third = mb.Length > 2 ? mb[2] : string.Empty;
             var fourth = mb.Length > 3 ? mb[3] : string.Empty;
-            _ = int.TryParse(fourth, out int machineId);
 
             // Add recipients who subscribed to this type
             foreach (var abo in Abonnents.Where(x => x.Subsribes != null && x.Subsribes.Contains(sender)))
             {
-                if (abo.Machines.Contains(machineId))
+                if (abo.WorkPlaces.Contains(fourth))
                 message.To.Add(new MailboxAddress(abo.Name, abo.Address));
             }
 
@@ -140,7 +139,7 @@ namespace El2Core.Services
             message.Subject = "Abonnierte Nachricht";
 
             message.Body = new TextPart("html") { Text = $"<b>Hallo! Abonnents<p>Nachricht von {sender.Description()}</p></b><p>{first} hat folgendes geschrieben.</p>" +
-                $"<p>{second}</p><p></p>Referenz: {third}" };
+                $"<p>{second}</p><p></p>Referenz: {third} - {fourth}" };
 
             using (var client = new MailKit.Net.Smtp.SmtpClient())
             {
@@ -160,7 +159,7 @@ namespace El2Core.Services
             var existing = Abonnents[idx];
             // If subscriptions are the same (reference or sequence), nothing to do
             if (existing.Subsribes == value.Subsribes || (existing.Subsribes != null && value.Subsribes != null && existing.Subsribes.SequenceEqual(value.Subsribes))
-                && existing.Machines == value.Machines)
+                && existing.WorkPlaces == value.WorkPlaces)
                 return false;
 
             // Replace the item in the list (Abonnent is a struct)

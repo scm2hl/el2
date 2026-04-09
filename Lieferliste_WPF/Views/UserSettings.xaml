@@ -409,35 +409,33 @@
                         <TextBlock Text="Mitarbeiter Bemerkung"/>
                         <CheckBox IsChecked="{Binding MaMessage}" Margin="5,0"/>
                     </StackPanel>
-                    <TextBox Grid.Row="1" Text="{Binding SearchCost, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" Margin="5" MinWidth="200"
+                    <TextBox Grid.Row="1" Text="{Binding SearchWorkplace, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" Margin="5" MinWidth="200"
                              Background="AliceBlue"/>
                     <StackPanel Grid.Row="2" Orientation="Horizontal">
 
-                        <ListBox ItemsSource="{Binding RessourcesView}" Margin="5" MinWidth="200" IsSynchronizedWithCurrentItem="True"
+                        <ListBox ItemsSource="{Binding WorkplacesView}" Margin="5" MinWidth="200" IsSynchronizedWithCurrentItem="True"
                                  Background="AntiqueWhite"
                                  dd:DragDrop.IsDragSource="True"
                                  dd:DragDrop.IsDropTarget="True"
                                  dd:DragDrop.DropHandler="{Binding}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Inventarnummer}" TextWrapping="Wrap" MaxWidth="160" Margin="5"/>
-                                        <TextBlock Text="{Binding RessName}" TextWrapping="Wrap" MaxWidth="160"/>
-                                    </StackPanel>
+
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" MaxWidth="160" Margin="5"/>
+                 
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
-                        <ListBox Grid.Column="1" ItemsSource="{Binding AboRessourcesView}" Margin="5" MinWidth="200" IsSynchronizedWithCurrentItem="True"
+                        <ListBox Grid.Column="1" ItemsSource="{Binding AboWorkPlacesView}" Margin="5" MinWidth="200" IsSynchronizedWithCurrentItem="True"
                                  Background="AntiqueWhite"
                                  dd:DragDrop.IsDragSource="True"
                                  dd:DragDrop.IsDropTarget="True"
                                  dd:DragDrop.DropHandler="{Binding}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Inventarnummer}" TextWrapping="Wrap" MaxWidth="160" Margin="5"/>
-                                        <TextBlock Text="{Binding RessName}" TextWrapping="Wrap" MaxWidth="160"/>
-                                    </StackPanel>
+         
+                                    <TextBlock Text="{Binding}" TextWrapping="Wrap" MaxWidth="160" Margin="5"/>
+                    
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
