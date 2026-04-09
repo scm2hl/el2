@@ -9,13 +9,46 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <DataGrid ItemsSource="{Binding Proxies}" AutoGenerateColumns="False" CanUserAddRows="False">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+ 
+
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5">
+            <Button Content="Neu" Command="{Binding NewProxyCommand}" Margin="0,0,5,0"/>
+            <Button Content="Löschen" Command="{Binding DeleteProxyCommand}" Margin="0,0,5,0"/>
+            <Button Content="Aktualisieren" Command="{Binding RefreshProxiesCommand}"/>
+            <TextBox Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0"/>
+        </StackPanel>
+        <DockPanel Grid.Row="1" Grid.Column="1" Margin="5">
+
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="5">
+                <ComboBox Width="150" ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedTarget}" Margin="0,0,5,0"/>
+                <ComboBox Width="150" ItemsSource="{Binding CostUnits}" SelectedItem="{Binding SelectedTarget}" Margin="0,0,5,0"/>
+            </StackPanel>
+            <Grid DockPanel.Dock="Bottom" Margin="5" HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5" DataContext="{Binding}">
+                    <TextBlock Text="Filter:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBox Width="200" Text="{Binding SearchText}"/>
+                </StackPanel>
+            </Grid>
+        </DockPanel>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Proxies}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsSynchronizedWithCurrentItem="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding OrderId}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Kostenträger" Binding="{Binding CostTarget}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Kostenträger" Binding="{Binding Target}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Beschreibung" Binding="{Binding CommentText}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Ertellt" Binding="{Binding Created}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Erstellt" Binding="{Binding Created}" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

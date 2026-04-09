@@ -23,4 +23,6 @@ public partial class Project
     public virtual ICollection<OrderRb> OrderRbs { get; set; } = new List<OrderRb>();
 
     public virtual ICollection<ProjectAttachment> ProjectAttachments { get; set; } = new List<ProjectAttachment>();
+
+    public virtual ICollection<ProxyOrder> ProxyOrders { get; set; } = new List<ProxyOrder>();
 }

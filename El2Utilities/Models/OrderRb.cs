@@ -64,11 +64,11 @@ public partial class OrderRb : ModelBase
 
     public DateTime? CompleteDate { get; set; }
 
-    public bool Archivated { get; set; }
-
     public int ArchivState { get; set; }
 
     public string? ArchivPath { get; set; }
+
+    public bool Archivated { get; set; }
 
     public virtual TblDummy? DummyMatNavigation { get; set; }
 
@@ -77,6 +77,8 @@ public partial class OrderRb : ModelBase
     public virtual ICollection<OrderComponent> OrderComponents { get; set; } = new List<OrderComponent>();
 
     public virtual Project? Pro { get; set; }
+
+    public virtual ICollection<ProxyOrder> ProxyOrders { get; set; } = new List<ProxyOrder>();
 
     public virtual ICollection<Vorgang> Vorgangs { get; set; } = new List<Vorgang>();
 }

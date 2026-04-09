@@ -17,6 +17,8 @@ public partial class Costunit
 
     public virtual ICollection<AccountCost> AccountCosts { get; set; } = new List<AccountCost>();
 
+    public virtual ICollection<ProxyOrder> ProxyOrders { get; set; } = new List<ProxyOrder>();
+
     public virtual ICollection<RessourceCostUnit> RessourceCostUnits { get; set; } = new List<RessourceCostUnit>();
 
     public virtual ICollection<WorkSap> WorkSaps { get; set; } = new List<WorkSap>();
