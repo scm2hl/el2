@@ -129,7 +129,7 @@ namespace El2Core.Services
             // Add recipients who subscribed to this type
             foreach (var abo in Abonnents.Where(x => x.Subsribes != null && x.Subsribes.Contains(sender)))
             {
-                if (abo.WorkPlaces.Contains(fourth))
+                if (abo.WorkPlaces.Contains(fourth) || abo.WorkPlaces.Count == 0)
                 message.To.Add(new MailboxAddress(abo.Name, abo.Address));
             }
 
