@@ -19,6 +19,7 @@ using ModulePlanning.Dialogs.ViewModels;
 using ModulePlanning.Planning;
 using ModulePlanning.Views;
 using ModuleProducts.Views;
+using ModuleProxyOrder.Views;
 using ModuleReport.Views;
 using ModuleShift.Dialogs;
 using ModuleShift.Services;
@@ -62,13 +63,13 @@ namespace Lieferliste_WPF
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message,"CreateShell", MessageBoxButton.OK);
+                MessageBox.Show(ex.Message, "CreateShell", MessageBoxButton.OK);
                 throw;
             }
         }
 
         private void Current_Exit(object sender, ExitEventArgs e)
-        {           
+        {
             _Logger?.LogInformation("Exit: {pc}--{id} Exitcode:{ec}", UserInfo.PC, UserInfo.Dbid, e.ApplicationExitCode);
         }
 
@@ -84,7 +85,7 @@ namespace Lieferliste_WPF
         {
             base.OnInitialized();
         }
-  
+
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
             try
@@ -136,6 +137,8 @@ namespace Lieferliste_WPF
                 containerRegistry.RegisterForNavigation<ReportMainView>();
                 containerRegistry.RegisterForNavigation<Products>();
                 containerRegistry.RegisterForNavigation<EmployNote>();
+                containerRegistry.RegisterForNavigation<ProxyOrderView>();
+
 
                 containerRegistry.RegisterSingleton<IPlanMachineFactory, PlanMachineFactory>();
                 containerRegistry.RegisterSingleton<IPlanWorkerFactory, PlanWorkerFactory>();
@@ -160,9 +163,9 @@ namespace Lieferliste_WPF
                 RuleInfo rule = new(gl.Rules);
                 containerRegistry.RegisterInstance(rule);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                MessageBox.Show(ex.Message,"RegisterTypes", MessageBoxButton.OK);              
+                MessageBox.Show(ex.Message, "RegisterTypes", MessageBoxButton.OK);
                 throw;
             }
         }
@@ -181,6 +184,8 @@ namespace Lieferliste_WPF
             moduleCatalog.AddModule<ModuleProducts.ProductsModule>();
             moduleCatalog.AddModule<ModuleShift.ShiftModule>();
             moduleCatalog.AddModule<El2Core.El2CoreModul>();
+            moduleCatalog.AddModule<ModuleProxyOrder.ProxyOrderModule>();
+
         }
     }
 }

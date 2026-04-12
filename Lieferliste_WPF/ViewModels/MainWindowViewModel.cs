@@ -72,6 +72,7 @@ namespace Lieferliste_WPF.ViewModels
         public ICommand OpenProjectOverViewCommand { get; }
         public ICommand MachinePrintCommand { get; }
         public ICommand OpenProductViewCommand { get; }
+        public ICommand OpenProxyOrderCommand { get; }
         private NotifyTaskCompletion<int>? _onlineTask;
         public NotifyTaskCompletion<int>? OnlineTask
         {
@@ -179,6 +180,7 @@ namespace Lieferliste_WPF.ViewModels
                 OpenReportCommand = new ActionCommand(OnOpenReportExecuted, OnOpenReportCanExecute);
                 OpenProductViewCommand = new ActionCommand(OnOpenProductExecuted, OnOpenProductCanExecute);
                 OpenNoteCommand = new ActionCommand(OnOpenNoteExecuted, OnOpenNoteCanExecute);
+                OpenProxyOrderCommand = new ActionCommand(OnOpenProxyOrderExecuted, OnOpenProxyOrderCanExecute);
 
                 _workareaDocumentInfo = new WorkareaDocumentInfo(container);
 
@@ -190,6 +192,16 @@ namespace Lieferliste_WPF.ViewModels
                 _Logger?.LogError("{message}", ex);
                 MessageBox.Show(ex.ToString(), "MainWindow Ctr", MessageBoxButton.OK);
             }
+        }
+
+        private bool OnOpenProxyOrderCanExecute(object arg)
+        {
+            return PermissionsProvider.GetInstance().GetUserPermission(Permissions.ProxyOrderOpen);
+        }
+
+        private void OnOpenProxyOrderExecuted(object obj)
+        {
+            _regionmanager.RequestNavigate(RegionNames.MainContentRegion, new Uri("ProxyOrderView", UriKind.Relative));
         }
 
         private bool OnAttachmentCanExecute(object arg)

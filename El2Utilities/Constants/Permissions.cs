@@ -88,5 +88,6 @@
         public const string Archivate = "ARCHIVATE";
         public const string Prepare = "PREP";
         public const string PrepareInvers = "!PREP";
+        public const string ProxyOrderOpen = "PRXOPEN";
     }
 }
