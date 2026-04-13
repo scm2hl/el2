@@ -71,7 +71,11 @@
                             <materialdesign:PackIcon Kind="AlphaLBox"/>
                         </MenuItem.Icon>
                     </MenuItem>
-                    
+                    <MenuItem Header="Ungeplant" Command="{Binding OpenProxyOrderCommand}">
+                        <MenuItem.Icon>
+                            <materialdesign:PackIcon Kind="Place"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
                     <MenuItem Header="Produktkatalog">
                         <MenuItem Header="Projekte" 
                                   Command="{Binding OpenProjectCombineCommand}"/>

@@ -5,7 +5,7 @@
    "FilterSchemas": false,
    "IncludeConnectionString": false,
    "IrregularWords": null,
-   "MinimumProductVersion": "2.6.1382",
+   "MinimumProductVersion": "2.6.1465",
    "ModelNamespace": null,
    "OutputContextPath": "",
    "OutputPath": "Models",
@@ -71,9 +71,6 @@
          "ObjectType": 0
       },
       {
-         "ExcludedColumns": [
-            "LatestRequirementsDate1"
-         ],
          "Name": "[dbo].[OrderComponent]",
          "ObjectType": 0
       },

@@ -1,0 +1,145 @@
+﻿<UserControl x:Class="ModuleProxyOrder.Views.ProxyOrderView" x:Name="ProxyOrderViewControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ModuleProxyOrder.Views"
+             xmlns:wpf="clr-namespace:WpfCustomControlLibrary;assembly=WpfCustomControlLibrary"
+             xmlns:materialdesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:prism="http://prismlibrary.com/"
+             xmlns:utils="clr-namespace:ModuleProxyOrder.Utilities"
+             xmlns:conv="clr-namespace:El2Core.Converters;assembly=El2Core"
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Tag="{Binding Title}">
+    <Grid>
+        <Grid.Resources>
+            <conv:StringNotNullOrEmptyConverter x:Key="StrNotNullOrEmpty" />
+            <conv:OrderIdToStringConverter x:Key="OrderIdToString" />
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+ 
+
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Margin="5">
+            <Button Content="Neu" Command="{Binding NewProxyCommand}" Margin="0,0,5,0"/>
+            <Button Content="Löschen" Command="{Binding DeleteProxyCommand}" Margin="0,0,5,0"/>
+            <TextBox Width="200" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,5,0"
+                     materialdesign:HintAssist.Hint="Suche..."/>
+        </StackPanel>
+        <Grid Grid.Row="1" Grid.Column="1" Margin="5">
+  
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal" Margin="5" >
+                <TextBlock Text="Projekte:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ToggleButton x:Name="Proj" Margin="0,0,5,0"
+                      Style="{DynamicResource MahApps.Styles.ToggleButton.ExpanderHeader.Down}"/>
+                <TextBlock Text="Kostenstellen:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ToggleButton x:Name="Cost" Margin="0,0,5,0"
+                     Style="{DynamicResource MahApps.Styles.ToggleButton.ExpanderHeader.Down}"/>
+                <TextBlock Text="Aufträge:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <ToggleButton x:Name="Ord" Margin="0,0,5,0"
+                     Style="{DynamicResource MahApps.Styles.ToggleButton.ExpanderHeader.Down}"/>
+            </StackPanel>
+            <Popup IsOpen="{Binding IsChecked, ElementName=Proj}" Placement="Left" MaxHeight="400">
+                <StackPanel Background="Chartreuse">
+                    <TextBox Width="200" Margin="5" Text="{Binding ProjectSearchText, UpdateSourceTrigger=PropertyChanged}"
+                             materialdesign:HintAssist.Hint="Suche..." Background="{DynamicResource MaterialDesignPaper}"
+                             materialdesign:TextFieldAssist.HasClearButton="false"  
+                             Style="{DynamicResource MaterialDesignFloatingHintTextBox}"/>
+                    <ListBox ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedTarget}" SelectionChanged="ProjectsList_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Background="AntiqueWhite">
+                                    <TextBlock Text="{Binding ProjectPsp}"/>
+                                    <TextBlock Text="{Binding ProjectInfo}" Margin="5,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Popup>
+            <Popup IsOpen="{Binding IsChecked, ElementName=Cost}" Placement="Left" MaxHeight="500" MinWidth="150">
+                <StackPanel Background="Chartreuse">
+                    <TextBox Width="200" Margin="5" Text="{Binding CostSearchText, UpdateSourceTrigger=PropertyChanged}"
+                             materialdesign:HintAssist.Hint="Suche..."/>
+                    <ListBox ItemsSource="{Binding CostUnits}" SelectedItem="{Binding SelectedTarget}"
+                             SelectionChanged="CostList_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Background="AntiqueWhite">
+                                    <TextBlock Text="{Binding CostunitId}"/>
+                                    <TextBlock Text="{Binding Description}" Margin="5,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Popup>
+            <Popup IsOpen="{Binding IsChecked, ElementName=Ord}" Placement="Left" MaxHeight="500" MinWidth="150">
+                <StackPanel Background="Chartreuse">
+                    <TextBox Width="200" Margin="5" Text="{Binding OrderSearchText, UpdateSourceTrigger=PropertyChanged}"
+                             materialdesign:HintAssist.Hint="Suche..."/>
+                    <ListBox ItemsSource="{Binding Orders}" SelectedItem="{Binding SelectedTarget}" SelectionChanged="OrdList_SelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Background="AntiqueWhite">
+                                    <TextBlock Text="{Binding Aid}"/>
+                                    <TextBlock Text="{Binding Material}" Margin="5,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel>
+            </Popup>
+            
+            <StackPanel Grid.Row="2" >
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                    <TextBlock Text="lfd. Nummer:" VerticalAlignment="Top" Margin="0,0,5,0"/>
+                    <TextBox x:Name="OrderIdTextBox" Width="200" IsEnabled="{Binding DataContext.IsAddingNew, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                             Text="{Binding Current.OrderId, UpdateSourceTrigger=LostFocus, Converter={StaticResource OrderIdToString},
+                        ValidatesOnExceptions=True, ValidatesOnNotifyDataErrors=True, ValidatesOnDataErrors=True}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                    <TextBlock Text="Kommentar:" VerticalAlignment="Top" Margin="0,0,5,0"/>
+                    <TextBox Width="200" Height="100" Text="{Binding Current.CommentText}" AcceptsReturn="True"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                    <TextBlock Text="Kostenträger:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock Width="200" Text="{Binding Current.TargetId}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                    <TextBlock Text="Stück:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBox Width="200" Text="{Binding Current.Quantity}"/>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,5">
+                <Button Content="Speichern" Command="{Binding ApplyProxyCommand}" Margin="0,0,5,0"/>
+                <Button Content="Abbrechen" Command="{Binding CancelEditCommand}"/>
+            </StackPanel>
+        </Grid>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Proxies}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                  SelectedItem="{Binding Current}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding OrderId}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Kostenträger" Binding="{Binding TargetId}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Stück" Binding="{Binding Quantity}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Beschreibung" Binding="{Binding CommentText}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Erstellt" Binding="{Binding Created}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Von" Binding="{Binding AccId}" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

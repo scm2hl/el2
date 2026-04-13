@@ -14,7 +14,11 @@ namespace El2Core.Utils
             _executeHandler = execute ?? throw new ArgumentNullException("Execute cannot be null");
             _canExecuteHandler = canExecute;
         }
-
+        public ActionCommand(Action<object> execute)
+        {
+            _executeHandler = execute ?? throw new ArgumentNullException("Execute cannot be null");
+ 
+        }
 
         public event EventHandler CanExecuteChanged
         {

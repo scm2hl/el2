@@ -9,13 +9,13 @@ namespace ModuleProxyOrder
     {
         public void OnInitialized(IContainerProvider containerProvider)
         {
-            throw new NotImplementedException();
+            
         }
 
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            throw new System.NotImplementedException();
+            
         }
     }
 

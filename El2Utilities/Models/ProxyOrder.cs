@@ -11,8 +11,6 @@ public partial class ProxyOrder
 
     public string? RbId { get; set; }
 
-    public string? ProjId { get; set; }
-
     public int? CostId { get; set; }
 
     public string AccId { get; set; } = null!;
@@ -23,5 +21,13 @@ public partial class ProxyOrder
 
     public DateTime? Created { get; set; }
 
+    public string? ProjId { get; set; }
+
     public virtual IdmAccount Acc { get; set; } = null!;
+
+    public virtual Costunit? Cost { get; set; }
+
+    public virtual Project? Proj { get; set; }
+
+    public virtual OrderRb? Rb { get; set; }
 }
