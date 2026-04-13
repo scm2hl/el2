@@ -48,13 +48,13 @@ namespace ModuleProxyOrder.Entities
             get;
             set
             {
-                if (field != value)
+                if (field == null)
                 {
-                    field = value;
-                    EntityState = State.Updated;
-                } else if (field == null) {
                     EntityState = State.New;
+                } else if (field != value) {
+                    EntityState = State.Updated;
                 }
+                field = value;
             }
         }
         private string _targetId;
@@ -95,32 +95,38 @@ namespace ModuleProxyOrder.Entities
             if (!string.IsNullOrEmpty(prx.RbId))
             {
                 Target = prx.Rb;
+                TargetId = prx.RbId;
             }
             else if (!string.IsNullOrEmpty(prx.ProjId))
             {
                 Target = prx.Proj;
+                TargetId = prx.Proj.ProjectPsp;
             }
             else if (prx.CostId.HasValue)
             {
                 Target = prx.Cost;
+                TargetId = prx.Cost.CostunitId.ToString();
             }
-
+            EntityState = State.Unchanged;
         }
         public void UpdateTarget(object? target)
         {
             if (target == null && Target != null)
             {
                 EntityState = State.Deleted;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EntityState)));
             }
             else if (Target == null)
             {
                 EntityState = State.New;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EntityState)));
             }
             else if (Target != target)
             {
                 EntityState = State.Updated;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EntityState)));
             }
-            else { EntityState = State.Unchanged; return; }
+            else { EntityState = State.Unchanged; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EntityState))); return; }
 
             if (target is OrderRb rb)
             {
@@ -147,7 +153,11 @@ namespace ModuleProxyOrder.Entities
             }
             Target = target;
         }
-  
+        public void SetState(State state)
+        {
+            EntityState = state;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EntityState)));
+        }   
         public enum State
         {
             Unchanged,

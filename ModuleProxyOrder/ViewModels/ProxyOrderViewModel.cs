@@ -1,6 +1,7 @@
 ﻿using El2Core.Models;
 using El2Core.Utils;
 using El2Core.ViewModelBase;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ModuleProxyOrder.Entities;
 using Prism.Ioc;
@@ -52,7 +53,7 @@ namespace ModuleProxyOrder.ViewModels
 
         private bool OnApplyCanExecute(object arg)
         {
-            return Current != null && IsAddingNew && !Current.EntityState.HasFlag(State.InValid)
+            return Current != null && IsAddingNew && Current.EntityState != State.InValid
                 && Current.Target != null && Current.OrderId > 0;
         }
 
@@ -70,6 +71,8 @@ namespace ModuleProxyOrder.ViewModels
 
         private void OnDeleteExecuted(object obj)
         {
+            Current.SetState(State.Deleted);
+            SaveChanges();
             _proxies.Remove(Current);
             Proxies.Refresh();
         }
@@ -187,7 +190,7 @@ namespace ModuleProxyOrder.ViewModels
         private void LoadData()
         {
             using var db = _containerExtension.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
-            var prx = db.ProxyOrders.OrderByDescending(x => x.Created);
+            var prx = db.ProxyOrders.OrderByDescending(x => x.Created).Include(x => x.Rb).Include(x => x.Proj).Include(x => x.Cost).ToList();
 
             foreach (var item in prx)
             {
@@ -229,20 +232,22 @@ namespace ModuleProxyOrder.ViewModels
             using var db = _containerExtension.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
             foreach (var item in _proxies)
             {
-                if (item.EntityState.HasFlag(State.New))
+                if (item.EntityState == State.New)
                 {
                     db.ProxyOrders.Add(item);
+                    
                 }
-                else if (item.EntityState.HasFlag(State.Updated))
+                else if (item.EntityState == State.Updated)
                 {
                     db.ProxyOrders.Update(item);
                 }
-                else if (item.EntityState.HasFlag(State.Deleted))
+                else if (item.EntityState == State.Deleted)
                 {
                     db.ProxyOrders.Remove(item);
                 }
+                item.SetState(State.Unchanged);
             }
-            db.SaveChangesAsync();
+            db.SaveChanges();
         }
 
         private void ValidateOrderId()

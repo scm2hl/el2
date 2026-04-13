@@ -112,7 +112,7 @@ namespace Lieferliste_WPF
                 //    .UseSqlServer(defaultconnection)
                 //    .EnableThreadSafetyChecks(true);
                 //containerRegistry.RegisterSingleton<DB_COS_LIEFERLISTE_SQLContext>();
-                containerRegistry.Register<DbContext, DB_COS_LIEFERLISTE_SQLContext>();
+                containerRegistry.RegisterScoped<DbContext, DB_COS_LIEFERLISTE_SQLContext>();
                 containerRegistry.RegisterSingleton<IApplicationCommands, ApplicationCommands>();
                 containerRegistry.RegisterSingleton<IHolidayLogic, HolidayLogic>();
                 containerRegistry.RegisterSingleton<IProcessStripeService, ProcessStripeService>();
