@@ -26,7 +26,7 @@ namespace ModuleProxyOrder.ViewModels
             _Logger = loggerFactory.CreateLogger<ProxyOrderViewModel>();
             LoadData();
         }
-        public string Title { get; } = "Ungeplante Aufträge+";
+        public string Title { get; } = "Ungeplante Aufträge";
         private readonly IContainerExtension _containerExtension;
         private readonly ILogger _Logger;
         private ObservableCollection<OrderProxy> _proxies = [];
@@ -54,7 +54,7 @@ namespace ModuleProxyOrder.ViewModels
         private bool OnApplyCanExecute(object arg)
         {
             return Current != null && IsAddingNew && Current.EntityState != State.InValid
-                && Current.Target != null && Current.OrderId > 0;
+                && Current.Target != null && Current.OrderId > 0 && !Current.HasErrors;
         }
 
         private void OnApplyExecuted(object obj)
@@ -230,23 +230,75 @@ namespace ModuleProxyOrder.ViewModels
         public void SaveChanges()
         {
             using var db = _containerExtension.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
-            foreach (var item in _proxies)
+
+            
+            foreach (var item in _proxies.ToList())
             {
                 if (item.EntityState == State.New)
                 {
-                    db.ProxyOrders.Add(item);
-                    
+                    var prx = new ProxyOrder
+                    {
+                        // copy scalar properties
+                        OrderId = item.OrderId,
+                        RbId = item.RbId,
+                        CostId = item.CostId,
+                        AccId = item.AccId,
+                        Quantity = item.Quantity,
+                        CommentText = item.CommentText,
+                        Created = item.Created,
+                        ProjId = item.ProjId
+                    };
+
+                    db.ProxyOrders.Add(prx);
                 }
                 else if (item.EntityState == State.Updated)
                 {
-                    db.ProxyOrders.Update(item);
+                    var existing = db.ProxyOrders.Find(item.OrderId);
+                    if (existing != null)
+                    {
+                        existing.RbId = item.RbId;
+                        existing.CostId = item.CostId;
+                        existing.AccId = item.AccId;
+                        existing.Quantity = item.Quantity;
+                        existing.CommentText = item.CommentText;
+                        existing.Created = item.Created;
+                        existing.ProjId = item.ProjId;
+                        db.ProxyOrders.Update(existing);
+                    }
+                    else
+                    {
+                        // If not found in DB, add as new
+                        db.ProxyOrders.Add(new ProxyOrder
+                        {
+                            OrderId = item.OrderId,
+                            RbId = item.RbId,
+                            CostId = item.CostId,
+                            AccId = item.AccId,
+                            Quantity = item.Quantity,
+                            CommentText = item.CommentText,
+                            Created = item.Created,
+                            ProjId = item.ProjId
+                        });
+                    }
                 }
                 else if (item.EntityState == State.Deleted)
                 {
-                    db.ProxyOrders.Remove(item);
+                    var existing = db.ProxyOrders.Find(item.OrderId);
+                    if (existing != null)
+                    {
+                        db.ProxyOrders.Remove(existing);
+                    }
+                    else
+                    {
+                        // If it was never persisted, just remove from collection
+                        _proxies.Remove(item);
+                        continue;
+                    }
                 }
+
                 item.SetState(State.Unchanged);
             }
+
             db.SaveChanges();
         }
 

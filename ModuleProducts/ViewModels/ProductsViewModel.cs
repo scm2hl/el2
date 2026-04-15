@@ -133,6 +133,39 @@ namespace ModuleProducts.ViewModels
                 NotifyPropertyChanged(() => IsArchivating);
             }
         }
+        private bool? _IsSearchMSF = null;
+        public bool? IsSearchMSF
+        {
+            get { return _IsSearchMSF; }
+            set
+            {
+                ProductsCount = 0;
+                _IsSearchMSF = value;
+                ProductsView.Refresh();
+            }
+        }
+        private bool? _IsSearchClosed = null;
+        public bool? IsSearchClosed
+        {
+            get { return _IsSearchClosed; }
+            set
+            {
+                ProductsCount = 0;
+                _IsSearchClosed = value;
+                ProductsView.Refresh();
+            }
+        }
+        private int _ProductsCount;
+
+        public int ProductsCount
+        {
+            get { return _ProductsCount; }
+            set
+            {
+                _ProductsCount = value;
+                NotifyPropertyChanged(() => ProductsCount);
+            }
+        }
 
         private string? _SearchText;
         public string? SearchText
@@ -140,6 +173,7 @@ namespace ModuleProducts.ViewModels
             get { return _SearchText; }
             set
             {
+                ProductsCount = 0;
                 _SearchText = value;
                 OnTextSearch(value);
             }
@@ -151,6 +185,7 @@ namespace ModuleProducts.ViewModels
             get { return _StartDateFilter; }
             set
             {
+                ProductsCount = 0;
                 _StartDateFilter = value;
                 if (value != null && EndDateFilter != null && value >= EndDateFilter)
                     throw new Exception("Startdatum muss kleiner als Enddatum sein");
@@ -419,42 +454,62 @@ namespace ModuleProducts.ViewModels
  
         private bool OnFilterPredicate(object obj)
         {
-            bool accept = true;
-            if (obj is ProductMaterial mat)
-            {
-                if (string.IsNullOrEmpty(_SearchText) == false)
-                {
-                    accept = mat.TTNR.Contains(_SearchText, StringComparison.CurrentCultureIgnoreCase);
-                    if (!accept)
-                        accept = (mat.Description != null) && mat.Description.Contains(_SearchText, StringComparison.CurrentCultureIgnoreCase);
-                    if (!accept)
-                    {
-                        mat.ProdOrders.Filter = item =>
-                        {
-                            return item is ProductOrder ord && ord.OrderNr.Contains(_SearchText, StringComparison.CurrentCultureIgnoreCase);
-                        };
-                        accept = !mat.ProdOrders.IsEmpty;
-                    }
+            if (obj is not ProductMaterial mat)
+                return true;
 
-                }
-                if (Selected_Dates != null)
-                {
-                    if (accept)
-                    {
-                        mat.ProdOrders.Filter = item =>
-                        {
-                            return item is ProductOrder ord && ord.Completed != null && Selected_Dates.Contains(ord.Completed.Value.Date);
-                        };
-                    }
-                    accept = !mat.ProdOrders.IsEmpty;            
-                }
+            // Get original orders collection
+            var sourceOrders = mat.ProdOrders.SourceCollection?.Cast<ProductOrder>().ToList() ?? mat.ProdOrders.Cast<ProductOrder>().ToList();
+
+            bool MatLevelSearchMatch()
+            {
+                return !string.IsNullOrEmpty(_SearchText) &&
+                       (mat.TTNR.Contains(_SearchText, StringComparison.CurrentCultureIgnoreCase) ||
+                        (mat.Description != null && mat.Description.Contains(_SearchText, StringComparison.CurrentCultureIgnoreCase)));
             }
-            return accept;
+
+            bool OrderMatches(ProductOrder ord)
+            {
+                // Search: if material-level search matched, do not require OrderNr match
+                if (!string.IsNullOrEmpty(_SearchText) && !MatLevelSearchMatch())
+                {
+                    if (!ord.OrderNr.Contains(_SearchText, StringComparison.CurrentCultureIgnoreCase))
+                        return false;
+                }
+
+                if (Selected_Dates != null && Selected_Dates.Any())
+                {
+                    if (ord.Completed == null || !Selected_Dates.Contains(ord.Completed.Value.Date))
+                        return false;
+                }
+
+                if (IsSearchMSF != null)
+                {
+                    var hasMsf = ord.Tags != null && ord.Tags.Any();
+                    if (IsSearchMSF == true && !hasMsf) return false;
+                    if (IsSearchMSF == false && hasMsf) return false;
+                }
+
+                if (IsSearchClosed != null)
+                {
+                    if (IsSearchClosed == true && !ord.Closed) return false;
+                    if (IsSearchClosed == false && ord.Closed) return false;
+                }
+
+                return true;
+            }
+
+            // Count matching orders and set the per-material filter
+            var matches = sourceOrders.Where(OrderMatches).ToList();
+            ProductsCount += matches.Count;
+            mat.ProdOrders.Filter = item => item is ProductOrder ord && OrderMatches(ord);
+
+            return matches.Any();
         }
         private void OnTextSearch(object obj)
         {
             if(obj is string search)
             {
+                ProductsCount = 0;
                 _SearchText = search;
                 ProductsView.Refresh();
             }

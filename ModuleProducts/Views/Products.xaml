@@ -30,7 +30,7 @@
             <ColumnDefinition/>
             <ColumnDefinition Width="185"/>
         </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Horizontal">
+        <DockPanel>
             <TextBox x:Name="search"
                  materialdesign:HintAssist.Hint="nach TTNR, Bezeichnung oder Auftragsnummer suchen"
                  materialdesign:TextFieldAssist.HasClearButton="False" Text="{Binding Path=SearchText}"
@@ -40,12 +40,76 @@
                             CommandParameter="{Binding Path=Text, RelativeSource={RelativeSource AncestorType=TextBox}}" />
                 </TextBox.InputBindings>
             </TextBox>
-  
-            
+
+            <ToggleButton Content="Aufträge" Margin="10,0,0,0" Padding="10,0" IsThreeState="True" IsChecked="{Binding IsSearchClosed}">
+                <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Padding="4,2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="LightGreen"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="LightCoral"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="Bd" Property="Background" Value="LightGoldenrodYellow"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </ToggleButton.Template>
+            </ToggleButton>
+            <ToggleButton Content="MSF" Margin="10,0,0,0" Padding="10,0" IsThreeState="True" IsChecked="{Binding IsSearchMSF}">
+                <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="3"
+                                Padding="4,2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="LightGreen"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="LightCoral"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="{x:Null}">
+                                <Setter TargetName="Bd" Property="Background" Value="LightGoldenrodYellow"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </ToggleButton.Template>
+            </ToggleButton>
+
             <Button Content="Archivieren" Margin="10,0,0,0" Padding="10,0" Command="{Binding ArchivateCommand}"
                     Style="{DynamicResource MahApps.Styles.Button.Flat}" />
-            
-        </StackPanel>
+            <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0}/{1}">
+                        <Binding Path="Items.Count" ElementName="MaterialListBox"/>
+                        <Binding Path="ProductsCount"/>
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+
+        </DockPanel>
   
         <StackPanel Grid.Row="1" >
 
@@ -54,7 +118,7 @@
             <TextBlock Text="{Binding MaterialTask.ErrorMessage}" HorizontalAlignment="Center"
                    Visibility="{Binding MaterialTask.IsFaulted, Converter={StaticResource BoolToVis}}"/>
         </StackPanel>
-        <ListBox Grid.Row="1" ItemsSource="{Binding MaterialTask.Result}" Visibility="{Binding MaterialTask.IsSuccessfullyCompleted, Converter={StaticResource BoolToVis}}" >
+        <ListBox x:Name="MaterialListBox" Grid.Row="1" ItemsSource="{Binding MaterialTask.Result}" Visibility="{Binding MaterialTask.IsSuccessfullyCompleted, Converter={StaticResource BoolToVis}}" >
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>
