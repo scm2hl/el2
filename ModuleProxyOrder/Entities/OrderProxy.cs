@@ -1,4 +1,5 @@
-﻿using El2Core.Models;
+﻿
+using El2Core.Models;
 using El2Core.Services;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Linq;
 
 namespace ModuleProxyOrder.Entities
 {
-    public class OrderProxy : ProxyOrder, IDbTarget, INotifyPropertyChanged, INotifyDataErrorInfo
+    public class OrderProxy : ProxyOrder, INotifyPropertyChanged, IDbTarget, INotifyDataErrorInfo
     {
         private readonly Dictionary<string, List<string>> _errors = new();
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;

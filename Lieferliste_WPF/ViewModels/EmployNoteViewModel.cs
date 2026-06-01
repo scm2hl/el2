@@ -224,8 +224,8 @@ namespace Lieferliste_WPF.ViewModels
                 NotifyPropertyChanged(() => SumTimes);
             }
         }
-
-        public object Target { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        private object _Target;
+        public object Target { get => _Target; set { _Target = value; NotifyPropertyChanged(() => Target); } }
 
         private bool OnProcessTimeChangeCanExecute(object arg)
         {
@@ -309,6 +309,7 @@ namespace Lieferliste_WPF.ViewModels
             {
                 foreach (var o in e.OldItems)
                 {
+                    
                     _ctx.EmployeeNotes.Remove((EmployeeNote)o);
                     _ctx.SaveChanges();
                 }
@@ -338,17 +339,18 @@ namespace Lieferliste_WPF.ViewModels
         {
             var emp = new EmployeeNote();
             emp.AccId = SelectedUser.User;
-            emp.Reference = string.Format("{0}{1}{2}{3}{4}",
-                ReferencePre.Value.Table, (char)29, ReferencePre.Value.Id, (char)29, ReferencePre.Value.Description);
-            if (ReferencePre.Value.Table == "Vorgang")
-            {
-                emp.VorgId = ReferencePre.Value.Id;
-                
-            }
-            else
-            {
-                emp.SelId = int.Parse(ReferencePre.Value.Id);
-            }
+            emp.SetTarget(Target);
+            //emp.Reference = string.Format("{0}{1}{2}{3}{4}",
+            //    ReferencePre.Value.Table, (char)29, ReferencePre.Value.Id, (char)29, ReferencePre.Value.Description);
+            //if (ReferencePre.Value.Table == "Vorgang")
+            //{
+            //    emp.VorgId = ReferencePre.Value.Id;
+
+            //}
+            //else
+            //{
+            //    emp.SelId = int.Parse(ReferencePre.Value.Id);
+            //}
             emp.Comment = Comment;
             emp.Stk = Quant;
             emp.Date = SelectedDate;

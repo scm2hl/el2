@@ -32,6 +32,10 @@ namespace El2Core.Utils
             Bezeichnung = view.Bezeichng ?? view.Mattext;
             VorgangId= view.VorgangId;
         }
+        public override string ToString()
+        {
+            return $"{Auftrag} - {Vorgang} - {Kurztext}\n{Material}  {Bezeichnung}";
+        }
     }
 
 }
