@@ -14,17 +14,17 @@
     <PackageVersion Include="log4net" Version="3.3.1" />
     <PackageVersion Include="MahApps.Metro" Version="2.4.11" />
     <PackageVersion Include="MahApps.Metro.IconPacks" Version="6.2.1" />
-    <PackageVersion Include="MailKit" Version="4.17.0" />
-    <PackageVersion Include="MaterialDesignThemes.MahApps" Version="5.3.2" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.8" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="MailKit" Version="4.15.1" />
+    <PackageVersion Include="MaterialDesignThemes.MahApps" Version="5.3.1" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Graph" Version="5.103.0" />
     <PackageVersion Include="Microsoft.Windows.SDK.Contracts" Version="10.0.26100.7705" />
-    <PackageVersion Include="MimeKit" Version="4.17.0" />
-    <PackageVersion Include="MSTest.TestAdapter" Version="4.2.3" />
-    <PackageVersion Include="MSTest.TestFramework" Version="4.2.3" />
+    <PackageVersion Include="MimeKit" Version="4.15.1" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="4.1.0" />
+    <PackageVersion Include="MSTest.TestFramework" Version="4.1.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.2.0" />
     <PackageVersion Include="OpenXmlPowerTools" Version="4.5.3.2" />
     <PackageVersion Include="Prism.Core" Version="9.0.537" />
