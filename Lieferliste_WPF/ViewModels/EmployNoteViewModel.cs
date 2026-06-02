@@ -35,11 +35,14 @@ namespace Lieferliste_WPF.ViewModels
             var loggerFactory = container.Resolve<ILoggerFactory>();
             _logger = loggerFactory.CreateLogger<EmployNoteViewModel>();
             VrgTask = new NotifyTaskCompletion<IEnumerable<dynamic>>(LoadVrgAsnc());
+            PrxTask = new NotifyTaskCompletion<IEnumerable<dynamic>>(LoadPrxAsnc());
             SubmitCommand = new ActionCommand(OnSubmitExecuted, OnSubmitCanExecute);
             ProcessTimeChangeCommand = new ActionCommand(OnProcessTimeChangeExecuted, OnProcessTimeChangeCanExecute);
             LoadingData();
             _dialogService = dialogService;
         }
+
+
 
         public string Title { get; } = "Arbeitszeiten";
         IContainerProvider container;
@@ -49,7 +52,9 @@ namespace Lieferliste_WPF.ViewModels
         private readonly IDialogService _dialogService;
 
         private IEnumerable<dynamic> VorgangRef { get; set; }
+
         public NotifyTaskCompletion<IEnumerable<dynamic>>? VrgTask { get; private set; }
+        public NotifyTaskCompletion<IEnumerable<dynamic>>? PrxTask { get; private set; }
         private IApplicationCommands _applicationCommands;
 
         public IApplicationCommands ApplicationCommands
@@ -73,10 +78,28 @@ namespace Lieferliste_WPF.ViewModels
                 {
                     ReferencePre = new RefItem("Vorgang", value.VorgangId, string.Format("{0} - {1}\n{2} {3}",
                         value.Auftrag, value.Vorgang, value.Material?.Trim(), value.Bezeichnung));
- 
+                    Target = value;
+
                 }
             }
         }
+        private ProxyOrder _SelectedPrxItem;
+
+        public ProxyOrder SelectedPrxItem
+        {
+            get { return _SelectedPrxItem; }
+            set
+            {
+                _SelectedPrxItem = value;
+                if (value != null)
+                {
+                    ReferencePre = new RefItem("ProxyOrder", value.OrderId.ToString(), string.Format("{0} - {1}", value.OrderId, value.CommentText));
+                    Target = value;
+
+                }
+            }
+        }
+
         private RefItem? _ReferencePre;
 
         public RefItem? ReferencePre
@@ -101,7 +124,8 @@ namespace Lieferliste_WPF.ViewModels
                 if (_selectedRef.Equals(value) == false)
                 {
                     _selectedRef = value;
-                    ReferencePre = value;                   
+                    ReferencePre = value;
+                    Target = value;
                 }
             }
         }
@@ -271,7 +295,17 @@ namespace Lieferliste_WPF.ViewModels
             VorgangRef = await db.ViewVorgangClosedDates.AsNoTracking().Select(s => new VorgItem(s)).ToListAsync();
             return VorgangRef;
         }
-
+        private async Task<IEnumerable<dynamic>> LoadPrxAsnc()
+        {
+            using var db = container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+            var prx = await db.ProxyOrders.AsNoTracking()
+                .Include(x => x.Cost)
+                .Include(x => x.Rb)
+                .Include(x => x.Proj)
+                .OrderByDescending(x => x.Created)
+                .ToListAsync();
+            return prx;
+        }
         private void LoadingData()
         {
             var D = DateTime.Today.AddYears(-1);
@@ -340,17 +374,9 @@ namespace Lieferliste_WPF.ViewModels
             var emp = new EmployeeNote();
             emp.AccId = SelectedUser.User;
             emp.SetTarget(Target);
-            //emp.Reference = string.Format("{0}{1}{2}{3}{4}",
-            //    ReferencePre.Value.Table, (char)29, ReferencePre.Value.Id, (char)29, ReferencePre.Value.Description);
-            //if (ReferencePre.Value.Table == "Vorgang")
-            //{
-            //    emp.VorgId = ReferencePre.Value.Id;
+            emp.Reference = string.Format("{0}{1}{2}{3}{4}",
+                ReferencePre.Value.Table, (char)29, ReferencePre.Value.Id, (char)29, ReferencePre.Value.Description);
 
-            //}
-            //else
-            //{
-            //    emp.SelId = int.Parse(ReferencePre.Value.Id);
-            //}
             emp.Comment = Comment;
             emp.Stk = Quant;
             emp.Date = SelectedDate;

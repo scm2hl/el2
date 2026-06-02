@@ -84,11 +84,15 @@
         <TextBox x:Name="SearchBox"  MinWidth="300" Margin="10,0,0,10" Padding="3" 
                  materialDesign:HintAssist.Hint="suchen in Auftragsnr, TTNR, Materialtext"
                  Style="{StaticResource MaterialDesignFloatingHintTextBox}" Background="{DynamicResource MahApps.Brushes.ThemeBackground}">
-            <i:Interaction.Triggers>
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding TextSearchCommand}"
+                        CommandParameter="{Binding Path=Text, ElementName=SearchBox}" />
+                </TextBox.InputBindings>
+                <!--<i:Interaction.Triggers>
                 <i:EventTrigger EventName="TextChanged">
                     <i:InvokeCommandAction Command="{Binding TextSearchCommand}" CommandParameter="{Binding Path=Text, ElementName=SearchBox}"/>
                 </i:EventTrigger>
-            </i:Interaction.Triggers>
+            </i:Interaction.Triggers>-->
         </TextBox>
             <Button Command="{Binding FilterDeleteCommand}" ToolTip="alle Filter rücksetzen" Margin="5"
                     Click="Button_Click"

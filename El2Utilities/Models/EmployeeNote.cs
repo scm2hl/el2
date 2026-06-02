@@ -30,7 +30,11 @@ public partial class EmployeeNote : ModelBase
 
     public string? Usr { get; set; }
 
+    public long? Prxid { get; set; }
+
     public virtual IdmAccount Acc { get; set; } = null!;
+
+    public virtual ProxyOrder? Prx { get; set; }
 
     public virtual EmploySelection? Sel { get; set; }
 

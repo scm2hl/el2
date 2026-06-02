@@ -102,7 +102,7 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
         IConfiguration configuration = builder.Build();
-        var defaultconnection = configuration.GetConnectionString("ConnectionBosch");
+        var defaultconnection = configuration.GetConnectionString("ConnectionHome");
         optionsBuilder.UseSqlServer(defaultconnection).EnableThreadSafetyChecks();
         base.OnConfiguring(optionsBuilder);
     }
@@ -202,6 +202,7 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                 .HasColumnType("date")
                 .HasColumnName("date");
             entity.Property(e => e.Processingtime).HasColumnName("processingtime");
+            entity.Property(e => e.Prxid).HasColumnName("prxid");
             entity.Property(e => e.Reference)
                 .HasMaxLength(255)
                 .IsUnicode(false)
@@ -227,6 +228,11 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
             entity.HasOne(d => d.Acc).WithMany(p => p.EmployeeNotes)
                 .HasForeignKey(d => d.AccId)
                 .HasConstraintName("FK_Employee_note_idm_accounts");
+
+            entity.HasOne(d => d.Prx).WithMany(p => p.EmployeeNotes)
+                .HasForeignKey(d => d.Prxid)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Employee_note_ProxyOrder");
 
             entity.HasOne(d => d.Sel).WithMany(p => p.EmployeeNotes)
                 .HasForeignKey(d => d.SelId)

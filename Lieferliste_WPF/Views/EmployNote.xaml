@@ -33,6 +33,10 @@
 
             <ComboBox Name="RefCombo" ItemsSource="{Binding SelectedRefs}" SelectedItem="{Binding SelectedRef, Mode=TwoWay}"
                       DisplayMemberPath="Description" SelectionChanged="Combo_SelectionChanged"/>
+            <WpfControl:SearchableComboBox Name="PrxCombo" ItemsSource="{Binding PrxTask.Result}" Width="150" PopupWidth="600"
+                                           SelectedItem="{Binding SelectedPrxItem, Mode=TwoWay}" SelectionChanged="Combo_SelectionChanged" 
+                                           SearchFieldName="OrderId" DisplayFieldNames="OrderId,CommentText"
+                                           IsEnabled="{Binding PrxTask.IsSuccessfullyCompleted}"/>
 
             <StackPanel Orientation="Horizontal">
                 <StackPanel.Resources>

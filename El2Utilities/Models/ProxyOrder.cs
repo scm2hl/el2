@@ -27,6 +27,8 @@ public partial class ProxyOrder
 
     public virtual Costunit? Cost { get; set; }
 
+    public virtual ICollection<EmployeeNote> EmployeeNotes { get; set; } = new List<EmployeeNote>();
+
     public virtual Project? Proj { get; set; }
 
     public virtual OrderRb? Rb { get; set; }

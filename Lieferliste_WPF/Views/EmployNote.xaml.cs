@@ -28,11 +28,22 @@ namespace Lieferliste_WPF.Views
             {
                 var cb = this.FindName("VrgCombo") as SearchableComboBox;
                 cb.SelectedIndex = -1;
+                var prx = this.FindName("PrxCombo") as SearchableComboBox;
+                prx.SelectedIndex = -1;
             }
             else if (Combo.Name == "VrgCombo")
             {
                 var cb = this.FindName("RefCombo") as ComboBox;
                 cb.SelectedIndex = -1;
+                var prx = this.FindName("PrxCombo") as SearchableComboBox;
+                prx.SelectedIndex = -1;
+            }
+            else if (Combo.Name == "PrxCombo")
+            {
+                var cb = this.FindName("RefCombo") as ComboBox;
+                cb.SelectedIndex = -1;
+                var vrg = this.FindName("VrgCombo") as SearchableComboBox;
+                vrg.SelectedIndex = -1;
             }
         }
     }
