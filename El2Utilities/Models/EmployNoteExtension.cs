@@ -43,7 +43,7 @@ namespace El2Core.Models
                 note.Prxid = null;
             }
         }
-        public static string? GetTargetString(this EmployeeNote note)
+        public static string? GetTargetInfo(this EmployeeNote note)
         {
             if (note.Sel != null)
                 return $"{note.Sel.Description}";
@@ -53,9 +53,7 @@ namespace El2Core.Models
                 return $"{note.Prx.OrderId} - {note.Prx.CommentText}";
             return null;
         }
-        public static string ToString(this EmployeeNote note)
-        {
-            return note.GetTargetString() ?? string.Empty;
-        }
+ 
     }
+
 }
