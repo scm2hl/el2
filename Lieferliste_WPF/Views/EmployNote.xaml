@@ -18,6 +18,7 @@
             <conv:TimeConverter x:Key="TimeConverter"/>
             <conv:CommentConverter x:Key="RefConvert"/>
             <conv:ReferenceConverter x:Key="refConv"/>
+            <conv:TargetInfoConverter x:Key="TargetInfoConverter"/>
         </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
@@ -114,8 +115,9 @@
                 </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Referenz" Binding="{Binding Reference, Converter={StaticResource RefConvert},
-                    ConverterParameter=2}" Width="300" IsReadOnly="True" />
+                <!--<DataGridTextColumn Header="Referenz" Binding="{Binding Reference, Converter={StaticResource RefConvert},
+                    ConverterParameter=2}" Width="300" IsReadOnly="True" />-->
+                <DataGridTextColumn Header="Info" Binding="{Binding ., Converter={StaticResource TargetInfoConverter}}" Width="200" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Stück" Binding="{Binding Stk}" Width="50"/>
                 <DataGridTextColumn Header="Kommentar" Binding="{Binding Comment}" Width="250"/>
                 <DataGridTextColumn Header="Datum" Binding="{Binding Date, StringFormat=\{0:D\}}" IsReadOnly="True"/>

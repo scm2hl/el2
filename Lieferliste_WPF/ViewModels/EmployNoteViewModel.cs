@@ -284,14 +284,7 @@ namespace Lieferliste_WPF.ViewModels
         private async Task<IEnumerable<dynamic>> LoadVrgAsnc()
         {
             using var db = container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
-            //VorgangRef = await db.Vorgangs
-            //    .Include(x => x.AidNavigation)
-            //    .Include(x => x.AidNavigation.MaterialNavigation)
-            //    .Include(x => x.AidNavigation.DummyMatNavigation)
-            //    .Where(static x => x.AidNavigation.SysStatus.Contains("TABG") == false)                       
-            //    .OrderBy(x => x.Aid)
-            //    .ThenBy(x => x.Vnr)
-            //    .Select(s => new VorgItem(s)).ToListAsync();
+
             VorgangRef = await db.ViewVorgangClosedDates.AsNoTracking().Select(s => new VorgItem(s)).ToListAsync();
             return VorgangRef;
         }
@@ -309,7 +302,11 @@ namespace Lieferliste_WPF.ViewModels
         private void LoadingData()
         {
             var D = DateTime.Today.AddYears(-1);
-            EmployeeNotes = _ctx.EmployeeNotes.Where(x => x.Date > D).OrderBy(x => x.Date).ToObservableCollection();
+            EmployeeNotes = _ctx.EmployeeNotes.Where(x => x.Date > D)
+                .Include(x => x.Sel)
+                .Include(x => x.Vorg)
+                .Include(x => x.Prx)
+                .OrderBy(x => x.Date).ToObservableCollection();
 
             EmployeeNotesView = CollectionViewSource.GetDefaultView(EmployeeNotes);
             CalendarWeeks = GetKW_List();

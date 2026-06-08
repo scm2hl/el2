@@ -36,12 +36,24 @@ namespace El2Core.Models
                 note.VorgId = null;
                 note.SelId = null;
             }
-            else 
+            else
             {
                 note.SelId = null;
                 note.VorgId = null;
                 note.Prxid = null;
             }
         }
+        public static string? GetTargetInfo(this EmployeeNote note)
+        {
+            if (note.Sel != null)
+                return $"{note.Sel.Description}";
+            else if (note.Vorg != null)
+                return $"{note.Vorg.Aid} - {note.Vorg.Vnr}\n{note.Vorg.Text}";
+            else if (note.Prx != null)
+                return $"{note.Prx.OrderId} - {note.Prx.CommentText}";
+            return null;
+        }
+ 
     }
+
 }
