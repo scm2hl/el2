@@ -19,6 +19,8 @@ public partial class OrderComponent
 
     public int? ConfirmedQuantity { get; set; }
 
+    public DateTime? LatestRequirementsDate1 { get; set; }
+
     public string? Assembly { get; set; }
 
     public DateTime? LatestRequirementsDate { get; set; }

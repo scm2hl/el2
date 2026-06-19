@@ -21,18 +21,18 @@ namespace El2Core.Models
             {
                 note.SelId = sel.Id;
                 note.VorgId = null;
-                note.Prxid = null;
+                note.PrxId = null;
             }
             else if (target is VorgItem vorg)
             {
                 note.VorgId = vorg.VorgangId;
                 //note.SelId = null;
                 note.SelId = null;
-                note.Prxid = null;
+                note.PrxId = null;
             }
             else if (target is ProxyOrder prx)
             {
-                note.Prxid = prx.OrderId;
+                note.PrxId = prx.OrderId;
                 note.VorgId = null;
                 note.SelId = null;
             }
@@ -40,7 +40,7 @@ namespace El2Core.Models
             {
                 note.SelId = null;
                 note.VorgId = null;
-                note.Prxid = null;
+                note.PrxId = null;
             }
         }
         public static string? GetTargetInfo(this EmployeeNote note)
@@ -48,7 +48,7 @@ namespace El2Core.Models
             if (note.Sel != null)
                 return $"{note.Sel.Description}";
             else if (note.Vorg != null)
-                return $"{note.Vorg.Aid} - {note.Vorg.Vnr}\n{note.Vorg.Text}";
+                return $"{note.Vorg.Aid} - {note.Vorg.Vnr}\n{note.Vorg.Text}\n{note.Vorg.AidNavigation?.Material} - {note.Vorg.AidNavigation?.MaterialNavigation?.Bezeichng}";
             else if (note.Prx != null)
                 return $"{note.Prx.OrderId} - {note.Prx.CommentText}";
             return null;

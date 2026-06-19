@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace El2Core.Constants
 {
@@ -7,14 +8,17 @@ namespace El2Core.Constants
     {
         public enum ProjectType
         {
-            [Description("ohne")]
+            [Description("kein Projekttyp")]
             None = 0,
             [Description("Entwicklungsmuster")]
             DevelopeSpecimen = 1,
             [Description("Verkaufsmuster")]
             SaleSpecimen = 2,
             [Description("Versuchsproject")]
-            TestOrder = 3
+            TestOrder = 3,
+            [NotMapped]
+            [Description("_keine")]
+            Null = int.MaxValue
         }
     }
 }

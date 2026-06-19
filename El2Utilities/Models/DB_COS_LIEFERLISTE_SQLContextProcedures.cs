@@ -57,7 +57,7 @@ namespace El2Core.Models
                 new SqlParameter
                 {
                     ParameterName = "usrID",
-                    Size = 20,
+                    Size = 10,
                     Value = usrID ?? Convert.DBNull,
                     SqlDbType = System.Data.SqlDbType.NChar,
                 },

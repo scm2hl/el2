@@ -209,7 +209,7 @@ namespace ModuleDeliverList.ViewModels
                 }
             }
         }
-        private ProjectTypes.ProjectType _SelectedProjectType = ProjectTypes.ProjectType.None;
+        private ProjectTypes.ProjectType _SelectedProjectType = ProjectTypes.ProjectType.Null;
 
         public ProjectTypes.ProjectType SelectedProjectType
         {
@@ -499,8 +499,8 @@ namespace ModuleDeliverList.ViewModels
                 if (accepted && _selectedDefaultFilter == CmbFilter.DEVELOP) accepted = (ord.Aid.StartsWith("EM")) == !FilterInvers;
                 if (accepted && _selectedDefaultFilter == CmbFilter.EXERTN) accepted = (ord.ArbPlSap == "_EXTERN_") == !FilterInvers;
                 if (accepted) accepted = !ord.AidNavigation.Abgeschlossen;
-                if (accepted && _selectedProjectFilter != "_keine") accepted = ord.AidNavigation.ProId == _selectedProjectFilter;
-                if (accepted && _SelectedProjectType != ProjectTypes.ProjectType.None) accepted = ord.AidNavigation.Pro?.ProjectType == (int)_SelectedProjectType;
+                if (accepted && _selectedProjectFilter != "") accepted = ord.AidNavigation.ProId == _selectedProjectFilter;
+                if (accepted && _SelectedProjectType != ProjectTypes.ProjectType.Null) accepted = ord.AidNavigation.Pro?.ProjectType == (int)_SelectedProjectType;
                 if (accepted && _selectedSectionFilter != "_keine") accepted = _ressources?
                         .FirstOrDefault(x => x.Inventarnummer == ord.ArbPlSap?[3..])?
                         .WorkArea?.Bereich == _selectedSectionFilter;
@@ -696,7 +696,7 @@ namespace ModuleDeliverList.ViewModels
         {
             SearchFilterText = string.Empty;
             SelectedDefaultFilter = CmbFilter.NOT_SET;
-            SelectedProjectType = ProjectTypes.ProjectType.None;
+            SelectedProjectType = ProjectTypes.ProjectType.Null;
             SelectedProjectFilter = Projects.ElementAt(0).ProjectPsp;
             SelectedSectionFilter = Sections.ElementAt(0).Value;
             SelectedPersonalFilter = PersonalFilterContainer.GetInstance().Keys[0];
@@ -809,7 +809,7 @@ namespace ModuleDeliverList.ViewModels
 
         public async Task<ICollectionView> LoadDataAsync()
         {
-            //_projects.Add(new Project() { ProjectPsp = "leer"});
+            
 
             if (!_sections.ContainsKey(0)) _sections.Add(0, "_keine");
             var a = await DBctx.Vorgangs
@@ -830,7 +830,7 @@ namespace ModuleDeliverList.ViewModels
                 .ToArrayAsync();
             var filt = await DBctx.ProductionOrderFilters.AsNoTracking().ToArrayAsync();
             _ressources.AddRange(ress);
-            SortedSet<ProjectStruct> pl = [new("_keine", ProjectTypes.ProjectType.None, string.Empty)];
+            SortedSet<ProjectStruct> pl = [new("", ProjectTypes.ProjectType.Null, string.Empty)];
             await Task.Factory.StartNew(() =>
             {
                 HashSet<Vorgang> result = new();
@@ -895,7 +895,7 @@ namespace ModuleDeliverList.ViewModels
                 _orders.AddRange(result.OrderBy(x => x.SpaetEnd));
                 
             });
-            Projects.AddRange(pl.OrderBy(x => x.ProjectType));
+            Projects.AddRange(pl.OrderByDescending(x => x.ProjectType));
             SelectedProjectFilter = pl.ElementAt(0).ProjectPsp;
             SelectedSectionFilter = _sections.ElementAt(0).Value;
             OrdersView = CollectionViewSource.GetDefaultView(_orders);

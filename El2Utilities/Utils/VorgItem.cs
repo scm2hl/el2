@@ -31,6 +31,7 @@ namespace El2Core.Utils
             Material= view.Material ?? view.DummyMat;
             Bezeichnung = view.Bezeichng ?? view.Mattext;
             VorgangId= view.VorgangId;
+            
         }
         public override string ToString()
         {

@@ -77,15 +77,15 @@ namespace Lieferliste_WPF.ViewModels
                 if (value != null)
                 {
                     ReferencePre = new RefItem("Vorgang", value.VorgangId, string.Format("{0} - {1}\n{2} {3}",
-                        value.Auftrag, value.Vorgang, value.Material?.Trim(), value.Bezeichnung));
+                        value.Auftrag, value.Vorgang, value.Material?.Trim(), value.Bezeichnung), value);
                     Target = value;
 
                 }
             }
         }
-        private ProxyOrder _SelectedPrxItem;
+        private ProxyOrder? _SelectedPrxItem;
 
-        public ProxyOrder SelectedPrxItem
+        public ProxyOrder? SelectedPrxItem
         {
             get { return _SelectedPrxItem; }
             set
@@ -93,7 +93,7 @@ namespace Lieferliste_WPF.ViewModels
                 _SelectedPrxItem = value;
                 if (value != null)
                 {
-                    ReferencePre = new RefItem("ProxyOrder", value.OrderId.ToString(), string.Format("{0} - {1}", value.OrderId, value.CommentText));
+                    ReferencePre = new RefItem("ProxyOrder", value.OrderId.ToString(), string.Format("{0} - {1}", value.OrderId, value.CommentText), value);
                     Target = value;
 
                 }
@@ -111,6 +111,7 @@ namespace Lieferliste_WPF.ViewModels
                 {
                     _ReferencePre = value;
                     NotifyPropertyChanged(() => ReferencePre);
+                    Target = value?.Source;
                 }
             }
         }
@@ -125,7 +126,7 @@ namespace Lieferliste_WPF.ViewModels
                 {
                     _selectedRef = value;
                     ReferencePre = value;
-                    Target = value;
+                    Target = (value != null) ? value.Value.Source : null;
                 }
             }
         }
@@ -248,8 +249,8 @@ namespace Lieferliste_WPF.ViewModels
                 NotifyPropertyChanged(() => SumTimes);
             }
         }
-        private object _Target;
-        public object Target { get => _Target; set { _Target = value; NotifyPropertyChanged(() => Target); } }
+
+        public object? Target { get; set { field = value; NotifyPropertyChanged(() => Target); } }
 
         private bool OnProcessTimeChangeCanExecute(object arg)
         {
@@ -305,6 +306,8 @@ namespace Lieferliste_WPF.ViewModels
             EmployeeNotes = _ctx.EmployeeNotes.Where(x => x.Date > D)
                 .Include(x => x.Sel)
                 .Include(x => x.Vorg)
+                .ThenInclude(x => x.AidNavigation)
+                .ThenInclude(x => x.MaterialNavigation)
                 .Include(x => x.Prx)
                 .OrderBy(x => x.Date).ToObservableCollection();
 
@@ -328,7 +331,7 @@ namespace Lieferliste_WPF.ViewModels
             SelectedRefs = [];
             foreach (var s in sel)
             {
-                SelectedRefs.Add(new RefItem("EmploySelection", s.Id.ToString(), s.Description));
+                SelectedRefs.Add(new RefItem("EmploySelection", s.Id.ToString(), s.Description, s));
             }
             SelectedWeekDay = DateTime.Today.DayOfWeek;
 
@@ -363,7 +366,7 @@ namespace Lieferliste_WPF.ViewModels
         }
         private bool OnSubmitCanExecute(object arg)
         {
-            return ReferencePre.HasValue;
+            return ReferencePre != null && ReferencePre.HasValue;
         }
 
         private void OnSubmitExecuted(object obj)
@@ -382,6 +385,7 @@ namespace Lieferliste_WPF.ViewModels
             _ctx.EmployeeNotes.Add(emp);
 
             _ctx.SaveChanges();
+            if (emp.VorgId != null) emp.Vorg = _ctx.Vorgangs.Include(x => x.AidNavigation).Include(y => y.AidNavigation.MaterialNavigation).First(a => a.VorgangId == emp.VorgId);
             EmployeeNotes.Add(emp);
             _logger.LogInformation("Employnote Submitted");
             ReferencePre = null;
@@ -492,10 +496,11 @@ namespace Lieferliste_WPF.ViewModels
         public string Vorname { get; } = Vorname;
         public string Nachname { get; } = Nachname;
     }
-    public struct RefItem(string Table, string Id, string Description)
+    public struct RefItem(string Table, string Id, string Description, object Source)
     {
         public string Table { get; } = Table;
         public string Id { get; } = Id;
         public string Description { get; set; } = Description;
+        public object Source { get; } = Source;
     }
 }

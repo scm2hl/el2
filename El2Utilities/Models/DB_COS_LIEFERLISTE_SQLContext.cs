@@ -108,8 +108,6 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.UseCollation("Latin1_General_CI_AS");
-
         modelBuilder.Entity<AccountCost>(entity =>
         {
             entity.HasKey(e => new { e.AccountId, e.CostId }).HasFillFactor(95);
@@ -202,7 +200,7 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                 .HasColumnType("date")
                 .HasColumnName("date");
             entity.Property(e => e.Processingtime).HasColumnName("processingtime");
-            entity.Property(e => e.Prxid).HasColumnName("prxid");
+            entity.Property(e => e.PrxId).HasColumnName("prxId");
             entity.Property(e => e.Reference)
                 .HasMaxLength(255)
                 .IsUnicode(false)
@@ -230,8 +228,7 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                 .HasConstraintName("FK_Employee_note_idm_accounts");
 
             entity.HasOne(d => d.Prx).WithMany(p => p.EmployeeNotes)
-                .HasForeignKey(d => d.Prxid)
-                .OnDelete(DeleteBehavior.SetNull)
+                .HasForeignKey(d => d.PrxId)
                 .HasConstraintName("FK_Employee_note_ProxyOrder");
 
             entity.HasOne(d => d.Sel).WithMany(p => p.EmployeeNotes)
@@ -337,10 +334,13 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
         modelBuilder.Entity<InMemoryMsg>(entity =>
         {
             entity.HasKey(e => e.MsgId)
-                .HasName("PK__InMemory__6623589344B17E95")
-                .IsClustered(false);
+                .HasName("PK__InMemory__662358934B319009")
+                .IsClustered(false)
+                .HasFillFactor(95);
 
-            entity.ToTable("InMemoryMsg");
+            entity
+                .ToTable("InMemoryMsg")
+                .IsMemoryOptimized();
 
             entity.Property(e => e.MsgId).HasColumnName("MsgID");
             entity.Property(e => e.Invoker).HasMaxLength(255);
@@ -355,10 +355,13 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
         modelBuilder.Entity<InMemoryOnline>(entity =>
         {
             entity.HasKey(e => e.OnlId)
-                .HasName("PK__InMemory__A34E6163C0494893")
-                .IsClustered(false);
+                .HasName("PK__InMemory__A34E616341453DE5")
+                .IsClustered(false)
+                .HasFillFactor(95);
 
-            entity.ToTable("InMemoryOnline");
+            entity
+                .ToTable("InMemoryOnline")
+                .IsMemoryOptimized();
 
             entity.Property(e => e.OnlId).HasColumnName("OnlID");
             entity.Property(e => e.LifeTime).HasColumnType("datetime");
@@ -439,12 +442,17 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
 
             entity.ToTable("OrderComponent");
 
+            entity.HasIndex(e => e.Aid, "ixAid").HasFillFactor(95);
+
+            entity.HasIndex(e => e.Material, "ixOrderComponentMaterial").HasFillFactor(95);
+
             entity.Property(e => e.CompId).HasColumnName("CompID");
             entity.Property(e => e.Aid)
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.Assembly).HasMaxLength(50);
             entity.Property(e => e.LatestRequirementsDate).HasColumnType("datetime");
+            entity.Property(e => e.LatestRequirementsDate1).HasColumnType("date");
             entity.Property(e => e.Material).HasMaxLength(255);
 
             entity.HasOne(d => d.AidNavigation).WithMany(p => p.OrderComponents)
@@ -642,6 +650,8 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                 .HasFillFactor(95);
 
             entity.ToTable("Response");
+
+            entity.HasIndex(e => e.VorgangId, "ixVorgangId").HasFillFactor(95);
 
             entity.Property(e => e.ResponseId).HasColumnName("response_id");
             entity.Property(e => e.Notreal).HasColumnName("notreal");
@@ -1033,6 +1043,8 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                     tb.HasTrigger("AuditChangesVorgang");
                     tb.HasTrigger("AuditInsertVorgang");
                 });
+
+            entity.HasIndex(e => new { e.Aid, e.Text, e.SysStatus }, "<ixAidTextSysstatus").HasFillFactor(95);
 
             entity.Property(e => e.VorgangId)
                 .HasMaxLength(255)
