@@ -1,6 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel;
 
 namespace El2Core.Constants
 {
@@ -8,15 +6,19 @@ namespace El2Core.Constants
     {
         public enum ProjectType
         {
+            [Browsable(true)]
             [Description("kein Projekttyp")]
             None = 0,
+            [Browsable(true)]
             [Description("Entwicklungsmuster")]
             DevelopeSpecimen = 1,
+            [Browsable(true)]
             [Description("Verkaufsmuster")]
             SaleSpecimen = 2,
+            [Browsable(true)]
             [Description("Versuchsproject")]
             TestOrder = 3,
-            [EditorBrowsable]
+            [Browsable (false)]
             [Description("_keine")]
             Null = int.MaxValue
         }
