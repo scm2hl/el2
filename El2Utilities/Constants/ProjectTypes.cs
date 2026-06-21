@@ -16,7 +16,7 @@ namespace El2Core.Constants
             SaleSpecimen = 2,
             [Description("Versuchsproject")]
             TestOrder = 3,
-            [NotMapped]
+            [EditorBrowsable]
             [Description("_keine")]
             Null = int.MaxValue
         }

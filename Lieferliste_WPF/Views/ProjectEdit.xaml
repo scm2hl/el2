@@ -86,7 +86,7 @@
                             HorizontalAlignment="Right" Background="Azure" MinWidth="40"/>
 
                                 <ComboBox Margin="15,0,0,0"  Name="ProjectType"
-                            ItemsSource="{Binding Node.ProjectType, Converter={conv:EnumToCollectionConverter}, Mode=TwoWay}"
+                            ItemsSource="{Binding Node.ProjectType, Converter={conv:EnumToCollectionConverter}, ConverterParameter=1, Mode=TwoWay}"
                             SelectedValuePath="Value"
                             SelectedValue="{Binding Path=Node.ProjectType, Mode=TwoWay}"
                             DisplayMemberPath="Description" Initialized="ProjectType_Initialized"/>
