@@ -858,7 +858,6 @@ namespace ModuleDeliverList.ViewModels
                                         break;
                                     }
                             }
-
                         }
                     }
                     if (relev)
@@ -866,7 +865,7 @@ namespace ModuleDeliverList.ViewModels
                             
                         foreach (var vorg in group)
                         {
-                            if (vorg.AidNavigation.ProId != null && !vorg.AidNavigation.ProId.StartsWith('0'))
+                            if (vorg.AidNavigation.ProId != null && !vorg.AidNavigation.ProId.StartsWith('0') )
                             {
                                 var p = vorg.AidNavigation.Pro;
                                 if (p != null)
