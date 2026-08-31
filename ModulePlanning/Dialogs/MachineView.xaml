@@ -25,6 +25,7 @@
         <conv:RelativePermissionConverter x:Key="Relpermiss"/>
         <conv:CommentConverter x:Key="comment"/>
         <conv:PlusConverter x:Key="plus"/>
+        <conv:DurationConverter x:Key="duration"/>
         <conv:KW_Converter x:Key="KW"/>
         <conv:NullZeroToBool x:Key="zerobool"/>
         <conv:IfNullConverter x:Key="IfNull"/>
@@ -277,7 +278,7 @@
                         <MultiBinding Converter="{StaticResource plus}">
                             <Binding Path="Beaze"/>
                             <Binding Path="Rstze"/>
-                            <Binding Path="Correction" Mode="OneWay" UpdateSourceTrigger="PropertyChanged"/>
+                            <Binding Path="Correction"/>
                         </MultiBinding>
                     </DataGridTextColumn.Binding>
                     <DataGridTextColumn.CellStyle>
@@ -294,6 +295,7 @@
                                     <Setter Property="Foreground" Value="Black"/>
                                 </DataTrigger>
                             </Style.Triggers>
+                            <Setter Property="ToolTip" Value="Dauer + Rüstzeit + Korrektur"/>
                         </Style>
                     </DataGridTextColumn.CellStyle>
                 </DataGridTextColumn>

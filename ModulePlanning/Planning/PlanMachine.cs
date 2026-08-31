@@ -318,19 +318,19 @@ namespace ModulePlanning.Planning
                 {
                     //calculation of the currently required time
                     var procT = vorgang.Beaze == null ? 0.0 : (short)vorgang.Beaze;
-                    var quant = (short)vorgang.AidNavigation.Quantity;
+                    var quant = vorgang.AidNavigation.Quantity ?? 0;
                     var miss = vorgang.QuantityMissNeo == null ? 0.0 : (short)vorgang.QuantityMissNeo;
                     if (vorgang.Prepare) 
                     {
-                        duration = procT / quant * miss +r +c;
-                        vorgang.Formula = string.Format("Formel: Beaze / Menge * offen + Rstze + Korrektur\n{0}/{3}*{4}+{1}+{2}",
-                            procT,r,c,quant,miss);
+                        duration = procT/quant*miss +r +c;
+                        vorgang.Formula = string.Format("Formel: Beaze/Menge*offen + Rstze + Korrektur\n{0}/{1}*{2} + {3} + {4}",
+                            procT,quant,miss,r,c);
                     }
                     else
                     {
-                        duration = procT / quant * miss +c;
-                        vorgang.Formula = string.Format("Formel: Beaze / Menge * offen + Korrektur\n{0}/{2}*{3}+{1}",
-                            procT, c, quant, miss);
+                        duration = procT/quant*miss +c;
+                        vorgang.Formula = string.Format("Formel: Beaze/Menge*offen + Korrektur\n{0}/{1}*{2} + {3}",
+                            procT,quant,miss,c);
                     }
                 }
                 return duration;
@@ -475,8 +475,7 @@ namespace ModulePlanning.Planning
                                 }
                             }
                         }
-                    }
-                    
+                    }                  
                     
                 });        
             }
