@@ -4,6 +4,11 @@ namespace El2Core.Models
 {
     public static class EmployNoteExtensions
     {
+        /// <summary>
+        /// Gets the target object (EmploySelection, VorgItem, or ProxyOrder) associated with the EmployeeNote.
+        /// </summary>
+        /// <param name="note"></param>
+        /// <returns></returns>
         public static object? GetTarget(this EmployeeNote note)
         {
             object? ret = null;
@@ -15,6 +20,11 @@ namespace El2Core.Models
                 ret = note.Prx;
             return ret;
         }
+        /// <summary>
+        /// Sets the target object (EmploySelection, VorgItem, or ProxyOrder) for the EmployeeNote.
+        /// </summary>
+        /// <param name="note"></param>
+        /// <param name="target"></param>
         public static void SetTarget(this EmployeeNote note, object? target)
         {
             if (target is EmploySelection sel)
@@ -43,6 +53,11 @@ namespace El2Core.Models
                 note.PrxId = null;
             }
         }
+        /// <summary>
+        /// Gets a string representation of the target object associated with the EmployeeNote.
+        /// </summary>
+        /// <param name="note"></param>
+        /// <returns></returns>
         public static string? GetTargetInfo(this EmployeeNote note)
         {
             if (note.Sel != null)

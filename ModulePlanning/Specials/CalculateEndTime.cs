@@ -37,7 +37,12 @@ namespace ModulePlanning.Specials
             
             holidayLogic = container.Resolve<HolidayLogic>();
         }
-
+        /// <summary>
+        /// Get a manipulated week plan based on the original week plan and the start date and time, considering stoppages.
+        /// </summary>
+        /// <param name="weekplan"></param>
+        /// <param name="start"></param>
+        /// <returns></returns>
         private bool[] GetManipulateMask(bool[] weekplan, DateTime start)
         {
             var stopes = stoppages.Where(x => start < x.Endtime && (start.Date <= x.Endtime.Date && start.Date >= x.Starttime.Date));
@@ -53,7 +58,12 @@ namespace ModulePlanning.Specials
             
             return ret;
         }
-
+        /// <summary>
+        /// Get the end date and time based on the process length and start date and time, considering the shift plan and holidays.
+        /// </summary>
+        /// <param name="processLength">The length of the process in minutes.</param>
+        /// <param name="start">The start date and time of the process.</param>
+        /// <returns>The calculated end date and time.</returns>
         public DateTime GetEndDateTime(double processLength, DateTime start)
         {
             int key = int.Parse(string.Concat(start.Year.ToString(),
@@ -114,6 +124,10 @@ namespace ModulePlanning.Specials
             using var db = container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
             stoppages = db.Stopages.AsNoTracking().Where(x => x.Rid == rid).ToList();
         }
+        /// <summary>
+        /// Reloads the shift calendar from database for the specified resource ID (rid) from the database and updates the weekPlans dictionary with the corresponding shift plans.
+        /// Every day have a boolean array of 1440 minutes, where true indicates that the resource is available for work and false indicates that the resource is not available for work.
+        /// </summary>
         public void ReloadShiftCalendar()
         {
             using var db = container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
