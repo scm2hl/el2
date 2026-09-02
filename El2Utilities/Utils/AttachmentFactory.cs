@@ -15,7 +15,9 @@ using static El2Core.Utils.AttachmentFactory;
 
 namespace El2Core.Utils
 {
-
+    /// <summary>
+    /// Abstract factory class for creating display and database attachments, retrieving file type icons, and handling file operations.
+    /// </summary>
     public abstract class AttachmentFactory
     {
         // SHGetFileInfo flags
@@ -109,7 +111,13 @@ namespace El2Core.Utils
             }
         }
 
-    
+        /// <summary>
+        /// Populates an IDisplayAttachment with file information and icon based on the provided file path and link status.
+        /// </summary>
+        /// <param name="attachment"></param>
+        /// <param name="file"></param>
+        /// <param name="isLink"></param>
+        /// <returns></returns>
         public static IDisplayAttachment FloatAttachment(IDisplayAttachment attachment, string? file, bool isLink)
         {
             FileInfo fi = new FileInfo(file ?? string.Empty);
@@ -121,6 +129,13 @@ namespace El2Core.Utils
             
             return attachment; 
         }
+        /// <summary>
+        /// Populates an IDbAttachment with file information and binary data based on the provided file path and link status.
+        /// </summary>
+        /// <param name="dbAttachment"></param>
+        /// <param name="fileString"></param>
+        /// <param name="isLink"></param>
+        /// <returns></returns>
         public static IDbAttachment FloatAttachment(IDbAttachment dbAttachment, string fileString, bool isLink)
         {
             FileInfo fi = new FileInfo(fileString);
@@ -157,6 +172,12 @@ namespace El2Core.Utils
             else MessageBox.Show("Datei wurde nicht gefunden", "Datei anfügen", MessageBoxButton.OK, MessageBoxImage.Error);
             return dbAttachment;
         }
+        /// <summary>
+        /// Opens a file using the default application associated with its file type.
+        /// If a MemoryStream is provided, it creates a temporary file from the stream before opening it.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="memoryStream"></param>
         public static void OpenFile(string file, MemoryStream? memoryStream)
         {
             try
@@ -184,6 +205,10 @@ namespace El2Core.Utils
                 MessageBox.Show(string.Format("{0}\n{1}", e.Message, e.InnerException), "OpenStream", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        /// <summary>
+        /// Opens a file picker dialog for the user to select a file and returns the selected file's path.
+        /// </summary>
+        /// <returns></returns>
         public static async Task<string> GetFilePickerPath()
         {
 

@@ -1,5 +1,8 @@
 ﻿namespace El2Core.Constants
 {
+    /// <summary>
+    /// Defines the names of regions used in the application for UI composition.
+    /// </summary>
     public struct RegionNames
     {
         public const string MainContentRegion = "MainContentRegion";

@@ -8,6 +8,9 @@ using System.Reflection;
 
 namespace El2Core.Utils
 {
+    /// <summary>
+    /// Provides helper methods for working with enums, including retrieving descriptions and filtering based on attributes.
+    /// </summary>
     public static class EnumHelper
     {
         // Cache must consider the descriptionParameter because callers may request different

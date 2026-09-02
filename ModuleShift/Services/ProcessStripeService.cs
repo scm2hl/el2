@@ -15,6 +15,12 @@ namespace ModuleShift.Services
 {
     public interface IProcessStripeService
     { }
+    /// <summary>
+    /// This class is responsible for calculating the processing time of a given process (Vorgang) based on its setup time,
+    /// correction time, and the quantity of work to be done.
+    /// It takes into account the work shifts of the associated resource and any holidays that may affect the processing time.
+    /// The class implements IDisposable to allow for proper resource management.
+    /// </summary>
     public class ProcessStripeService : IProcessStripeService, IDisposable
     {
 
@@ -24,7 +30,13 @@ namespace ModuleShift.Services
         public void Dispose()
         {
         }
-
+        /// <summary>
+        /// Calculates the end date of a process (Vorgang) based on its setup time, correction time, and the quantity of work to be done.
+        /// </summary>
+        /// <param name="vorgang"></param>
+        /// <param name="start"></param>
+        /// <param name="ProcessLength"></param>
+        /// <returns></returns>
         public DateTime GetProcessLength(Vorgang vorgang, DateTime start, out TimeSpan ProcessLength)
         {
             var r = vorgang.Rstze == null ? 0.0 : (short)vorgang.Rstze; //Setup time
@@ -47,6 +59,14 @@ namespace ModuleShift.Services
             ProcessLength = TimeSpan.Zero;
             return start;
         }
+        /// <summary>
+        /// Calculates the end date of a process (Vorgang) based on the provided time span, start date, resource, and length.
+        /// </summary>
+        /// <param name="timeSpan"></param>
+        /// <param name="start"></param>
+        /// <param name="ressource"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         private TimeSpan GetCalculatedEndDate(TimeSpan timeSpan, DateTime start, Ressource ressource, TimeSpan length)
         {
             DateTime dateTime = start;

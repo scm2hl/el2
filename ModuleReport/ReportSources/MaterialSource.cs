@@ -20,6 +20,12 @@ namespace ModuleReport.ReportSources
         long Counter { get; }
 
     }
+    /// <summary>
+    /// This class is responsible for loading and managing material data from the database.
+    /// It implements the IMaterialSource interface and provides functionality to load default and SAP material data asynchronously.
+    /// The class uses dependency injection to obtain necessary services such as IContainerProvider and IEventAggregator.
+    /// It also logs information about the loading process using an ILogger instance.
+    /// </summary>
     internal partial class MaterialSource : ViewModelBase, IMaterialSource
     {
         public MaterialSource(IContainerProvider containerProvider, IEventAggregator eventAggregator)
@@ -31,7 +37,10 @@ namespace ModuleReport.ReportSources
             _Logger = factory.CreateLogger<MaterialSource>();
             _ = LoadDefaultDataAsync();
         }
-
+        /// <summary>
+        /// Handles the source change event and triggers the loading of material data based on the selected source.
+        /// </summary>
+        /// <param name="obj"></param>
         private void OnSourceChange(int obj)
         {
             if (obj == 0) _ = LoadDefaultDataAsync();
@@ -139,6 +148,10 @@ namespace ModuleReport.ReportSources
             _Logger.LogInformation("Default Count: {message} Loadtime(ms): {1}", temp.Count, new TimeSpan(end.Ticks - start.Ticks).TotalMilliseconds);
             Materials.AddRange(temp);
         }
+        /// <summary>
+        /// Asynchronously loads material data from the SAP source and populates the Materials collection.
+        /// </summary>
+        /// <returns></returns>
         public async Task LoadSapDataAsync()
         {
             Counter = 0;

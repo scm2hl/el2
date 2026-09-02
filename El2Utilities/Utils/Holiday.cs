@@ -29,9 +29,6 @@ namespace El2Core.Utils
             this._locale = locale;
         }
 
-        /// <summary>
-        /// Beschreibung: 
-        /// </summary>
         private string? name;
         public string? Name
         {
@@ -47,9 +44,6 @@ namespace El2Core.Utils
         }
 
 
-        /// <summary>
-        /// Beschreibung: 
-        /// </summary>
         private DateTime datum = DateTime.Now;
         public DateTime Datum
         {
@@ -65,9 +59,6 @@ namespace El2Core.Utils
         }
 
 
-        /// <summary>
-        /// Beschreibung: 
-        /// </summary>
         private int type;
         public int Type
         {
@@ -82,9 +73,6 @@ namespace El2Core.Utils
             }
         }
   
-        /// <summary>
-        /// Locale String
-        /// </summary>
         public string  Locale => _locale;
 
 
@@ -105,9 +93,7 @@ namespace El2Core.Utils
         private String? locale;
 
         internal FrozenDictionary<DateOnly, Holiday> Holidays { get { return holydays; } }
-        /// <summary>
-        /// Beschreibung: 
-        /// </summary>
+
         public int CurrentYear
         {
             get { return year; }
@@ -118,12 +104,20 @@ namespace El2Core.Utils
             get { return locale; }
             set { locale = value; }
         }
-
+        /// <summary>
+        /// Checks if the given date is a holiday.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool IsHolyday(DateTime value)
         {
             return holydays.Keys.Contains(DateOnly.FromDateTime(value));
         }
-
+        /// <summary>
+        /// Returns the name of the holiday for the given date, or "no Holiday" if it is not a holiday.
+        /// </summary>
+        /// <param name="Datevalue"></param>
+        /// <returns></returns>
         public string? GetHolydayName(DateTime Datevalue)
         {
             var d = DateOnly.FromDateTime(Datevalue);
@@ -131,7 +125,10 @@ namespace El2Core.Utils
                 return value.Name;
             return "no Holiday";
         }
-
+        /// <summary>
+        /// Initializes a new instance of the HolidayLogic class and populates the list of holidays
+        /// for the current year and the next year based on the rules defined in RuleInfo.
+        /// </summary>
         public HolidayLogic()
         {
             this.year = DateTime.Now.Year;

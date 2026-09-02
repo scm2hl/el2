@@ -26,6 +26,13 @@ namespace El2Core.Services
         void Reload();
         void Upgrade();
     }
+    /// <summary>
+    /// Implements the IUserSettingsService interface to manage user settings for the application.
+    /// This service provides properties to get and set various user preferences,
+    /// such as ExplorerPath, PersonalFolder, IsAutoSave, IsSaveMessage, IsRowDetails,
+    /// FontSize, SizePercent, Theme, PlanedSetup, KWReview, and EmployTimeFormat.
+    /// It also includes methods to save, reset, reload, and upgrade user settings.
+    /// </summary>
     public class UserSettingsService : IUserSettingsService
     {
         public string ExplorerPath

@@ -25,6 +25,9 @@ namespace El2Core.Services
         bool RemoveAbonnent(Abonnent abonnent);
         bool UpdateAbonnent(Abonnent value);
     }
+    /// <summary>
+    /// Represents a subscriber (Abonnent) with properties for ID, address, name, subscriptions, and workplaces.
+    /// </summary>
     public struct Abonnent
     {
         public string Id { get; set; }
@@ -45,6 +48,9 @@ namespace El2Core.Services
         [Description("Bemerkung Mitarbeiter")]
         MaBem = 3
     }
+    /// <summary>
+    /// Represents a notification broker that manages subscribers (Abonnents) and sends messages to them based on their subscriptions.
+    /// </summary>
     public class NotifyBroker : INotifyBroker
     {
         private static IConfiguration? _container;
@@ -115,6 +121,13 @@ namespace El2Core.Services
         //    }
         //}
 
+        /// <summary>
+        /// Sends a message to all subscribers (Abonnents) who have subscribed to the specified sender type. (SMTP)
+        /// The message body is split into parts using the ASCII character 29 as a delimiter, and the message is sent in HTML format.
+        /// </summary>
+        /// <param name="message_body"></param>
+        /// <param name="sender"></param>
+        /// <returns></returns>
         public async Task SendMessageAsync(string message_body, SubscribeType sender)
         {
             var message = new MimeMessage();
@@ -149,7 +162,13 @@ namespace El2Core.Services
                 await client.DisconnectAsync(true);
             }
         }
-
+        /// <summary>
+        /// Updates an existing subscriber (Abonnent) in the list based on the provided value.
+        /// If the subscriber with the same ID exists, it checks if the subscriptions and workplaces are the same. If they are different,
+        /// it replaces the existing subscriber with the new value. Returns true if the update was successful, false otherwise.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public bool UpdateAbonnent(Abonnent value)
         {
             var idx = Abonnents.FindIndex(m => m.Id == value.Id);

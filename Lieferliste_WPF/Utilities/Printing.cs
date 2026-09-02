@@ -46,7 +46,11 @@ namespace Lieferliste_WPF.Utilities
         {
             throw new NotImplementedException();
         }
-
+        /// <summary>
+        /// Print Preview for a PlanMachine with a given PrintTicket
+        /// </summary>
+        /// <param name="planMachine"></param>
+        /// <param name="ticket"></param>
         public void PrintPreview(PlanMachine planMachine, PrintTicket ticket)
         {
             Printing.DoPrintPreview
@@ -69,6 +73,12 @@ namespace Lieferliste_WPF.Utilities
     }
     internal static class Printing
     {
+        /// <summary>
+        /// Prints the given FlowDocument using the specified PrintTicket and description.
+        /// </summary>
+        /// <param name="document"></param>
+        /// <param name="ticket"></param>
+        /// <param name="description"></param>
         public static void DoThePrint(FlowDocument document, PrintTicket ticket, string description)
         {
             // Clone the source document's content into a new FlowDocument.
@@ -254,7 +264,11 @@ namespace Lieferliste_WPF.Utilities
         WindowStartupLocation ='CenterOwner'>
                       <DocumentViewer Name='dv1'/>
      </Window>";
-
+        /// <summary>
+        /// Previews a window with the given useful data.
+        /// The window is created using a Grid and a FixedDocument, and the document is displayed in a DocumentViewer.
+        /// </summary>
+        /// <param name="usefulData"></param>
         public static void PreviewWindowXaml(object usefulData)
         {
             Grid grid;
@@ -327,6 +341,13 @@ namespace Lieferliste_WPF.Utilities
         //        }
         //    }
         //}
+
+        /// <summary>
+        /// Converts a FlowDocument to a FixedDocument using the specified PrintTicket.
+        /// </summary>
+        /// <param name="flowDoc"></param>
+        /// <param name="ticket"></param>
+        /// <returns></returns>
         public static FixedDocument Get_Fixed_From_FlowDoc(FlowDocument flowDoc, PrintTicket ticket)
         {
             var fixedDocument = new FixedDocument();
@@ -377,6 +398,12 @@ namespace Lieferliste_WPF.Utilities
             }
             return fixedDocument;
         }
+        /// <summary>
+        /// Creates a FlowDocument for a given Vorgang,
+        /// including details such as Auftrag, Vorgang number, Material, Bemerkung, and Start messen time.
+        /// </summary>
+        /// <param name="vorgang"></param>
+        /// <returns></returns>
         public static FlowDocument CreateKlimaDocument(Vorgang vorgang)
         {
             FlowDocument document = new FlowDocument();
@@ -536,6 +563,12 @@ namespace Lieferliste_WPF.Utilities
 
         //    FlexPrinter.Print(printerName, labelSize, doc);
         //}
+
+        /// <summary>
+        /// Saves the given FlowDocument as an XPS file at the specified path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="document"></param>
         public static void SaveAsXps(string path, FlowDocument document)
         {
             using (Package package = Package.Open(path, FileMode.Create))

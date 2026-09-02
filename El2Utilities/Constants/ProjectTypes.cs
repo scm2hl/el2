@@ -4,6 +4,9 @@ namespace El2Core.Constants
 {
     public class ProjectTypes
     {
+        /// <summary>
+        /// Defines the types of projects available in the system.
+        /// </summary>
         public enum ProjectType
         {
             [Browsable(true)]

@@ -6,7 +6,9 @@ using System.Windows.Documents;
 
 namespace Lieferliste_WPF.Utilities
 {
-
+    /// <summary>
+    /// A helper class for binding the Document property of a RichTextBox to a string containing XAML.
+    /// </summary>
     public class RichTextBoxHelper : DependencyObject
     {
         public static string GetDocumentXaml(DependencyObject obj)

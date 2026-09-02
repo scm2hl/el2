@@ -27,6 +27,9 @@ namespace El2Core.Utils
         public abstract string GetHtml();
         public abstract FlowDocument GetDoc();
     }
+    /// <summary>
+    /// A concrete builder class that constructs a FlowDocument with a table based on the provided headers and context.
+    /// </summary>
     public class FlowTableBuilder : AbstracatBuilder
     {
         string[] headers;
@@ -99,6 +102,10 @@ namespace El2Core.Utils
             xslt.Load(xr);
             return xslt;
         }
+        /// <summary>
+        /// Transforms the FlowDocument to HTML using an XSLT transformation.
+        /// </summary>
+        /// <returns></returns>
         public override string GetHtml()
         {
             XslCompiledTransform ToHtmlTransform = LoadTransformResource("/FlowDocumentToXhtml.xslt");
@@ -127,10 +134,18 @@ namespace El2Core.Utils
             }
             
         }
+        /// <summary>
+        /// Returns the constructed FlowDocument containing the table.
+        /// </summary>
+        /// <returns></returns>
         public override FlowDocument GetDoc()
         {
             return doc;
         }
+        /// <summary>
+        /// Sets the context for the table builder, which is a list of string arrays representing the rows of the table.
+        /// </summary>
+        /// <param name="context"></param>
         public override void SetContext(List<string?[]> context)
         {
             this.context = context;

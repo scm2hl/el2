@@ -8,6 +8,10 @@ namespace El2Core.Utils
     {
 
     }
+    /// <summary>
+    /// A class that wraps a Task and provides notification when the task completes.
+    /// </summary>
+    /// <typeparam name="TResult"></typeparam>
     public sealed class NotifyTaskCompletion<TResult> : INotifyPropertyChanged, INotifyTaskCompletion
     {
         public NotifyTaskCompletion(Task<TResult> task)

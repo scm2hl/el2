@@ -2,6 +2,9 @@
 
 namespace El2Core.Utils
 {
+    /// <summary>
+    /// Singleton class that provides user permissions and access control.
+    /// </summary>
     public sealed class PermissionsProvider
     {
         private static PermissionsProvider? _instance;
@@ -9,6 +12,10 @@ namespace El2Core.Utils
         private HashSet<string> _permissions = new();
         private HashSet<int> _fullAccesses = new();
 
+        /// <summary>
+        /// Gets the singleton instance of the PermissionsProvider.
+        /// </summary>
+        /// <returns></returns>
         public static PermissionsProvider GetInstance()
         {
             if (_instance == null)
@@ -36,7 +43,11 @@ namespace El2Core.Utils
                 }
             }
         }
-
+        /// <summary>
+        /// Checks if the user has the specified permission.
+        /// </summary>
+        /// <param name="permission"></param>
+        /// <returns></returns>
         public bool GetUserPermission(string permission)
         {
             if (permission.StartsWith('!')) //negation of permission
@@ -45,6 +56,12 @@ namespace El2Core.Utils
             }
             return _permissions.Contains(permission);
         }
+        /// <summary>
+        /// Checks if the user has the specified permission and full access to the given work area.
+        /// </summary>
+        /// <param name="permission"></param>
+        /// <param name="workAreaId"></param>
+        /// <returns></returns>
         public bool GetRelativeUserPermission(string permission, int workAreaId)
         {
             if(GetUserPermission(permission))

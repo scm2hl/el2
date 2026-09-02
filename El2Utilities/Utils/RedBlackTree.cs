@@ -10,6 +10,10 @@ namespace El2Core.Utils
         private Node grandParentNode;
         private Node tempNode;
 
+        /// <summary>
+        /// Inserts an item into the Red-Black Tree while maintaining its properties.
+        /// </summary>
+        /// <param name="item"></param>
         public void Insert(IComparable item)
         {
             //root.data = item;
@@ -34,6 +38,10 @@ namespace El2Core.Utils
                 ReArrange(item);
             }
         }
+        /// <summary>
+        /// Rearranges the tree to maintain Red-Black Tree properties after an insertion.
+        /// </summary>
+        /// <param name="item"></param>
         private void ReArrange(IComparable item)
         {
             currentNode.color = Red;

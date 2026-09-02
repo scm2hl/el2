@@ -6,6 +6,10 @@ using System.Threading;
 
 namespace El2Core.Utils
 {
+    /// <summary>
+    /// An ObservableCollection that is thread-safe and can be updated from any thread.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class ConcurrentObservableCollection<T> : ObservableCollection<T>
     {
         private readonly SynchronizationContext _synchronizationContext = SynchronizationContext.Current;

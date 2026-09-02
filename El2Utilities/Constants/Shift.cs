@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace El2Core.Constants
 {
+    /// <summary>
+    /// Represents the different types of shifts available in the system.
+    /// </summary>
     public class ShiftTypes
     {
         public ShiftTypes() { }

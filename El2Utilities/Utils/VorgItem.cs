@@ -3,6 +3,9 @@ using System.Windows.Media.Media3D;
 
 namespace El2Core.Utils
 {
+    /// <summary>
+    /// Represents a simplified view of a Vorgang (process/order) item with relevant properties for display and identification.
+    /// </summary>
     public class VorgItem
     {
         public string Auftrag { get; private set; }

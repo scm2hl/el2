@@ -8,20 +8,36 @@ using System.Linq;
 
 namespace ModuleProxyOrder.Entities
 {
+    /// <summary>
+    /// Represents a proxy for an order, implementing INotifyPropertyChanged, IDbTarget, and INotifyDataErrorInfo interfaces.
+    /// </summary>
     public class OrderProxy : ProxyOrder, INotifyPropertyChanged, IDbTarget, INotifyDataErrorInfo
     {
         private readonly Dictionary<string, List<string>> _errors = new();
         public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
         public bool HasErrors => _errors.Any();
+        /// <summary>
+        /// Gets the errors associated with the specified property name. If there are no errors for the property, it returns null.
+        /// </summary>
+        /// <param name="propertyName"></param>
+        /// <returns></returns>
         public System.Collections.IEnumerable GetErrors(string? propertyName)
             => _errors.ContainsKey(propertyName) ? _errors[propertyName] : null;
 
+        /// <summary>
+        /// Sets the errors for the specified property name and raises the ErrorsChanged event.
+        /// </summary>
+        /// <param name="propertyName"></param>
+        /// <param name="errors"></param>
         public void SetErrors(string propertyName, List<string> errors)
         {
             _errors[propertyName] = errors;
             ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
         }
-
+        /// <summary>
+        /// Clears the errors associated with the specified property name and raises the ErrorsChanged event if any errors were removed.
+        /// </summary>
+        /// <param name="propertyName"></param>
         public void ClearErrors(string propertyName)
         {
             if (_errors.Remove(propertyName))
@@ -43,7 +59,9 @@ namespace ModuleProxyOrder.Entities
                 }
             }
         }
-
+        /// <summary>
+        /// Gets or sets the target object associated with the OrderProxy. When the target is set, it updates the EntityState accordingly.
+        /// </summary>
         public object? Target
         {
             get;
@@ -81,6 +99,10 @@ namespace ModuleProxyOrder.Entities
             Created = DateTime.Now;
             
         }
+        /// <summary>
+        /// Initializes a new instance of the OrderProxy class based on the provided ProxyOrder object.
+        /// </summary>
+        /// <param name="prx"></param>
         public OrderProxy(ProxyOrder prx)
         {
             foreach (var b in prx.GetType().GetProperties())
@@ -110,6 +132,10 @@ namespace ModuleProxyOrder.Entities
             }
             EntityState = State.Unchanged;
         }
+        /// <summary>
+        /// Updates the target of the OrderProxy and adjusts the EntityState accordingly.
+        /// </summary>
+        /// <param name="target"></param>
         public void UpdateTarget(object? target)
         {
             if (target == null && Target != null)
@@ -154,6 +180,10 @@ namespace ModuleProxyOrder.Entities
             }
             Target = target;
         }
+        /// <summary>
+        /// Sets the state of the OrderProxy and raises the PropertyChanged event for EntityState.
+        /// </summary>
+        /// <param name="state"></param>
         public void SetState(State state)
         {
             EntityState = state;

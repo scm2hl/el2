@@ -1,5 +1,8 @@
 ﻿namespace El2Core.Constants
 {
+    /// <summary>
+    /// Represents a collection of permission constants used for access control in the application.
+    /// </summary>
     public struct Permissions
     {
         public const string MachPlan = "MP00";

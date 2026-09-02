@@ -13,6 +13,9 @@ namespace El2Core.Utils
     public interface IDocument
     {
     }
+    /// <summary>
+    /// Represents a document with various parts and their corresponding values.
+    /// </summary>
     public abstract class Document()
     {
         private readonly Dictionary<DocumentPart, string> parts =[];
@@ -27,6 +30,10 @@ namespace El2Core.Utils
     public class FirstPartDocument : Document { }
     public class VmpbDocument : Document { }
     public class WorkAreaDocument : Document { }
+    /// <summary>
+    /// Represents the information of a document, including its type, root path, template, and other relevant parts.
+    /// </summary>
+    /// <param name="container"></param>
     public abstract class DocumentInfo(IContainerExtension container)
     {
         private IContainerExtension Container => container;
@@ -51,6 +58,10 @@ namespace El2Core.Utils
 
             db.SaveChanges();
         }
+        /// <summary>
+        /// Collects the document data and creates the necessary directories based on the SavePath in the document.
+        /// </summary>
+        /// <param name="document"></param>
         public void Collect(Document document)
         {
             if (string.IsNullOrEmpty(document[DocumentPart.SavePath])) { return; }
@@ -76,6 +87,9 @@ namespace El2Core.Utils
             serializer.Serialize(writer, entries);
         }
     }
+    /// <summary>
+    /// Represents the information of a measure first part document.
+    /// </summary>
     public class MeasureFirstPartInfo : DocumentInfo
     {
         private Document document;
@@ -139,11 +153,17 @@ namespace El2Core.Utils
             }
 
         }
-
+        /// <summary>
+        /// Creates document information without specifying folders, returning the document with default values.
+        /// </summary>
+        /// <returns></returns>
         public override Document CreateDocumentInfos()
         {
             return CreateDocumentInfos(null);
         }
+        /// <summary>
+        /// Saves the document data to the database using the base class method.
+        /// </summary>
         public void SaveDocumentData()
         {
             base.SaveDocumentData(document);
@@ -152,12 +172,18 @@ namespace El2Core.Utils
         {
             base.Collect(document);
         }
-
+        /// <summary>
+        /// Gets the document associated with this MeasureFirstPartInfo instance.
+        /// </summary>
+        /// <returns></returns>
         public override Document GetDocument()
         {
             return document;
         }
     }
+    /// <summary>
+    /// Represents the information of a VMPB document, including its type, root path, template, and other relevant parts.
+    /// </summary>
     public class VmpbDocumentInfo : DocumentInfo
     {
         private Document document;
@@ -167,7 +193,12 @@ namespace El2Core.Utils
             var factory = container.Resolve<ILoggerFactory>();
             logger = factory.CreateLogger<VmpbDocumentInfo>();
         }
-
+        /// <summary>
+        /// Creates document information based on the provided folders and whether it is a dummy document, returning the document with populated values.
+        /// </summary>
+        /// <param name="folders"></param>
+        /// <param name="isDummy"></param>
+        /// <returns></returns>
         public override Document CreateDocumentInfos(string[]? folders, bool isDummy = false)
         {
             try
@@ -246,6 +277,9 @@ namespace El2Core.Utils
             return document;
         }
     }
+    /// <summary>
+    /// Represents the information of a work area document, including its type, root path, template, and other relevant parts.
+    /// </summary>
     public class WorkareaDocumentInfo : DocumentInfo
     {
         private Document document;
@@ -333,6 +367,9 @@ namespace El2Core.Utils
             return document;
         }
     }
+    /// <summary>
+    /// Represents the information of a measure document, including its type, root path, template, and other relevant parts.
+    /// </summary>
     public class MeasureDocumentInfo : DocumentInfo
     {
         private Document document;

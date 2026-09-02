@@ -18,6 +18,11 @@ namespace El2Core.Utils
     {
         IContainerProvider Container { get; }
     }
+    /// <summary>
+    /// Singleton class that manages a collection of personal filters.
+    /// It provides methods to add, remove, load, save, and access filters by key.
+    /// The filters are serialized to and deserialized from an XML file named "Perfilter.xml" located in the user's roaming and local configuration directory.
+    /// </summary>
     public sealed class PersonalFilterContainer
     {
         private readonly Dictionary<string, PersonalFilter> _filters = [];
@@ -36,6 +41,10 @@ namespace El2Core.Utils
         }
         public string[] Keys => [.. _filters.Keys];
 
+        /// <summary>
+        /// Gets the singleton instance of the PersonalFilterContainer.
+        /// </summary>
+        /// <returns></returns>
         public static PersonalFilterContainer GetInstance()
         {
             return Instance;
@@ -85,7 +94,9 @@ namespace El2Core.Utils
         {
             IsChanged = true;
         }
-
+        /// <summary>
+        /// Saves the current state of the personal filters to an XML file named "Perfilter.xml" in the user's roaming and local configuration directory.
+        /// </summary>
         public void Save()
         {
             if (IsChanged)
@@ -315,6 +326,10 @@ namespace El2Core.Utils
             RegEx = new Regex(regex);
             _Field = field;
         }
+        /// <summary>
+        /// Gets or sets the regular expression pattern associated with this personal filter.
+        /// When set, it updates the RegEx property and raises the PropertyChanged event for the Pattern property.
+        /// </summary>
         public override string Pattern
         {
             get { return RegEx.ToString(); }
@@ -330,12 +345,20 @@ namespace El2Core.Utils
             get => _Field;
             set => SetField(ref _Field, value);
         }
-
+        /// <summary>
+        /// Gets the regular expression associated with this personal filter.
+        /// </summary>
+        /// <returns></returns>
         public override Regex GetRegEx()
         {
             return RegEx;
         }
-
+        /// <summary>
+        /// Gets the test string for the specified Vorgang by navigating through the AidNavigation property to retrieve the value of the property specified in Field.Item2.
+        /// </summary>
+        /// <param name="vorgang"></param>
+        /// <param name="container"></param>
+        /// <returns></returns>
         public override string GetTestString(Vorgang vorgang, IContainerProvider container)
         {
 
@@ -388,7 +411,13 @@ namespace El2Core.Utils
         {
             return RegEx;
         }
-
+        /// <summary>
+        /// Gets the test string for the specified Vorgang by navigating through the AidNavigation
+        /// and MaterialNavigation properties to retrieve the value of the property specified in Field.Item2.
+        /// </summary>
+        /// <param name="vorgang"></param>
+        /// <param name="container"></param>
+        /// <returns></returns>
         public override string GetTestString(Vorgang vorgang, IContainerProvider container)
         {
 
@@ -447,7 +476,12 @@ namespace El2Core.Utils
         {
             return RegEx;
         }
-
+        /// <summary>
+        /// Gets the test string for the specified Vorgang by navigating through the RidNavigation property to retrieve the value of the property specified in Field.Item2.
+        /// </summary>
+        /// <param name="vorgang"></param>
+        /// <param name="container"></param>
+        /// <returns></returns>
         public override string GetTestString(Vorgang vorgang, IContainerProvider container)
         {
 
@@ -503,7 +537,12 @@ namespace El2Core.Utils
         {
             return RegEx;
         }
-
+        /// <summary>
+        /// Gets the test string for the specified Vorgang by navigating through the AidNavigation and Pro properties to retrieve the value of the property specified in Field.Item2.
+        /// </summary>
+        /// <param name="vorgang"></param>
+        /// <param name="container"></param>
+        /// <returns></returns>
         public override string GetTestString(Vorgang vorgang, IContainerProvider container)
         {
 
@@ -528,6 +567,9 @@ namespace El2Core.Utils
             return string.Empty;
         }
     }
+    /// <summary>
+    /// Represents a pair of properties with associated metadata.
+    /// </summary>
     public readonly struct PropertyPair
     {
         //Type 1 == Vorgang

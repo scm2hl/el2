@@ -28,6 +28,10 @@ using System.Windows.Media;
 
 namespace ModulePlanning.Planning
 {
+    /// <summary>
+    /// This interface defines a factory for creating instances of the PlanMachine class.
+    /// It provides access to various services and components required for the creation and operation of PlanMachine instances.
+    /// </summary>
     public interface IPlanMachineFactory
     {
         IContainerProvider Container { get; }
@@ -36,6 +40,9 @@ namespace ModulePlanning.Planning
         IUserSettingsService SettingsService { get; }
         IDialogService DialogService { get; }
     }
+    /// <summary>
+    /// This class implements the IPlanMachineFactory interface and serves as a factory for creating instances of the PlanMachine class.
+    /// </summary>
     public class PlanMachineFactory : IPlanMachineFactory
     {
         public IContainerProvider Container { get; }
@@ -48,7 +55,14 @@ namespace ModulePlanning.Planning
 
         public IDialogService DialogService { get; }
         public DB_COS_LIEFERLISTE_SQLContext DbContext { get; }
-
+        /// <summary>
+        /// Initializes a new instance of the PlanMachineFactory class with the specified dependencies.
+        /// </summary>
+        /// <param name="container"></param>
+        /// <param name="applicationCommands"></param>
+        /// <param name="eventAggregator"></param>
+        /// <param name="settingsService"></param>
+        /// <param name="dialogService"></param>
         public PlanMachineFactory(IContainerProvider container, IApplicationCommands applicationCommands,
             IEventAggregator eventAggregator, IUserSettingsService settingsService, IDialogService dialogService)
         {
@@ -60,6 +74,12 @@ namespace ModulePlanning.Planning
             DataObject dt = new();
             
         }
+        /// <summary>
+        /// Creates a new instance of the PlanMachine class using the provided Ressource and database context.
+        /// </summary>
+        /// <param name="res"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public PlanMachine CreatePlanMachine(Ressource res, DB_COS_LIEFERLISTE_SQLContext context)
         {
             return new PlanMachine(res, context, Container, ApplicationCommands, EventAggregator, SettingsService, DialogService);
@@ -70,6 +90,9 @@ namespace ModulePlanning.Planning
     {
         public int Rid { get; }
     }
+    /// <summary>
+    /// The PlanMachine class represents a view model for managing and displaying information related to a specific machine in a planning context.
+    /// </summary>
     [System.Runtime.Versioning.SupportedOSPlatform("windows10.0")]
     public class PlanMachine : ViewModelBase, IPlanMachine, IDropTarget, IViewModel
     {
@@ -275,7 +298,9 @@ namespace ModulePlanning.Planning
             IsAdmin = PermissionsProvider.GetInstance().GetUserPermission(Permissions.AdminFunc);
             EnableRowDetails = _settingsService.IsRowDetails;           
         }
-
+        /// <summary>
+        /// Calculates the end time for each process in the Processes collection based on their durations and the selected shift plan.
+        /// </summary>
         private void CalculateEndTime()
         {
             try
@@ -307,6 +332,11 @@ namespace ModulePlanning.Planning
                 _logger.LogError("{message}", ex.ToString());
             }
         }
+        /// <summary>
+        /// Calculates the duration of a given process (Vorgang) based on its setup time, correction time, processing time, and quantity.
+        /// </summary>
+        /// <param name="vorgang"></param>
+        /// <returns></returns>
         private double GetProcessDuration(Vorgang vorgang)
         {
             try
@@ -341,6 +371,10 @@ namespace ModulePlanning.Planning
                 return 0.0;
             }
         }
+        /// <summary>
+        /// Handles the reception of a search filter message and updates the ScrollItem property based on the provided search string.
+        /// </summary>
+        /// <param name="obj"></param>
         private void MessageSearchFilterReceived(string obj)
         {
             try
@@ -355,6 +389,10 @@ namespace ModulePlanning.Planning
                 _logger.LogError("{message}", ex.ToString());
             }
         }
+        /// <summary>
+        /// Handles the reception of an order message and updates the Processes collection based on the provided list of order tuples.
+        /// </summary>
+        /// <param name="list"></param>
         private void MessageOrderReceived(List<(string, string)?> list)
         {
             try
@@ -419,6 +457,10 @@ namespace ModulePlanning.Planning
                 _logger.LogError("{message}", ex.ToString());
             }
         }
+        /// <summary>
+        /// Handles the reception of a vorgang message and updates the Processes collection based on the provided list of vorgang tuples.
+        /// </summary>
+        /// <param name="vorgangIdList"></param>
         private void MessageVorgangReceived(List<(string, string)?> vorgangIdList)
         {
             try
@@ -670,7 +712,11 @@ namespace ModulePlanning.Planning
                 _logger.LogError("{message}", ex.ToString());
             }
         }
-
+        /// <summary>
+        /// Callback method for handling the result of the HistoryDialog.
+        /// Updates the BemT property of the corresponding Vorgang based on the user's input in the dialog.
+        /// </summary>
+        /// <param name="result"></param>
         private void HistoryCallBack(IDialogResult result)
         {
             try
@@ -805,8 +851,18 @@ namespace ModulePlanning.Planning
                 var bem = result.Parameters.GetValue<string>("Comment");
             }
         }
+        /// <summary>
+        /// Inserts a Vorgang item into the target ListCollectionView at the specified index,
+        /// updating the SortPos of all items in the target collection accordingly.
+        /// If the item is being moved from the source collection, it is removed from there.
+        /// If the WorkArea has CreateFolder enabled, it creates document infos for the item.
+        /// </summary>
+        /// <param name="Item"></param>
+        /// <param name="Source"></param>
+        /// <param name="Target"></param>
+        /// <param name="Index"></param>
+        /// <param name="sorting"></param>
 
- 
         private void InsertItems(Vorgang Item, ListCollectionView Source, ListCollectionView Target, int Index, bool sorting)
         {
 
@@ -879,6 +935,10 @@ namespace ModulePlanning.Planning
                 _logger.LogError("{message}", ex.ToString());
             }
         }
+        /// <summary>
+        /// Handles the drop operation for drag-and-drop functionality, moving Vorgang items between source and target collections,
+        /// </summary>
+        /// <param name="dropInfo"></param>
         public void Drop(IDropInfo dropInfo)
         {
 

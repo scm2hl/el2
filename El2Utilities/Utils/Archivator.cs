@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace El2Core.Utils
 {
-
+    /// <summary>
+    /// Provides functionality for archiving files based on specified rules and criteria.
+    /// </summary>
     public static class Archivator
     {
         
@@ -38,7 +40,13 @@ namespace El2Core.Utils
             get { return _DelayDays; }
             set { _isChanged = true; _DelayDays = value; }
         }
-
+        /// <summary>
+        /// Archives files from the specified source location based on the provided rule.
+        /// </summary>
+        /// <param name="SourceLocation"></param>
+        /// <param name="rule"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public static async Task<ArchivatorResult> ArchivateAsync(DirectoryInfo SourceLocation, int rule, CancellationToken cancellationToken = default)
         {
             
@@ -97,6 +105,12 @@ namespace El2Core.Utils
             }
             return new ArchivatorResult() { State = state, Location = Location, MovedFiles = MovedFiles };
         }
+        /// <summary>
+        /// Moves files from the source array to the target directory, updating the state of the archiving operation accordingly.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        /// <param name="state"></param>
         private static void MoveFiles(FileInfo[] source, string target, ref ArchivState state)
         {
             foreach (var file in source)
@@ -112,6 +126,14 @@ namespace El2Core.Utils
                 }
             }
         }
+        /// <summary>
+        /// Moves files asynchronously from the source array to the target directory,
+        /// returning the number of successfully moved files and the path of the next directory if applicable.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="target"></param>
+        /// <param name="repeatNr"></param>
+        /// <returns></returns>
         private static async Task<ValueTuple<int, string>> MoveFilesAsync(FileInfo[] source, string target, int repeatNr)
         {
             int result = 0;
@@ -144,6 +166,10 @@ namespace El2Core.Utils
             TTNR,
             OrderNumber
         }
+        /// <summary>
+        /// Represents the state of the archiving operation, indicating whether files were archived,
+        /// if there were no files, if the directory was missing, or if no rule was found.
+        /// </summary>
         public enum ArchivState
         {
             None,
@@ -153,12 +179,18 @@ namespace El2Core.Utils
             NoRule
         }
     }
+    /// <summary>
+    /// Represents the result of an archiving operation, including the state, location, and number of moved files.
+    /// </summary>
     public struct ArchivatorResult
     {
         public Archivator.ArchivState State { get; set; }
         public string Location { get; set; }
         public int MovedFiles { get; set; }
     }
+    /// <summary>
+    /// Represents a rule for archiving files based on a regular expression and target path.
+    /// </summary>
     public class ArchivatorRule
     {
         public string? Name { get; set; }

@@ -7,7 +7,9 @@ using System.Windows.Markup;
 
 namespace El2Core.Converters
 {
-
+    /// <summary>
+    /// Converts an Enum type to a collection of ValueDescription objects for use in data binding.
+    /// </summary>
     [ValueConversion(typeof(Enum), typeof(IEnumerable<ValueDescription>))]
     public class EnumToCollectionConverter : MarkupExtension, IValueConverter
     {

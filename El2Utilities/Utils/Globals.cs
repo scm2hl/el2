@@ -20,6 +20,12 @@ namespace El2Core.Utils
         static User User { get; }
         static IContainerProvider Container { get; }
     }
+    /// <summary>
+    /// Globals class is a singleton that holds global application state,
+    /// including user information, machine name, and application rules.
+    /// It provides methods to load and save rules, project schemes, and notification settings.
+    /// The class implements IDisposable for resource management.
+    /// </summary>
     public class Globals : IGlobals, IDisposable
     {
         public User User { get; private set; }
@@ -36,6 +42,12 @@ namespace El2Core.Utils
             LoadData();
             
         }
+        /// <summary>
+        /// Creates a UserInfo object by querying the database for the current user's account information and permissions.
+        /// </summary>
+        /// <param name="container"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
         public static UserInfo CreateUserInfo(IContainerProvider container)
         {
             //user = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
@@ -104,6 +116,11 @@ namespace El2Core.Utils
             }
 
         }
+        /// <summary>
+        /// Saves a rule to the database. If the rule already exists, it updates the existing rule's value; otherwise, it creates a new rule entry.
+        /// </summary>
+        /// <param name="RuleKey"></param>
+        /// <param name="value"></param>
         public static void SaveRule(string RuleKey, string value)
         {
             Rule rule;
@@ -115,6 +132,10 @@ namespace El2Core.Utils
             else { rule = new Rule() { RuleName = RuleKey, RuleValue = value }; }
             SaveRule(rule);
         }
+        /// <summary>
+        /// Saves a rule to the database. If the rule already exists, it updates the existing rule's value and data; otherwise, it creates a new rule entry.
+        /// </summary>
+        /// <param name="rule"></param>
         public static void SaveRule(Rule rule)
         {           
             using var db = Container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
@@ -130,6 +151,10 @@ namespace El2Core.Utils
             }
             db.SaveChanges();
         }
+        /// <summary>
+        /// Saves a list of project schemes to the database by serializing them into XML format and storing them in a rule entry with the name "ProjStruct".
+        /// </summary>
+        /// <param name="projectSchemes"></param>
         public static void SaveProjectSchemes(List<ProjectScheme> projectSchemes)
         {
             var serializer = XmlSerializerHelper.GetSerializer(typeof(List<ProjectScheme>));
@@ -143,6 +168,10 @@ namespace El2Core.Utils
             SaveRule(rule);
 
         }
+        /// <summary>
+        /// Saves the current state of the Archivator settings to the database by serializing them into XML format
+        /// and storing them in a rule entry with the name "Archivator".
+        /// </summary>
         public static void SaveArchivator()
         {
             ArchivatorWrap wrap = new();
@@ -157,7 +186,9 @@ namespace El2Core.Utils
             SaveRule(rule);
             Archivator.IsChanged = false;
         }
-
+        /// <summary>
+        /// Saves the current list of notification subscribers (Abonnents) to the database by serializing them into XML format
+        /// </summary>
         public static void SaveNotifyBroker()
         {
             var serializer = XmlSerializerHelper.GetSerializer(typeof(List<Abonnent>));
@@ -174,6 +205,9 @@ namespace El2Core.Utils
 
         }
     }
+    /// <summary>
+    /// UserInfo is a readonly struct that holds information about the current user and machine.
+    /// </summary>
     public readonly struct UserInfo
     {
         public static string? PC => _PC ?? string.Empty;
@@ -188,6 +222,9 @@ namespace El2Core.Utils
             _User = Usr;
         }
     }
+    /// <summary>
+    /// RuleInfo is a readonly struct that holds application rules and project schemes in immutable dictionaries.
+    /// </summary>
     public readonly struct RuleInfo
     {
         public static ImmutableDictionary<string, Rule> Rules { get; private set; } = ImmutableDictionary<string, Rule>.Empty;
@@ -211,6 +248,9 @@ namespace El2Core.Utils
                 ProjectSchemes = sc.ToImmutableDictionary();
             }
         }
+        /// <summary>
+        /// Wraps the Archivator settings for serialization and deserialization, allowing the settings to be saved to and loaded from the database.
+        /// </summary>
         public class ArchivatorWrap
         {
 
