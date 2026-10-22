@@ -57,6 +57,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DynamicExpresso.Core" />
     <PackageReference Include="EfCore.SchemaCompare" />
     <PackageReference Include="gong-wpf-dragdrop" />
     <PackageReference Include="HtmlToXaml" />
