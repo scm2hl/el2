@@ -40,7 +40,7 @@ namespace ModulePlanning.Dialogs.ViewModels
             else
             {
                 result = ButtonResult.OK;
-                param.Add("correct", correctValue * 60);
+                param.Add("correct", correctValue);
                 param.Add("correction", vorgang);
             }
             RequestClose.Invoke(param, result);
@@ -49,7 +49,7 @@ namespace ModulePlanning.Dialogs.ViewModels
         public void OnDialogOpened(IDialogParameters parameters)
         {
             vorgang = parameters.GetValue<Vorgang>("correction");
-            correctValue = vorgang.Correction / 60;
+            correctValue = vorgang.Correction;
             
         }
     }

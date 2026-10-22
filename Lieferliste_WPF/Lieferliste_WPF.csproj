@@ -318,7 +318,9 @@
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<UserSecretsId>89393e76-c4e9-423b-a875-988090c78343</UserSecretsId>
 		<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-	</PropertyGroup>
+		<GenerateDocumentationFile>False</GenerateDocumentationFile>
+	</PropertyGroup>	
+
   
   <!--<Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v17.0\TextTemplating\Microsoft.TextTemplating.targets" />-->
   
