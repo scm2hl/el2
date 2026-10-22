@@ -352,15 +352,15 @@ namespace ModulePlanning.Planning
                     var miss = vorgang.QuantityMissNeo == null ? 0.0 : (short)vorgang.QuantityMissNeo;
                     if (vorgang.Prepare) 
                     {
-                        duration = procT/quant*miss +r +c;
-                        vorgang.Formula = string.Format("Formel: Beaze/Menge*offen + Rstze + Korrektur\n{0}/{1}*{2} + {3} + {4}",
-                            procT,quant,miss,r,c);
+                        duration = (procT/quant+c)*miss +r;
+                        vorgang.Formula = string.Format("Formel: (Beaze/Menge + Korrektur)*offen + Rstze\n({0}/{1} + {2})*{3} + {4}",
+                            procT,quant,c,miss,r);
                     }
                     else
                     {
-                        duration = procT/quant*miss +c;
-                        vorgang.Formula = string.Format("Formel: Beaze/Menge*offen + Korrektur\n{0}/{1}*{2} + {3}",
-                            procT,quant,miss,c);
+                        duration = (procT/quant+c)*miss;
+                        vorgang.Formula = string.Format("Formel: (Beaze/Menge + Korrektur) * offen\n({0}/{1}+{2})*{3}",
+                            procT,quant,c,miss);
                     }
                 }
                 return duration;

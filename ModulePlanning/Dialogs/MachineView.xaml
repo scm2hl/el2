@@ -275,10 +275,11 @@
                 <DataGridTextColumn Header="NA" Binding="{Binding QuantityRework}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Dauer" IsReadOnly="True">
                     <DataGridTextColumn.Binding>
-                        <MultiBinding Converter="{StaticResource plus}">
+                        <MultiBinding Converter="{StaticResource duration}">
                             <Binding Path="Beaze"/>
                             <Binding Path="Rstze"/>
                             <Binding Path="Correction"/>
+                            <Binding Path="AidNavigation.Quantity"/>
                         </MultiBinding>
                     </DataGridTextColumn.Binding>
                     <DataGridTextColumn.CellStyle>
