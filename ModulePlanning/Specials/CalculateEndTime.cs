@@ -23,6 +23,8 @@ namespace ModulePlanning.Specials
         private HolidayLogic holidayLogic;
         private List<Stopage> stoppages;
         private bool repeat;
+        private Dictionary<int, ShiftPlan> ShiftPlans;
+        private int kw;
         private ILogger logger;
 
         public ShiftPlanService(int rid, IContainerProvider container)
@@ -33,7 +35,7 @@ namespace ModulePlanning.Specials
             var factory = container.Resolve<ILoggerFactory>();
             logger = factory.CreateLogger<ShiftPlanService>();
             ReloadStoppage();
-            ReloadShiftCalendar();      
+            ReloadShiftCalendar();
             
             holidayLogic = container.Resolve<HolidayLogic>();
         }
@@ -73,8 +75,8 @@ namespace ModulePlanning.Specials
                 var count = weekPlans.Count;
                 var diff = key - weekPlans.Keys.First();
                 var mod = diff % count;
-                var k = weekPlans.Keys.ElementAt(mod);
-                weekPlan = weekPlans[k];
+                kw = weekPlans.Keys.ElementAt(mod);
+                weekPlan = weekPlans[kw];
             }
             else if (weekPlans.TryGetValue(key, out weekPlan) == false) return start;
 
@@ -83,10 +85,11 @@ namespace ModulePlanning.Specials
             int resultMinute = 0;
             
             TimeSpan time = start.TimeOfDay;
-            if (holidayLogic.IsHolyday(start))
+            if (ShiftPlans[kw].NightshiftRule == null)
             {
-                while (holidayLogic.IsHolyday(start.AddDays(1))) { start = start.AddDays(1); } //move the start to => tomorrow is not holiday
+                while (holidayLogic.IsHolyday(start)) { start = start.AddDays(1); } //move the start to => tomorrow is not holiday
             }
+            ///todo: add the nightshift rule to the shiftplan, and implement the logic to handle the nightshift rule
             int startDay = (int)start.DayOfWeek;
             tmpWeekPlan = [.. weekPlan[startDay]];
             if (startDay != 0)
@@ -135,12 +138,13 @@ namespace ModulePlanning.Specials
                 .Include(x => x.ShiftCalendarShiftPlans)
                 .ThenInclude(x => x.Plan)
                 .SingleOrDefault(x => x.Ressources.Any(x => x.RessourceId == rid));
+
             if (scal != null)
-            {
+            {              
                 repeat = scal.Repeat;
                 weekPlans.Clear();
                 foreach (var s in scal.ShiftCalendarShiftPlans.OrderBy(x => x.YearKw))
-                {
+                {                   
                     List<bool[]> days = new List<bool[]>();
                     Byte[] bytes;
                     bool[] sbools = new bool[1440];
@@ -187,6 +191,7 @@ namespace ModulePlanning.Specials
 
                     int key = int.Parse(s.YearKw);
                     weekPlans.Add(key, [.. days]);
+                    ShiftPlans.Add(key, s.Plan);
                 }
             }
         }
