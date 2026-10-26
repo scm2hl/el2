@@ -1,4 +1,5 @@
 ﻿using El2Core.Models;
+using El2Core.Services;
 using El2Core.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Documents;
 
 namespace ModulePlanning.Specials
 {
@@ -23,7 +25,7 @@ namespace ModulePlanning.Specials
         private HolidayLogic holidayLogic;
         private List<Stopage> stoppages;
         private bool repeat;
-        private Dictionary<int, ShiftPlan> ShiftPlans;
+        private Dictionary<int, ShiftPlan> ShiftPlans = [];
         private int kw;
         private ILogger logger;
 
@@ -68,8 +70,11 @@ namespace ModulePlanning.Specials
         /// <returns>The calculated end date and time.</returns>
         public DateTime GetEndDateTime(double processLength, DateTime start)
         {
-            int key = int.Parse(string.Concat(start.Year.ToString(),
-                    CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(start, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday)));
+            if (start.Year > DateTime.Now.AddYears(2).Year) return start;
+            var kw = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(start, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            var str = string.Concat(start.Year.ToString(), kw);
+                   
+            int key = int.Parse(str);
             if (repeat)
             {
                 var count = weekPlans.Count;
@@ -85,23 +90,37 @@ namespace ModulePlanning.Specials
             int resultMinute = 0;
             
             TimeSpan time = start.TimeOfDay;
-            if (ShiftPlans[kw].NightshiftRule == null)
+            ShiftPlans[kw].NightshiftRule = "IsHoliday(date)";
+            if (string.IsNullOrWhiteSpace(ShiftPlans[kw].NightshiftRule))
             {
                 while (holidayLogic.IsHolyday(start)) { start = start.AddDays(1); } //move the start to => tomorrow is not holiday
+            }
+            else if (start.Year <= DateTime.Now.AddYears(2).Year)
+            {
+                if (weekPlan[(int)start.DayOfWeek].Length < 1440)
+                {
+
+                }
+                else
+                {
+                    var condition = ShiftPlans[kw].NightshiftRule;
+                    CodeSolver codeSolver = new CodeSolver();
+                    codeSolver.ManipulateWorkPlan(condition, start, 300, 1440, weekPlan[(int)start.DayOfWeek]);
+                }
             }
             ///todo: add the nightshift rule to the shiftplan, and implement the logic to handle the nightshift rule
             int startDay = (int)start.DayOfWeek;
             tmpWeekPlan = [.. weekPlan[startDay]];
-            if (startDay != 0)
-            {
-                if (holidayLogic.IsHolyday(start)) {tmpWeekPlan.AsSpan(0, 1320).Fill(false);} //clear the shift unless nightshift_2
-                ///summary
-                ///extensionrule for nightshift if two holidays successively
-                ///summary
-                if (holidayLogic.IsHolyday(start.AddDays(-1)) && holidayLogic.IsHolyday(start)) tmpWeekPlan.AsSpan(1320, 120).Fill(false); //clear the nightshift_2
-                if (startDay == 2 && holidayLogic.IsHolyday(start.AddDays(-1)) && holidayLogic.IsHolyday(start.AddDays(-2))) tmpWeekPlan.AsSpan(0, 300).Fill(false); //clear the nightshift_1
-            }
-            else { if (holidayLogic.IsHolyday(start.AddDays(1))) tmpWeekPlan.AsSpan(1260, 180).Fill(false); } //clear the nightshift_sun
+            //if (startDay != 0)
+            //{
+            //    if (holidayLogic.IsHolyday(start)) {tmpWeekPlan.AsSpan(0, 1320).Fill(false);} //clear the shift unless nightshift_2
+            //    ///summary
+            //    ///extensionrule for nightshift if two holidays successively
+            //    ///summary
+            //    if (holidayLogic.IsHolyday(start.AddDays(-1)) && holidayLogic.IsHolyday(start)) tmpWeekPlan.AsSpan(1320, 120).Fill(false); //clear the nightshift_2
+            //    if (startDay == 2 && holidayLogic.IsHolyday(start.AddDays(-1)) && holidayLogic.IsHolyday(start.AddDays(-2))) tmpWeekPlan.AsSpan(0, 300).Fill(false); //clear the nightshift_1
+            //}
+            //else { if (holidayLogic.IsHolyday(start.AddDays(1))) tmpWeekPlan.AsSpan(1260, 180).Fill(false); } //clear the nightshift_sun
             tmpWeekPlan = GetManipulateMask(tmpWeekPlan, start);
 
             for (int j = (int)time.TotalMinutes; j < tmpWeekPlan.Length; j++)

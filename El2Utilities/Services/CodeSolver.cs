@@ -2,35 +2,54 @@
 using System.Collections.Generic;
 using System.Text;
 using DynamicExpresso;
+using El2Core.Utils;
 
 namespace El2Core.Services
 {
-    internal class CodeSolver
+    public class CodeSolver
     {
-        public void Solve()
+
+        public void ManipulateWorkPlan(string condition, DateTime date, int startMinute, int endMinute, bool[] workplan)
         {
-            var interpreter = new Interpreter();
-
-            var context = new RuleContext
+            if (startMinute < 0 ||
+                endMinute > workplan.Length ||
+                endMinute <= startMinute)
             {
-                Temperatur = 28,
-                Bewegung = false,
-                Stunde = 14
-            };
+                throw new ArgumentOutOfRangeException();
+            }
+            RuleContext context = new() { Date = date };
+            condition = "IsHoliday(AddDays(date, 1)) && IsMonday(date)";
 
-            bool result = interpreter.Eval<bool>(
-                "Temperatur > 25",
-                new Parameter("Temperatur", context.Temperatur)
-            );
+            Interpreter interpreter = new();
+            interpreter.SetVariable("date", context.Date);
+            interpreter.SetVariable("dayOfWeek", context.Date.DayOfWeek);
+            interpreter.SetFunction("IsHoliday", new Func<DateTime, bool>(context.IsHoliday));
+            interpreter.SetFunction("IsSunday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Sunday));
+            interpreter.SetFunction("IsMonday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Monday));
+            interpreter.SetFunction("IsTuesday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Tuesday));
+            interpreter.SetFunction("IsWednesday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Wednesday));
+            interpreter.SetFunction("IsThursday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Thursday));
+            interpreter.SetFunction("IsFriday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Friday));
+            interpreter.SetFunction("IsSaturday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Saturday));
+            interpreter.SetFunction("AddDays", new Func<DateTime, int, DateTime>((d, days) => d.AddDays(days)));
+            if (interpreter.Eval<bool>(condition))
+            {
+  
+                workplan.AsSpan(startMinute, endMinute - startMinute).Fill(false);
+            }
 
-            Console.WriteLine(result);
+
         }
-
         private class RuleContext
         {
-            public int Temperatur { get; set; }
-            public bool Bewegung { get; set; }
-            public int Stunde { get; set; }
+            readonly HolidayLogic holidayLogic = new();
+            public DateTime Date { get; set; }
+            public bool IsHoliday(DateTime date)
+            {
+                
+                return holidayLogic.IsHolyday(date);
+            }
+
         }
     }
 }
