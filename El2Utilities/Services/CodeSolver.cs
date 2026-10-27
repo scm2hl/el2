@@ -42,25 +42,51 @@ namespace El2Core.Services
 
 
         }
-        public void ManipulateWorkPlan(string condition, DateTime date, int startMinute, int endMinute, bool[] workplan)
+        public (int, int)? ManipulateWorkPlan(string condition, DateTime date, bool[] workplan)
         {
-            if (startMinute < 0 ||
-                endMinute > workplan.Length ||
-                endMinute <= startMinute)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+
             // Engine direkt im C#-Code starten (die DLLs liegen im ClickOnce-Paket)
             ScriptEngine engine = Python.CreateEngine();
             ScriptScope scope = engine.CreateScope();
-
+            var a = holidayLogic.IsHolyday(date.AddDays(-1));
+            var b = holidayLogic.IsHolyday(date);
+            var c = holidayLogic.IsHolyday(date.AddDays(1));
             // Ihre Feiertags-Objekte an Python übergeben
             scope.SetVariable("date", date);
             scope.SetVariable("IsHoliday", new Func<DateTime, bool>(holidayLogic.IsHolyday));
+            scope.SetVariable("a", a);
+            scope.SetVariable("b", b);
+            scope.SetVariable("c", c);
 
-            // Code des Users ausführen
-            string userCode = "if not IsHoliday(date) and date.DayOfWeek == date.DayOfWeek.Tuesday: MethodeA()";
-            engine.Execute(userCode, scope);
+// Code des Users ausführen
+string userCode = @"
+if a and b:
+    result = ('00:00', '23:59')
+elif b:
+    result = ('05:00', '23:59')
+elif c and not b:
+    result = ('22:00', '23:59')
+else:
+    result = None
+result
+";
+
+            dynamic r;
+            try
+            {
+                r = engine.Execute(userCode, scope);
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception($"Fehler in Regel: {ex.Message}");
+            }
+            if (r == null) return null;
+            else
+            { 
+                return ((int)TimeSpan.Parse(r[0]).TotalMinutes, (int)TimeSpan.Parse(r[1]).TotalMinutes);
+            }
+
         }
         private class RuleContext
         {
