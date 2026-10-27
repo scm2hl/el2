@@ -97,16 +97,11 @@ namespace ModulePlanning.Specials
             }
             else if (start.Year <= DateTime.Now.AddYears(2).Year)
             {
-                if (weekPlan[(int)start.DayOfWeek].Length < 1440)
-                {
-
-                }
-                else
-                {
-                    var condition = ShiftPlans[kw].NightshiftRule;
-                    CodeSolver codeSolver = new CodeSolver();
-                    codeSolver.ManipulateWorkPlan(condition, start, 300, 1440, weekPlan[(int)start.DayOfWeek]);
-                }
+ 
+                var condition = ShiftPlans[kw].NightshiftRule;
+                CodeSolver codeSolver = new CodeSolver();
+                codeSolver.ManipulateWorkPlan(condition, start, 300, 1440, weekPlan[(int)start.DayOfWeek]);
+                
             }
             ///todo: add the nightshift rule to the shiftplan, and implement the logic to handle the nightshift rule
             int startDay = (int)start.DayOfWeek;

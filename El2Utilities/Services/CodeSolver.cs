@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Text;
 using DynamicExpresso;
 using El2Core.Utils;
+using IronPython.Hosting;
+using Microsoft.Scripting.Hosting;
 
 namespace El2Core.Services
 {
     public class CodeSolver
     {
-
-        public void ManipulateWorkPlan(string condition, DateTime date, int startMinute, int endMinute, bool[] workplan)
+        HolidayLogic holidayLogic = new();
+        public void ManipulateWorkPlan(string condition, DateTime date, int startMinute, int endMinute, bool[] workplan, string m)
         {
             if (startMinute < 0 ||
                 endMinute > workplan.Length ||
@@ -39,6 +41,26 @@ namespace El2Core.Services
             }
 
 
+        }
+        public void ManipulateWorkPlan(string condition, DateTime date, int startMinute, int endMinute, bool[] workplan)
+        {
+            if (startMinute < 0 ||
+                endMinute > workplan.Length ||
+                endMinute <= startMinute)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+            // Engine direkt im C#-Code starten (die DLLs liegen im ClickOnce-Paket)
+            ScriptEngine engine = Python.CreateEngine();
+            ScriptScope scope = engine.CreateScope();
+
+            // Ihre Feiertags-Objekte an Python übergeben
+            scope.SetVariable("date", date);
+            scope.SetVariable("IsHoliday", new Func<DateTime, bool>(holidayLogic.IsHolyday));
+
+            // Code des Users ausführen
+            string userCode = "if not IsHoliday(date) and date.DayOfWeek == date.DayOfWeek.Tuesday: MethodeA()";
+            engine.Execute(userCode, scope);
         }
         private class RuleContext
         {

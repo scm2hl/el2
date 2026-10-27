@@ -11,6 +11,7 @@
     <PackageVersion Include="FileAssociation2" Version="22.12.21.18" />
     <PackageVersion Include="gong-wpf-dragdrop" Version="4.0.0" />
     <PackageVersion Include="HtmlToXaml" Version="1.0.0" />
+    <PackageVersion Include="IronPython" Version="3.4.2" />
     <PackageVersion Include="LiveCharts.Wpf" Version="0.9.7" />
     <PackageVersion Include="log4net" Version="3.3.1" />
     <PackageVersion Include="MahApps.Metro" Version="2.4.11" />

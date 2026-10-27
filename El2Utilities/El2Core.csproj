@@ -61,6 +61,7 @@
     <PackageReference Include="EfCore.SchemaCompare" />
     <PackageReference Include="gong-wpf-dragdrop" />
     <PackageReference Include="HtmlToXaml" />
+    <PackageReference Include="IronPython" />
     <PackageReference Include="log4net" />
     <PackageReference Include="MahApps.Metro" />
     <PackageReference Include="MailKit" />
