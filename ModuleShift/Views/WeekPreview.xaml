@@ -18,14 +18,21 @@
             <RowDefinition Height="50"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
-        
-        <ItemsControl  Grid.Row="1" ItemsSource="{Binding SelectedPlan.ShiftWeekDays}">
+        <ItemsControl ItemsSource="{Binding ShiftView}" Grid.Row="1">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <wpfCustom:BitPicture1D BoolPattern="{Binding Definition, Mode=OneWay}" WeekDay="{Binding WeekDayName, Mode=OneTime}" 
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="{Binding WeekNumber}" Width="50" HorizontalContentAlignment="Center"/>
+                        <ItemsControl ItemsSource="{Binding ShiftWeekDays}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <wpfCustom:BitPicture1D BoolPattern="{Binding Definition, Mode=OneWay}" WeekDay="{Binding WeekDayName, Mode=OneTime}" 
                                             StripeHeight="50" LowColor="AntiqueWhite" HighColor="{DynamicResource Theme.ShowcaseBrush}"
                                             Margin="5" Height="70"/>
-
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

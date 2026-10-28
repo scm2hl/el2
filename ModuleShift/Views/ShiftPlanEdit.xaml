@@ -129,6 +129,7 @@
                 <ListBox.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="neuer Schicht Kalender" Command="{Binding NewCalendarCommand}"/>
+                        <MenuItem Header="Wochenvorschau" Command="{Binding WeekPreviewCommand}"/>
                         <MenuItem Header="Kalender löschen" Command="{Binding PlacementTarget.DataContext.DelCalendarCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                     </ContextMenu>
                 </ListBox.ContextMenu>

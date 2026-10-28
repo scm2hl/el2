@@ -24,6 +24,7 @@ using ModuleReport.Views;
 using ModuleShift.Dialogs;
 using ModuleShift.Services;
 using ModuleShift.Views;
+using ModuleShift.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Navigation.Regions;
@@ -156,6 +157,7 @@ namespace Lieferliste_WPF
                 containerRegistry.RegisterDialog<AttachmentDialog, AttachmentDialogViewModel>();
                 containerRegistry.RegisterDialog<InputStoppage, InputStoppageVM>();
                 containerRegistry.RegisterDialog<ProcessTimeDialog, ProcessTimeDialogVM>();
+                containerRegistry.RegisterDialog<WeekPreview, WeekPreviewViewModel>();
 
 
                 Globals gl = new(Container);

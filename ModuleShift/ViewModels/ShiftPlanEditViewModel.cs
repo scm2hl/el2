@@ -43,6 +43,7 @@ namespace ModuleShift.ViewModels
         public ICommand DelCalendarCommand { get; private set; }
         public ICommand NewCalendarShiftCommand { get; private set; }
         public ICommand DelCalendarShiftCommand { get; private set; }
+        public ICommand WeekPreviewCommand { get; private set; }
         public Dictionary<int, List<ShiftDay>> ShiftWeeks { get; set; }
         private ShiftWeek _SelectedPlan;
         public ShiftWeek SelectedPlan
@@ -88,11 +89,13 @@ namespace ModuleShift.ViewModels
             DelCalendarCommand = new ActionCommand(OnDelCalendarExecuted, OnDelCalendarCanExecute);
             NewCalendarShiftCommand = new ActionCommand(OnNewCalendarShiftExecuted, OnNewCalendarShiftCanExecute);
             DelCalendarShiftCommand = new ActionCommand(OnDelCalendarShiftExecuted, OnDelCalendarShiftCanExecute);
+            WeekPreviewCommand = new ActionCommand(OnWeekPreviewExecuted, OnWeekPreviewCanExecute);
             LoadData();
             LoadCovers();
             
         }
 
+ 
 
         public bool IsRubberChecked { get; set; }
         private List<ShiftCover> _ShiftCovers = [];
@@ -197,7 +200,23 @@ namespace ModuleShift.ViewModels
             }
             return null;
         }
+        private bool OnWeekPreviewCanExecute(object arg)
+        {
+            return true;
+        }
 
+        private void OnWeekPreviewExecuted(object obj)
+        {
+
+                var par = new DialogParameters();
+                par.Add("Calendar", SelectedCalendar);
+                _dialogService.ShowDialog("WeekPreview", par, OnWeekPreviewCallBack);
+            
+        }
+        private void OnWeekPreviewCallBack()
+        {
+            
+        }
         private bool OnDelCalendarShiftCanExecute(object arg)
         {
             return !SelectedCalendar.IsLocked &&
