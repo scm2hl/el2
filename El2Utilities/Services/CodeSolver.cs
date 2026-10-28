@@ -51,21 +51,25 @@ namespace El2Core.Services
             var a = holidayLogic.IsHolyday(date.AddDays(-1));
             var b = holidayLogic.IsHolyday(date);
             var c = holidayLogic.IsHolyday(date.AddDays(1));
+            var dayName = date.DayOfWeek.ToString();
             // Ihre Feiertags-Objekte an Python übergeben
             scope.SetVariable("date", date);
             scope.SetVariable("IsHoliday", new Func<DateTime, bool>(holidayLogic.IsHolyday));
             scope.SetVariable("a", a);
             scope.SetVariable("b", b);
             scope.SetVariable("c", c);
+            scope.SetVariable("dayName", dayName);
 
 // Code des Users ausführen
 string userCode = @"
 if a and b:
     result = ('00:00', '23:59')
-elif b:
+elif b and not a:
     result = ('05:00', '23:59')
-elif c and not b:
-    result = ('22:00', '23:59')
+elif dayName == 'Sunday' and c:
+    result = ('00:00', '23:59')
+elif dayName == 'Monday' and b:
+    result = ('00:00', '22:00')
 else:
     result = None
 result
