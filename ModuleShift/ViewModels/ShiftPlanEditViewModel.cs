@@ -4,6 +4,7 @@ using El2Core.Utils;
 using El2Core.ViewModelBase;
 using GongSolutions.Wpf.DragDrop;
 using Microsoft.EntityFrameworkCore;
+using ModuleShift.Services;
 using Prism.Dialogs;
 using Prism.Ioc;
 using System;
@@ -572,67 +573,8 @@ namespace ModuleShift.ViewModels
                 SelectedPlan = s;
             }           
         }
-        public class ShiftDay(int id, BitArray definition) : ViewModelBase
-        {
-            public readonly int Id = id;
-            public string WeekDayName { get; } = DateTimeFormatInfo.CurrentInfo.GetDayName((DayOfWeek)id);
-            private BitArray _Definition = definition;
-            public BitArray Definition {  get { return _Definition; } }
-        }
-        public interface IShiftWeekProtoType
-        {
-            int Id { get; set; }
-            string ShiftPlanName { get; set; }
-            bool Lock {  get; set; }
-            string YearKW { get; set; }
-            List<ShiftDay> ShiftWeekDays { get; set; }
-            object Clone();
-            Byte[] GetDayDefinition(int id);
-        }
-        public class ShiftWeek : IShiftWeekProtoType
-        {
-            public int Id { get; set; }
-            public string ShiftPlanName { get; set; } = string.Empty;
-            public bool Lock { get; set; } = false;
-            public string YearKW { get; set; } = "200001";
 
-            public List<ShiftDay> ShiftWeekDays { get; set; } = [];
-
-            public ShiftPlan GetNewShiftPlan()
-            {
-                ShiftPlan shiftPlan = new ShiftPlan();
-
-                shiftPlan.PlanName = ShiftPlanName;
-                //shiftPlan.Sun = ShiftWeekDays[0].Definition.CopyTo;
-
-                return shiftPlan;
-            }
-            public Byte[] GetDayDefinition(int id)
-            {
-                byte[] bytes = new byte[1440];
-                ShiftWeekDays.First(x => x.Id == id).Definition.CopyTo(bytes, 0);
-
-                return bytes;
-            }
-            public object? Clone(bool deep)
-            {
-                return (deep) ? Clone() : DeepCopy();
-            }
-
-            public object Clone()
-            {
-                return (ShiftWeek)this.MemberwiseClone();
-            }
-            // Creates a deep copy
-            public object? DeepCopy()
-            {
-                // use serialized to create a deep copy
-                var serialized = JsonSerializer.Serialize(this);
-                var copy = JsonSerializer.Deserialize<ShiftWeek>(serialized);
-    
-                return copy;
-            }
-        }
+        
         public class ShiftCalendar
         {
             public int id { get; set; }

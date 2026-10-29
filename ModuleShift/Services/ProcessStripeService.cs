@@ -165,6 +165,7 @@ namespace ModuleShift.Services
                 Changed = true;
             }
         }
+        
         public bool Changed { get; set; } = false;
         private string shiftName;
 

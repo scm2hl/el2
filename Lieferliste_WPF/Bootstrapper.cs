@@ -24,7 +24,6 @@ using ModuleReport.Views;
 using ModuleShift.Dialogs;
 using ModuleShift.Services;
 using ModuleShift.Views;
-using ModuleShift.ViewModels;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Navigation.Regions;

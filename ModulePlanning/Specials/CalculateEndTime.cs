@@ -100,7 +100,7 @@ namespace ModulePlanning.Specials
  
                 var condition = ShiftPlans[kw].NightshiftRule;
                 CodeSolver codeSolver = new CodeSolver();
-                var r = codeSolver.ManipulateWorkPlan(condition, start, weekPlan[(int)start.DayOfWeek]);
+                var r = codeSolver.ManipulateWorkPlan(start);
                 
             }
             ///todo: add the nightshift rule to the shiftplan, and implement the logic to handle the nightshift rule

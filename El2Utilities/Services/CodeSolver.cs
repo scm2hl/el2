@@ -42,7 +42,7 @@ namespace El2Core.Services
 
 
         }
-        public (int, int)? ManipulateWorkPlan(string condition, DateTime date, bool[] workplan)
+        public (int, int)? ManipulateWorkPlan(DateTime date)
         {
 
             // Engine direkt im C#-Code starten (die DLLs liegen im ClickOnce-Paket)
@@ -64,8 +64,10 @@ namespace El2Core.Services
 string userCode = @"
 if a and b:
     result = ('00:00', '23:59')
-elif b and not a:
+elif (not a) and b:
     result = ('05:00', '23:59')
+elif (not b) and a:
+    result = ('00:00', '05:00')
 elif dayName == 'Sunday' and c:
     result = ('00:00', '23:59')
 elif dayName == 'Monday' and b:
