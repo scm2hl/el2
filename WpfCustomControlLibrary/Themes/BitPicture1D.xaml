@@ -8,11 +8,13 @@
                     <ContentControl VerticalContentAlignment="Stretch" >
                         <Grid Margin="4" HorizontalAlignment="Left">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="85"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-
-                            <TextBlock x:Name="PART_WeekDay" Text="{TemplateBinding WeekDay}"/>
+                            <StackPanel Margin="2,2,10,0">
+                                <TextBlock x:Name="PART_WeekDay" Text="{TemplateBinding WeekDay}" Margin="0,10,0,2"/>
+                                <TextBlock x:Name="PART_HolidayName" Text="{TemplateBinding HolidayName}" TextElement.FontSize="9"/>
+                            </StackPanel>
                             <Canvas x:Name="PART_DayPicture" Grid.Column="1" Width="1152" Height="{TemplateBinding StripeHeight}"  VerticalAlignment="Stretch"/>
                         
                         </Grid>

@@ -66,6 +66,18 @@ namespace WpfCustomControlLibrary
 
 
 
+        public string HolidayName
+        {
+            get { return (string)GetValue(HolidayNameProperty); }
+            set { SetValue(HolidayNameProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for HolidayName.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty HolidayNameProperty =
+            DependencyProperty.Register(nameof(HolidayName), typeof(string), typeof(BitPicture1D), new PropertyMetadata(""));
+
+
+
         public string WorkRangePattern
         {
             get { return (string)GetValue(WorkRangePatternProperty); }

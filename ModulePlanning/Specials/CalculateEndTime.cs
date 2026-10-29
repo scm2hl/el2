@@ -99,8 +99,24 @@ namespace ModulePlanning.Specials
             {
  
                 var condition = ShiftPlans[kw].NightshiftRule;
+                // Code des Users ausführen
+                string userCode = @"
+if vortag and tag:
+    result = ('00:00', '23:59')
+elif (not vortag) and tag and dayName != 'Monday':
+    result = ('05:00', '23:59')
+elif (not tag) and vortag and dayName != 'Tuesday':
+    result = ('00:00', '05:00')
+elif dayName == 'Sunday' and folgetag:
+    result = ('00:00', '23:59')
+elif dayName == 'Monday' and tag:
+    result = ('00:00', '22:00')
+else:
+    result = None
+result
+";
                 CodeSolver codeSolver = new CodeSolver();
-                var r = codeSolver.ManipulateWorkPlan(start);
+                var r = codeSolver.ManipulateWorkPlan(start, userCode);
                 
             }
             ///todo: add the nightshift rule to the shiftplan, and implement the logic to handle the nightshift rule

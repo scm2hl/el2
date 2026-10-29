@@ -35,7 +35,6 @@ namespace ModuleShift.Services
             ShiftPlan shiftPlan = new ShiftPlan();
 
             shiftPlan.PlanName = ShiftPlanName;
-            //shiftPlan.Sun = ShiftWeekDays[0].Definition.CopyTo;
 
             return shiftPlan;
         }
@@ -48,7 +47,7 @@ namespace ModuleShift.Services
         }
         public object? Clone(bool deep)
         {
-            return (deep) ? Clone() : DeepCopy();
+            return (deep) ? DeepCopy() : Clone();
         }
 
         public object Clone()
@@ -62,6 +61,10 @@ namespace ModuleShift.Services
             var serialized = JsonSerializer.Serialize(this);
             var copy = JsonSerializer.Deserialize<ShiftWeek>(serialized);
 
+            for (int i = 0; i < ShiftWeekDays.Count; i++)
+            {
+                copy.ShiftWeekDays.Add(new ShiftDay(this.ShiftWeekDays[i].Id, new BitArray(this.ShiftWeekDays[i].Definition)));
+            }
             return copy;
         }
     }
@@ -69,6 +72,7 @@ namespace ModuleShift.Services
     {
         public readonly int Id = id;
         public string WeekDayName { get; } = DateTimeFormatInfo.CurrentInfo.GetDayName((DayOfWeek)id);
+        public string? HolidayName { get; set; } = null;
         private BitArray _Definition = definition;
         public BitArray Definition { get { return _Definition; } }
     }

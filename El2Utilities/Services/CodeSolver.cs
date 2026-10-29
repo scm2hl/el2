@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using DynamicExpresso;
 using El2Core.Utils;
 using IronPython.Hosting;
@@ -10,100 +11,76 @@ namespace El2Core.Services
 {
     public class CodeSolver
     {
-        HolidayLogic holidayLogic = new();
-        public void ManipulateWorkPlan(string condition, DateTime date, int startMinute, int endMinute, bool[] workplan, string m)
-        {
-            if (startMinute < 0 ||
-                endMinute > workplan.Length ||
-                endMinute <= startMinute)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-            RuleContext context = new() { Date = date };
-            condition = "IsHoliday(AddDays(date, 1)) && IsMonday(date)";
+        private static readonly object ScriptLock = new();
+        private static readonly ScriptEngine PythonEngine = Python.CreateEngine();
+        private static readonly Dictionary<string, ScriptSource> CompiledScripts = new(StringComparer.Ordinal);
+        private readonly HolidayLogic holidayLogic = new();
 
-            Interpreter interpreter = new();
-            interpreter.SetVariable("date", context.Date);
-            interpreter.SetVariable("dayOfWeek", context.Date.DayOfWeek);
-            interpreter.SetFunction("IsHoliday", new Func<DateTime, bool>(context.IsHoliday));
-            interpreter.SetFunction("IsSunday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Sunday));
-            interpreter.SetFunction("IsMonday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Monday));
-            interpreter.SetFunction("IsTuesday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Tuesday));
-            interpreter.SetFunction("IsWednesday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Wednesday));
-            interpreter.SetFunction("IsThursday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Thursday));
-            interpreter.SetFunction("IsFriday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Friday));
-            interpreter.SetFunction("IsSaturday", new Func<DateTime, bool>(d => d.DayOfWeek == DayOfWeek.Saturday));
-            interpreter.SetFunction("AddDays", new Func<DateTime, int, DateTime>((d, days) => d.AddDays(days)));
-            if (interpreter.Eval<bool>(condition))
+
+        public (int, int)? ManipulateWorkPlan(DateTime date, string? userCode)
+        {
+            if (string.IsNullOrWhiteSpace(userCode))
             {
-  
-                workplan.AsSpan(startMinute, endMinute - startMinute).Fill(false);
+                return null;
             }
 
-
-        }
-        public (int, int)? ManipulateWorkPlan(DateTime date)
-        {
-
-            // Engine direkt im C#-Code starten (die DLLs liegen im ClickOnce-Paket)
-            ScriptEngine engine = Python.CreateEngine();
-            ScriptScope scope = engine.CreateScope();
-            var a = holidayLogic.IsHolyday(date.AddDays(-1));
-            var b = holidayLogic.IsHolyday(date);
-            var c = holidayLogic.IsHolyday(date.AddDays(1));
+            ScriptScope scope = PythonEngine.CreateScope();
+            var previousDayHoliday = holidayLogic.IsHolyday(date.AddDays(-1));
+            var currentDayHoliday = holidayLogic.IsHolyday(date);
+            var nextDayHoliday = holidayLogic.IsHolyday(date.AddDays(1));
             var dayName = date.DayOfWeek.ToString();
-            // Ihre Feiertags-Objekte an Python übergeben
+
             scope.SetVariable("date", date);
             scope.SetVariable("IsHoliday", new Func<DateTime, bool>(holidayLogic.IsHolyday));
-            scope.SetVariable("a", a);
-            scope.SetVariable("b", b);
-            scope.SetVariable("c", c);
+            scope.SetVariable("vortag", previousDayHoliday);
+            scope.SetVariable("tag", currentDayHoliday);
+            scope.SetVariable("folgetag", nextDayHoliday);
             scope.SetVariable("dayName", dayName);
 
-// Code des Users ausführen
-string userCode = @"
-if a and b:
-    result = ('00:00', '23:59')
-elif (not a) and b:
-    result = ('05:00', '23:59')
-elif (not b) and a:
-    result = ('00:00', '05:00')
-elif dayName == 'Sunday' and c:
-    result = ('00:00', '23:59')
-elif dayName == 'Monday' and b:
-    result = ('00:00', '22:00')
-else:
-    result = None
-result
-";
+            ScriptSource source;
+            lock (ScriptLock)
+            {
+                if (!CompiledScripts.TryGetValue(userCode, out source))
+                {
+                    source = PythonEngine.CreateScriptSourceFromString(userCode);
+                    CompiledScripts[userCode] = source;
+                }
+            }
 
-            dynamic r;
+            object? result;
             try
             {
-                r = engine.Execute(userCode, scope);
+                lock (ScriptLock)
+                {
+                    result = source.Execute(scope);
+                }
             }
             catch (Exception ex)
             {
-
-                throw new Exception($"Fehler in Regel: {ex.Message}");
-            }
-            if (r == null) return null;
-            else
-            { 
-                return ((int)TimeSpan.Parse(r[0]).TotalMinutes, (int)TimeSpan.Parse(r[1]).TotalMinutes);
+                throw new Exception($"Fehler in Regel: {ex.Message}", ex);
             }
 
-        }
-        private class RuleContext
-        {
-            readonly HolidayLogic holidayLogic = new();
-            public DateTime Date { get; set; }
-            public bool IsHoliday(DateTime date)
+            if (result == null)
             {
-                
-                return holidayLogic.IsHolyday(date);
+                return null;
             }
 
+            if (result is IEnumerable enumerable && result is not string)
+            {
+                var values = enumerable.Cast<object?>()
+                    .Select(x => x?.ToString())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToArray();
+
+                if (values.Length == 2 &&
+                    TimeSpan.TryParse(values[0], out var start) &&
+                    TimeSpan.TryParse(values[1], out var end))
+                {
+                    return ((int)start.TotalMinutes, (int)end.TotalMinutes);
+                }
+            }
+
+            return null;
         }
     }
 }

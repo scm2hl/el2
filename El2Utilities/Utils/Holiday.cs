@@ -118,12 +118,12 @@ namespace El2Core.Utils
         /// </summary>
         /// <param name="Datevalue"></param>
         /// <returns></returns>
-        public string? GetHolydayName(DateTime Datevalue)
+        public string GetHolydayName(DateTime Datevalue)
         {
             var d = DateOnly.FromDateTime(Datevalue);
             if(holydays.TryGetValue(d, out Holiday? value))
                 return value.Name;
-            return "no Holiday";
+            return string.Empty;
         }
         /// <summary>
         /// Initializes a new instance of the HolidayLogic class and populates the list of holidays
