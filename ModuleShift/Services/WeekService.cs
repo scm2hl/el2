@@ -3,6 +3,7 @@ using El2Core.ViewModelBase;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -27,7 +28,7 @@ namespace ModuleShift.Services
         public string ShiftPlanName { get; set; } = string.Empty;
         public bool Lock { get; set; } = false;
         public string YearKW { get; set; } = "200001";
-
+        public string? NightRule { get; set; } = null;
         public List<ShiftDay> ShiftWeekDays { get; } = [];
 
         public ShiftPlan GetNewShiftPlan()
@@ -75,5 +76,25 @@ namespace ModuleShift.Services
         public string? HolidayName { get; set; } = null;
         private BitArray _Definition = definition;
         public BitArray Definition { get { return _Definition; } }
+    }
+    public class ShiftCalendar
+    {
+        public int id { get; set; }
+        public string CalendarName { get; set; } = string.Empty;
+        public bool IsLocked { get; set; }
+        private bool repeat;
+        public bool Repeat
+        {
+            get { return repeat; }
+            set
+            {
+                repeat = value;
+                IsChanged = true;
+            }
+        }
+        public bool IsNotRepeat { get { return !Repeat; } }
+        public bool IsChanged { get; set; } = false;
+        public ObservableCollection<ShiftWeek> ShiftWeeks { get; set; } = [];
+
     }
 }

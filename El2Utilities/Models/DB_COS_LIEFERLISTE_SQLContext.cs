@@ -2,6 +2,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -101,7 +102,7 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
         IConfiguration configuration = builder.Build();
-        var defaultconnection = configuration.GetConnectionString("ConnectionHome");
+        var defaultconnection = configuration.GetConnectionString("ConnectionBosch");
         optionsBuilder.UseSqlServer(defaultconnection).EnableThreadSafetyChecks();
         base.OnConfiguring(optionsBuilder);
     }
@@ -845,6 +846,7 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
                 .HasMaxLength(180)
                 .IsFixedLength()
                 .HasColumnName("mon");
+            entity.Property(e => e.NightshiftRule).IsUnicode(false);
             entity.Property(e => e.PlanName).HasMaxLength(50);
             entity.Property(e => e.Sat)
                 .HasMaxLength(180)
@@ -1074,16 +1076,20 @@ public partial class DB_COS_LIEFERLISTE_SQLContext : DbContext
             entity.Property(e => e.BemT)
                 .IsUnicode(false)
                 .HasColumnName("Bem_T");
+            entity.Property(e => e.BmVgt).HasColumnName("bm_vgt");
             entity.Property(e => e.Bullet)
                 .HasMaxLength(9)
                 .HasDefaultValue("#FFFFFFFF", "DF_Vorgang_Bullet");
             entity.Property(e => e.BulletTwo).HasMaxLength(9);
             entity.Property(e => e.CommentMach).IsUnicode(false);
             entity.Property(e => e.MarkCode).HasMaxLength(50);
+            entity.Property(e => e.MaschRst).HasColumnName("masch_rst");
             entity.Property(e => e.Msf)
                 .HasMaxLength(50)
                 .HasColumnName("MSF");
             entity.Property(e => e.MsfInWork).HasColumnName("MSF-InWork");
+            entity.Property(e => e.PersonRst).HasColumnName("person_rst");
+            entity.Property(e => e.PersonVgt).HasColumnName("person_vgt");
             entity.Property(e => e.Prepare)
                 .HasDefaultValue(true, "DF_Vorgang_prepare")
                 .HasColumnName("prepare");

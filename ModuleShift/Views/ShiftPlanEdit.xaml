@@ -92,6 +92,8 @@
 
                             <TextBlock.ContextMenu>
                                 <ContextMenu>
+                                    <MenuItem Header="Manipulations Regel bearbeiten" Command="{Binding PlacementTarget.Tag.ManipulationRuleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                     <MenuItem Header="Löschen" Command="{Binding PlacementTarget.Tag.DeleteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                 </ContextMenu>

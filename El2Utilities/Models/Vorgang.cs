@@ -103,6 +103,14 @@ public partial class Vorgang : ModelBase
 
     public bool Prepare { get; set; }
 
+    public int? PersonVgt { get; set; }
+
+    public int? BmVgt { get; set; }
+
+    public int? PersonRst { get; set; }
+
+    public int? MaschRst { get; set; }
+
     public virtual OrderRb AidNavigation { get; set; } = null!;
 
     public virtual WorkSap? ArbPlSapNavigation { get; set; }

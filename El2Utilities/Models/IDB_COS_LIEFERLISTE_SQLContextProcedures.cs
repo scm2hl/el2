@@ -13,6 +13,6 @@ namespace El2Core.Models
 {
     public partial interface IDB_COS_LIEFERLISTE_SQLContextProcedures
     {
-        Task<List<ProductMaterialsResult>?> ProductMaterialsAsync(string? usrID, OutputParameter<int>? returnValue = null, CancellationToken? cancellationToken = default);
+        Task<List<ProductMaterialsResult>> ProductMaterialsAsync(string? usrID, OutputParameter<int>? returnValue = null, CancellationToken cancellationToken = default);
     }
 }

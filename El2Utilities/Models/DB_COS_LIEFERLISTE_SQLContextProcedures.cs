@@ -43,7 +43,7 @@ namespace El2Core.Models
             _context = context;
         }
 
-        public virtual async Task<List<ProductMaterialsResult>?> ProductMaterialsAsync(string? usrID, OutputParameter<int>? returnValue = null, CancellationToken? cancellationToken = default)
+        public virtual async Task<List<ProductMaterialsResult>> ProductMaterialsAsync(string? usrID, OutputParameter<int>? returnValue = null, CancellationToken cancellationToken = default)
         {
             var parameterreturnValue = new SqlParameter
             {

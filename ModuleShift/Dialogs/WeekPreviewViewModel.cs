@@ -17,6 +17,7 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Input;
+using ShiftCalendar = ModuleShift.Services.ShiftCalendar;
 
 namespace ModuleShift.Dialogs
 {
@@ -31,7 +32,7 @@ namespace ModuleShift.Dialogs
         public ObservableCollection<DataTable> ShiftDataSets { get; private set; } = [];
         public ICollectionView ShiftView { get; private set; }
         public ICollectionView ShiftItemsView { get; private set; }
-        private ShiftPlanEditViewModel.ShiftCalendar? _selectedCalendar { get; set; }
+        private ShiftCalendar? _selectedCalendar { get; set; }
         private List<ShiftWeek> ShiftWeeks { get; } = [];
         private ShiftWeek? _selectedWeek;
         public ShiftWeek? SelectedWeek
@@ -83,22 +84,7 @@ namespace ModuleShift.Dialogs
             {
                 if (_selectedCalendar == null) return;
 
-                // Code des Users ausführen
-                string userCode = @"
-if vortag and tag:
-    result = ('00:00', '23:59')
-elif (not vortag) and tag and dayName != 'Monday':
-    result = ('05:00', '23:59')
-elif (not tag) and vortag and dayName != 'Tuesday':
-    result = ('00:00', '05:00')
-elif dayName == 'Sunday' and folgetag:
-    result = ('00:00', '23:59')
-elif dayName == 'Monday' and tag:
-    result = ('00:00', '22:00')
-else:
-    result = None
-result
-";
+
                 ShiftWeek w;
                 var StartDay = DateTime.Now.AddDays(-14);
                 StartDay = StartDay.AddDays(-(int)StartDay.DayOfWeek);
@@ -112,68 +98,103 @@ result
                     {
                         w = (ShiftWeek)week.Clone(true);
                         w.YearKW = $"{dt.Year} KW {CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(dt, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday)}";
-                        cs = CodeSolver.ManipulateWorkPlan(dt, userCode);
+                        cs = CodeSolver.ManipulateWorkPlan(dt, w.NightRule);
+                        w.ShiftWeekDays[0].Definition.CopyTo(dayplan, 0);
                         if (cs != null)
                         {
-                            w.ShiftWeekDays[0].Definition.CopyTo(dayplan, 0);
                             dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
-                            w.ShiftWeekDays[0].Definition.And(new BitArray(dayplan));
-                            w.ShiftWeekDays[0].HolidayName = HolidayLogic.GetHolydayName(dt);
                         }
-                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(1), userCode);
-                        if (cs != null)
+                        else if (HolidayLogic.IsHolyday(dt))
                         {
-                            w.ShiftWeekDays[1].Definition.CopyTo(dayplan, 0);
-                            dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
-                            w.ShiftWeekDays[1].Definition.And(new BitArray(dayplan));
-                            w.ShiftWeekDays[1].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(1));
+                            dayplan.AsSpan(0, 1440).Fill(false);
                         }
+                        w.ShiftWeekDays[0].Definition.And(new BitArray(dayplan));
+                        w.ShiftWeekDays[0].HolidayName = HolidayLogic.GetHolydayName(dt); 
+                        
+                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(1), w.NightRule);
+                        w.ShiftWeekDays[1].Definition.CopyTo(dayplan, 0);
   
-                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(2), userCode);
                         if (cs != null)
                         {
-                            w.ShiftWeekDays[2].Definition.CopyTo(dayplan, 0);
                             dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
-                            w.ShiftWeekDays[2].Definition.And(new BitArray(dayplan));
-                            w.ShiftWeekDays[2].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(2));
                         }
+                        else if (HolidayLogic.IsHolyday(dt.AddDays(1)))
+                        {
+                            dayplan.AsSpan(0, 1440).Fill(false);
+                        }
+                        w.ShiftWeekDays[1].Definition.And(new BitArray(dayplan));
+                        w.ShiftWeekDays[1].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(1));
+
+                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(2), w.NightRule);
+                        w.ShiftWeekDays[2].Definition.CopyTo(dayplan, 0);
    
-                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(3), userCode);
                         if (cs != null)
                         {
-                            w.ShiftWeekDays[3].Definition.CopyTo(dayplan, 0);
                             dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
-                            w.ShiftWeekDays[3].Definition.And(new BitArray(dayplan));
-                            w.ShiftWeekDays[3].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(3));
                         }
+                        else if (HolidayLogic.IsHolyday(dt.AddDays(2)))
+                        {
+                            dayplan.AsSpan(0, 1440).Fill(false);
+                        }
+                        w.ShiftWeekDays[2].Definition.And(new BitArray(dayplan));
+                        w.ShiftWeekDays[2].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(2));               
 
-                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(4), userCode);
+                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(3), w.NightRule);
+                        w.ShiftWeekDays[3].Definition.CopyTo(dayplan, 0);
+ 
                         if (cs != null)
                         {
-                            w.ShiftWeekDays[4].Definition.CopyTo(dayplan, 0);
                             dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
-                            w.ShiftWeekDays[4].Definition.And(new BitArray(dayplan));
-                            w.ShiftWeekDays[4].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(4));
                         }
-  
-                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(5), userCode);
-                        if (cs != null)
+                        else if (HolidayLogic.IsHolyday(dt.AddDays(3)))
                         {
-                            w.ShiftWeekDays[5].Definition.CopyTo(dayplan, 0);
-                            dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
-                            w.ShiftWeekDays[5].Definition.And(new BitArray(dayplan));
-                            w.ShiftWeekDays[5].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(5));
+                            dayplan.AsSpan(0, 1440).Fill(false);
                         }
+                        w.ShiftWeekDays[3].Definition.And(new BitArray(dayplan));
+                        w.ShiftWeekDays[3].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(3));
+                        
+                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(4), w.NightRule);
+                        w.ShiftWeekDays[4].Definition.CopyTo(dayplan, 0);
 
-                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(6), userCode);
                         if (cs != null)
                         {
-                            w.ShiftWeekDays[6].Definition.CopyTo(dayplan, 0);
                             dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
-                            w.ShiftWeekDays[6].Definition.And(new BitArray(dayplan));
-                            w.ShiftWeekDays[6].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(6));
                         }
+                        else if (HolidayLogic.IsHolyday(dt.AddDays(4)))
+                        {
+                            dayplan.AsSpan(0, 1440).Fill(false);
+                        }
+                        w.ShiftWeekDays[4].Definition.And(new BitArray(dayplan));
+                        w.ShiftWeekDays[4].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(4));
+                        
+                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(5), w.NightRule);
+                        w.ShiftWeekDays[5].Definition.CopyTo(dayplan, 0);
 
+                        if (cs != null)
+                        {
+                            dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
+                        }
+                        else if (HolidayLogic.IsHolyday(dt.AddDays(5)))
+                        {
+                            dayplan.AsSpan(0, 1440).Fill(false);
+                        }
+                        w.ShiftWeekDays[5].Definition.And(new BitArray(dayplan));
+                        w.ShiftWeekDays[5].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(5));
+                        
+                        cs = CodeSolver.ManipulateWorkPlan(dt.AddDays(6), w.NightRule);
+                        w.ShiftWeekDays[6].Definition.CopyTo(dayplan, 0);
+
+                        if (cs != null)
+                        {
+                            dayplan.AsSpan((int)cs.Value.Item1, cs.Value.Item2 - cs.Value.Item1).Fill(false);
+                        }
+                        else if (HolidayLogic.IsHolyday(dt.AddDays(6)))
+                        {
+                            dayplan.AsSpan(0, 1440).Fill(false);
+                        }
+                        w.ShiftWeekDays[6].Definition.And(new BitArray(dayplan));
+                        w.ShiftWeekDays[6].HolidayName = HolidayLogic.GetHolydayName(dt.AddDays(6));
+                       
                         ShiftWeeks.Add(w);
 
                     }
@@ -199,7 +220,7 @@ result
 
         public void OnDialogOpened(IDialogParameters parameters)
         {
-            _selectedCalendar = parameters.GetValue<ShiftPlanEditViewModel.ShiftCalendar>("Calendar");
+            _selectedCalendar = parameters.GetValue<ShiftCalendar>("Calendar");
             LoadData();
         }
         public class ShiftTimeLine

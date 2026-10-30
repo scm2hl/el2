@@ -21,6 +21,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using ShiftCalendar = ModuleShift.Services.ShiftCalendar;
 
 
 namespace ModuleShift.ViewModels
@@ -45,6 +46,7 @@ namespace ModuleShift.ViewModels
         public ICommand NewCalendarShiftCommand { get; private set; }
         public ICommand DelCalendarShiftCommand { get; private set; }
         public ICommand WeekPreviewCommand { get; private set; }
+        public ICommand ManipulationRuleCommand { get; private set; }
         public Dictionary<int, List<ShiftDay>> ShiftWeeks { get; set; }
         private ShiftWeek _SelectedPlan;
         public ShiftWeek SelectedPlan
@@ -91,12 +93,11 @@ namespace ModuleShift.ViewModels
             NewCalendarShiftCommand = new ActionCommand(OnNewCalendarShiftExecuted, OnNewCalendarShiftCanExecute);
             DelCalendarShiftCommand = new ActionCommand(OnDelCalendarShiftExecuted, OnDelCalendarShiftCanExecute);
             WeekPreviewCommand = new ActionCommand(OnWeekPreviewExecuted, OnWeekPreviewCanExecute);
+            ManipulationRuleCommand = new ActionCommand(OnManipulationRuleExecuted, OnManipulationRuleCanExecute);
             LoadData();
             LoadCovers();
             
         }
-
- 
 
         public bool IsRubberChecked { get; set; }
         private List<ShiftCover> _ShiftCovers = [];
@@ -140,7 +141,8 @@ namespace ModuleShift.ViewModels
                     week.Id = item.Id;
                     week.ShiftPlanName = item.PlanName;
                     week.Lock = item.Lock;
-                   
+                    week.NightRule = item.NightshiftRule;
+
                     List<ShiftDay> shiftDays = new();
                     Byte[] bytes;
                     bytes = item.Sun;
@@ -164,6 +166,7 @@ namespace ModuleShift.ViewModels
                 ShiftWeekPlans = CollectionViewSource.GetDefaultView(_ShiftWeekPlans);
                 var cal = db.ShiftCalendars
                     .Include(x => x.ShiftCalendarShiftPlans)
+                    .ThenInclude(x => x.Plan)
                     .ToList();
                 foreach (var scal in cal)
                 {
@@ -172,6 +175,7 @@ namespace ModuleShift.ViewModels
                     {
                         var sw = (ShiftWeek)_ShiftWeekPlans.Single(x => x.Id == sc.PlanId).Clone();
                         sw.YearKW = sc.YearKw;
+                        sw.NightRule = sc.Plan.NightshiftRule;
                         c.ShiftWeeks.Add(sw);
                     }
                     c.ShiftWeeks.CollectionChanged += CalendarShiftWeeksChanged;
@@ -201,6 +205,35 @@ namespace ModuleShift.ViewModels
             }
             return null;
         }
+        private bool OnManipulationRuleCanExecute(object arg)
+        {
+            return true;
+        }
+
+        private void OnManipulationRuleExecuted(object obj)
+        {
+            var par = new DialogParameters();
+            par.Add("RuleText", SelectedPlan.NightRule);
+            _dialogService.ShowDialog("ManipulationRuleEdit", par, OnManipulationRuleCallBack);
+        }
+
+        private void OnManipulationRuleCallBack(IDialogResult result)
+        {
+            if (result.Result == ButtonResult.OK)
+            {
+                if (result.Parameters.GetValue<string>("RuleText") is string ruleText)
+                {
+                    SelectedPlan.NightRule = ruleText;
+                    using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                    var planDb = db.ShiftPlans.SingleOrDefault(x => x.Id == SelectedPlan.Id);
+                    if(planDb != null)
+                    {
+                        planDb.NightshiftRule = ruleText;
+                        db.SaveChanges();
+                    }              
+                }
+            }
+        } 
         private bool OnWeekPreviewCanExecute(object arg)
         {
             return true;
@@ -208,11 +241,9 @@ namespace ModuleShift.ViewModels
 
         private void OnWeekPreviewExecuted(object obj)
         {
-
-                var par = new DialogParameters();
-                par.Add("Calendar", SelectedCalendar);
-                _dialogService.ShowDialog("WeekPreview", par, OnWeekPreviewCallBack);
-            
+            var par = new DialogParameters();
+            par.Add("Calendar", SelectedCalendar);
+            _dialogService.ShowDialog("WeekPreview", par, OnWeekPreviewCallBack);        
         }
         private void OnWeekPreviewCallBack()
         {
@@ -290,7 +321,7 @@ namespace ModuleShift.ViewModels
                 var sc = new El2Core.Models.ShiftCalendar() { CalendarName = r };
                 db.ShiftCalendars.Add(sc);
                 db.SaveChanges();
-                SelectedCalendar = new ShiftCalendar() { CalendarName = r, id = sc.Id };
+                SelectedCalendar = new Services.ShiftCalendar() { CalendarName = r, id = sc.Id };
                 shiftCalendars.Add(SelectedCalendar);
             }
         }
@@ -572,27 +603,6 @@ namespace ModuleShift.ViewModels
                 SelectedPlan = null;
                 SelectedPlan = s;
             }           
-        }
-
-        
-        public class ShiftCalendar
-        {
-            public int id { get; set; }
-            public string CalendarName { get; set; } = string.Empty;
-            public bool IsLocked { get; set; }
-            private bool repeat;
-            public bool Repeat
-            {
-                get { return repeat; }
-                set
-                {
-                    repeat = value;
-                    IsChanged = true;
-                }
-            }
-            public bool IsNotRepeat {  get {  return !Repeat; } }
-            public bool IsChanged { get; set; } = false;
-            public ObservableCollection<ShiftWeek> ShiftWeeks { get; set; } = [];
         }
         void addshift()
         {

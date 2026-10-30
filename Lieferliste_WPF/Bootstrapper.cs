@@ -157,6 +157,7 @@ namespace Lieferliste_WPF
                 containerRegistry.RegisterDialog<InputStoppage, InputStoppageVM>();
                 containerRegistry.RegisterDialog<ProcessTimeDialog, ProcessTimeDialogVM>();
                 containerRegistry.RegisterDialog<WeekPreview, WeekPreviewViewModel>();
+                containerRegistry.RegisterDialog<ManipulationRuleEdit, ManipulationRuleEditVM>();
 
 
                 Globals gl = new(Container);
