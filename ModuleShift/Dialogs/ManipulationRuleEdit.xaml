@@ -4,24 +4,24 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ModuleShift.Dialogs"
+             xmlns:service="clr-namespace:ModuleShift.Services"
              xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800" MinWidth="600">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="60" />
+            <RowDefinition Height="*" MinHeight="400"/>
+            <!-- Bereich, um den aktualisierten Code im ViewModel zu demonstrieren -->
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
-            <Button Content="Speichern" Width="75" Margin="5" Command="{Binding OkDialogCommand}"/>
-            <Button Content="Cancel" Width="75" Margin="5"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="10">
+            <Button Content="Speichern" Command="{Binding OkDialogCommand}" Margin="5"/>
+            <Button Content="Abbrechen" Command="{Binding CancelDialogCommand}" Margin="5"/>
         </StackPanel>
+        <!-- Der Monaco Editor via WebView2 -->
+        <wv2:WebView2 Grid.Row="1"
+                      service:MonacoHelper.InitializeWithCode="True"
+                      service:MonacoHelper.BindableCode="{Binding RuleText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-        <TextBox Grid.Row="1" Text="{Binding RuleText}" Margin="5" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
-            <Button Content="Add Rule" Width="100" Margin="5"/>
-            <Button Content="Remove Rule" Width="100" Margin="5"/>
-        </StackPanel>
     </Grid>
 </UserControl>

@@ -20,6 +20,12 @@ namespace ModuleShift.Dialogs
         private DelegateCommand? _okDialogCommand;
         public DelegateCommand OkDialogCommand =>
             _okDialogCommand ?? (_okDialogCommand = new DelegateCommand(OnOkDialog));
+        private DelegateCommand? _cancelDialogCommand;
+        public DelegateCommand CancelDialogCommand =>
+            _cancelDialogCommand ?? (_cancelDialogCommand = new DelegateCommand(OnCancelDialog));
+
+
+
         public ManipulationRuleEditVM(IContainerExtension container)
         {
             _container = container;
@@ -40,6 +46,10 @@ namespace ModuleShift.Dialogs
         public void OnDialogOpened(IDialogParameters parameters)
         {
             RuleText = parameters.GetValue<string>("RuleText");
+        }
+        private void OnCancelDialog()
+        {
+            RequestClose.Invoke(null, ButtonResult.Cancel);
         }
         private void OnOkDialog()
         { 

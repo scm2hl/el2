@@ -223,12 +223,14 @@ namespace ModuleShift.ViewModels
             {
                 if (result.Parameters.GetValue<string>("RuleText") is string ruleText)
                 {
+                    if (string.IsNullOrWhiteSpace(ruleText)) ruleText = null;
                     SelectedPlan.NightRule = ruleText;
                     using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
                     var planDb = db.ShiftPlans.SingleOrDefault(x => x.Id == SelectedPlan.Id);
                     if(planDb != null)
-                    {
+                    {               
                         planDb.NightshiftRule = ruleText;
+                        
                         db.SaveChanges();
                     }              
                 }

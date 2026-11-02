@@ -172,6 +172,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DotNetKit.Wpf.AutoCompleteComboBox" />
     <PackageReference Include="gong-wpf-dragdrop" />
     <PackageReference Include="MahApps.Metro" />
