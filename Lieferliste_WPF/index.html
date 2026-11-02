@@ -17,35 +17,128 @@
 
     <div id="container"></div>
 
-    <!-- Monaco-Editor via CDN laden (für Offline-Szenarien lokal speichern) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js"></script>
     <script>
-    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' } });
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' } });
 
-    let editor;
+        let editor;
 
-    require(['vs/editor/editor.main'], function() {
-        editor = monaco.editor.create(document.getElementById('container'), {
-            value: '# Schreibe hier deinen Python-Code',
-            language: 'python',
-            theme: 'vs-dark',
-            automaticLayout: true
+        // Liste der erlaubten benutzerdefinierten Befehle / Funktionen
+        const allowedCommands = [
+            { label: 'vortag', detail: 'Ist wahr wenn der Vortag ein Feiertag ist', insertText: 'vortag' },
+            { label: 'tag', detail: 'Wahr wenn Feiertag', insertText: 'tag' },
+            { label: 'folgetag', detail: 'Ist wahr wenn der Folgetag ein Feiertag ist', insertText: 'folgetag' },
+            { label: 'dayName', detail: 'Enthält die Wochentage', insertText: 'dayName' },
+            { label: 'Sunday', detail: 'Sonntag', insertText: '\'Sunday\'' },
+            { label: 'Monday', detail: 'Montag', insertText: '\'Monday\'' },
+            { label: 'Tuesday', detail: 'Dienstag', insertText: '\'Tuesday\'' },
+            { label: 'Wednesday', detail: 'Mittwoch', insertText: '\'Wednesday\'' },
+            { label: 'Thursday', detail: 'Donnerstag', insertText: '\'Thursday\'' },
+            { label: 'Friday', detail: 'Freitag', insertText: '\'Friday\'' },
+            { label: 'Saturday', detail: 'Samstag', insertText: '\'Saturday\'' }
+
+        ];
+
+        // Python-Schlüsselwörter und Standard-Funktionen, die NICHT rot unterstrichen werden dürfen
+        const pythonKeywords = [
+            // Logische Operatoren & Kontrollstrukturen
+            'and', 'or', 'not', 'if', 'elif', 'else', 'for', 'while', 'in', 'is', 'with', 'as', 'import', 'from',
+            // Built-In Funktionen
+            'print', 'range', 'len', 'int', 'str', 'bool', 'float', 'list', 'dict', 'set', 'tuple', 'type'
+        ];
+
+        require(['vs/editor/editor.main'], function () {
+
+            // Custom Intellisense (Autocomplete) registrieren
+            monaco.languages.registerCompletionItemProvider('python', {
+                provideCompletionItems: function (model, position) {
+                    const word = model.getWordUntilPosition(position);
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn
+                    };
+
+                    // Mappe unsere erlaubten Befehle in das Monaco-Format
+                    const suggestions = allowedCommands.map(cmd => ({
+                        label: cmd.label,
+                        kind: monaco.languages.CompletionItemKind.Function,
+                        documentation: cmd.detail,
+                        insertText: cmd.insertText,
+                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                        range: range
+                    }));
+
+                    return { suggestions: suggestions };
+                }
+            });
+
+            // Editor initialisieren
+            editor = monaco.editor.create(document.getElementById('container'), {
+                value: '# Schreibe hier deinen Python-Code\n',
+                language: 'python',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                // Intellisense-Verhalten optimieren
+                suggestOnTriggerCharacters: true,
+                quickSuggestions: { other: true, comments: false, strings: false }
+            });
+
+            // Echtzeit-Validierung (Gibt Warnungen aus, wenn unerlaubte Funktionen genutzt werden)
+            editor.onDidChangeModelContent(() => {
+                const code = editor.getValue();
+                window.chrome.webview.postMessage(code);
+
+                // Einfache Validierung ausführen
+                validateCode();
+            });
         });
 
-        // Event-Handler für Inhaltsänderungen im Editor
-        editor.onDidChangeModelContent(() => {
-            const code = editor.getValue();
-            // Sendet den geänderten Code zurück an C#
-            window.chrome.webview.postMessage(code);
-        });
-    });
+        // Validierungsfunktion: Sucht nach echten Funktionsaufrufen, die nicht erlaubt sind
+        function validateCode() {
+            if (!editor) return;
+            const model = editor.getModel();
+            const code = model.getValue();
+            const markers = [];
 
-    // Funktion, die von C# aufgerufen wird, um neuen Code zu setzen
-    function setCode(newCode) {
-        if (editor && editor.getValue() !== newCode) {
-            editor.setValue(newCode);
+            // Sucht nach Wortzeichen, auf die direkt (oder nur mit optionalen Leerzeichen) eine Klammer folgt
+            const regex = /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g;
+            let match;
+
+            while ((match = regex.exec(code)) !== null) {
+                const funcName = match[1];
+
+                // Prüfen, ob es sich um ein geschütztes Python-Schlüsselwort oder eine erlaubte Funktion handelt
+                const isPythonKeyword = pythonKeywords.includes(funcName);
+                const isAllowed = allowedCommands.some(cmd => cmd.label === funcName);
+
+                // Nur anmarkern, wenn es weder ein Standard-Keyword noch in der Whitelist ist
+                if (!isAllowed && !isPythonKeyword) {
+                    const position = model.getPositionAt(match.index);
+
+                    markers.push({
+                        severity: monaco.MarkerSeverity.Error,
+                        message: `Nicht erlaubter Befehl: "${funcName}". Erlaubt sind: ${allowedCommands.map(c => c.label).join(', ')}`,
+                        startLineNumber: position.lineNumber,
+                        startColumn: position.column,
+                        endLineNumber: position.lineNumber,
+                        endColumn: position.column + funcName.length
+                    });
+                }
+            }
+
+
+            // Marker an den Editor übergeben
+            monaco.editor.setModelMarkers(model, "owner", markers);
         }
-    }
+
+        function setCode(newCode) {
+            if (editor && editor.getValue() !== newCode) {
+                editor.setValue(newCode);
+                validateCode(); // Auch beim Laden validieren
+            }
+        }
     </script>
 </body>
 </html>
