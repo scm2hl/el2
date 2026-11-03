@@ -411,8 +411,98 @@ namespace ModulePlanning.ViewModels
                 _Logger.LogError("{message}", ex.ToString());
             }
         }
-
         private async Task<ICollectionView> LoadMachinesAsync()
+        {
+            var workAreaIds = UserInfo.User.AccountWorkAreas
+                .Select(x => x.WorkAreaId)
+                .Distinct()
+                .ToHashSet();
+
+            var costIds = UserInfo.User.AccountCostUnits
+                .Select(x => x.CostId)
+                .ToHashSet();
+
+            var proc = await GetVorgangsAsync(null);
+
+            var procByRid = proc
+                .Where(x => x.Rid.HasValue)
+                .GroupBy(x => x.Rid.Value)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+
+            var machines = await db.Ressources
+                .AsNoTracking()
+                .Include(x => x.WorkArea)
+                .Include(x => x.RessourceCostUnits)
+                .Where(x => workAreaIds.Contains((int)x.WorkAreaId))
+                .OrderBy(x => x.WorkArea.Sort)
+                .ThenBy(x => x.Sort)
+                .ThenBy(x => x.RessourceId)
+                .ToListAsync();
+
+            var factory = _container.Resolve<PlanMachineFactory>();
+            var result = new List<PlanMachine>(machines.Count);
+
+            foreach (var m in machines)
+            {
+                if (procByRid.TryGetValue(m.RessourceId, out var assigned))
+                    result.Add(factory.CreatePlanMachine(assigned.RidNavigation, _DbCtx));
+                else
+                    result.Add(factory.CreatePlanMachine(m, _DbCtx));
+            }
+
+            _machines.Clear();
+            _machines.AddRange(result);
+
+            var processByMachine = proc
+                .Where(x =>
+                    x.ArbPlSapNavigation != null &&
+                    x.ArbPlSapNavigation.RessourceId.HasValue &&
+                    costIds.Contains((int)x.ArbPlSapNavigation.CostId))
+                .GroupBy(x => x.ArbPlSapNavigation!.RessourceId!.Value)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var list = new List<Vorgang>();
+            foreach (var machine in result)
+            {
+                if (processByMachine.TryGetValue(machine.Rid, out var items))
+                    list.AddRange(items);
+            }
+
+            Priv_processes = list
+                .Where(x => x.Rid == null)
+                .OrderBy(x => x.Vnr)
+                .ToObservableCollection();
+
+            Priv_parking = list
+                .Where(x => x.Rid < 0)
+                .ToObservableCollection();
+
+            ProcessViewSource.Source = Priv_processes;
+            ParkingViewSource.Source = Priv_parking;
+
+            RessCV = CollectionViewSource.GetDefaultView(_machines);
+
+            if (_machines.Count > 0)
+            {
+                var defaultWorkAreaId = WorkAreas.FirstOrDefault()?.WorkAreaId ?? _machines[0].WorkArea?.WorkAreaId ?? 0;
+                RessCV.MoveCurrentTo(_machines.FirstOrDefault(x => x.WorkArea?.WorkAreaId == defaultWorkAreaId) ?? _machines[0]);
+                _currentWorkArea = ((PlanMachine)RessCV.CurrentItem)?.WorkArea?.WorkAreaId ?? 0;
+            }
+
+            NotifyPropertyChanged(() => ProcessCV);
+            NotifyPropertyChanged(() => ParkingCV);
+
+            RessCV.Filter = f => (f as PlanMachine)?.WorkArea?.WorkAreaId == _currentWorkArea &&
+                                 (f as PlanMachine)!.Vis;
+
+            ParkingCV.Filter = f => (f as Vorgang)?.Rid == _currentWorkArea * -1;
+            ProcessViewSource.Filter += ProcessCV_Filter;
+
+            return RessCV;
+        }
+        private async Task<ICollectionView> LoadMachinesAsyncOLD()
         {
             var uiContext = TaskScheduler.FromCurrentSynchronizationContext();
 
