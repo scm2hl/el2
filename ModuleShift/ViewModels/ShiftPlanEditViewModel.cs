@@ -207,7 +207,7 @@ namespace ModuleShift.ViewModels
         }
         private bool OnManipulationRuleCanExecute(object arg)
         {
-            return true;
+            return PermissionsProvider.GetInstance().GetUserPermission(Permissions.ShiftRule);
         }
 
         private void OnManipulationRuleExecuted(object obj)
@@ -225,10 +225,18 @@ namespace ModuleShift.ViewModels
                 {
                     if (string.IsNullOrWhiteSpace(ruleText)) ruleText = null;
                     SelectedPlan.NightRule = ruleText;
+                    foreach (var cal in shiftCalendars)
+                    {
+                        foreach (var c in cal.ShiftWeeks)
+                        {
+                            if (c.Id == SelectedPlan.Id) c.NightRule = ruleText;
+                        }
+                    }
                     using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
                     var planDb = db.ShiftPlans.SingleOrDefault(x => x.Id == SelectedPlan.Id);
                     if(planDb != null)
-                    {               
+                    {
+   
                         planDb.NightshiftRule = ruleText;
                         
                         db.SaveChanges();

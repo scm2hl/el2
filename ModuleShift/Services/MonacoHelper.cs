@@ -102,7 +102,7 @@ namespace ModuleShift.Services
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"WebView2-Fehler: {ex.Message}");
+                    MessageBox.Show($"Fehler beim Initialisieren des Monaco Editors: {ex.Message}", "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
