@@ -402,7 +402,6 @@ namespace ModulePlanning.ViewModels
                         if (_DbCtx.ChangeTracker.HasChanges()) Task.Run(async () => _DbCtx.SaveChanges());
                         _lock.Exit();
                     }
-
                 }
             }
             catch (Exception ex)
@@ -435,7 +434,7 @@ namespace ModulePlanning.ViewModels
                 .AsNoTracking()
                 .Include(x => x.WorkArea)
                 .Include(x => x.RessourceCostUnits)
-                .Where(x => workAreaIds.Contains((int)x.WorkAreaId))
+                .Where(x => workAreaIds.Contains(x.WorkAreaId ?? 0))
                 .OrderBy(x => x.WorkArea.Sort)
                 .ThenBy(x => x.Sort)
                 .ThenBy(x => x.RessourceId)
@@ -459,7 +458,7 @@ namespace ModulePlanning.ViewModels
                 .Where(x =>
                     x.ArbPlSapNavigation != null &&
                     x.ArbPlSapNavigation.RessourceId.HasValue &&
-                    costIds.Contains((int)x.ArbPlSapNavigation.CostId))
+                    costIds.Contains(x.ArbPlSapNavigation.CostId ?? 0))
                 .GroupBy(x => x.ArbPlSapNavigation!.RessourceId!.Value)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
