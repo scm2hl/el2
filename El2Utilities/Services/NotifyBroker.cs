@@ -1,5 +1,5 @@
-﻿using El2Core.Models;
-using El2Core.Utils;
+﻿using El2Core.Utils;
+using MailKit;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 using System;
