@@ -381,6 +381,72 @@ namespace ModulePlanning.ViewModels
             }
             return query;
         }
+        private async Task<List<Vorgang>> GetVorgangsAsyncOLD(string? aid)
+        {
+            using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+
+            var q = await db.Vorgangs.AsNoTracking()
+                .Include(x => x.AidNavigation)
+                .ThenInclude(x => x.OrderComponents)
+                .ThenInclude(x => x.MaterialNavigation)
+                .Include(x => x.AidNavigation.DummyMatNavigation)
+                .Include(x => x.AidNavigation.MaterialNavigation)
+                .Include(x => x.Responses)
+                .Where(y => y.AidNavigation.Abgeschlossen == false
+                    && y.SysStatus != null
+                    && y.Text != null
+                    && y.ArbPlSapNavigation.Ressource.WorkAreaId != 5
+                    && y.Text.ToLower().Contains("auftrag starten") == false
+                    && y.SysStatus.Contains("RÜCK") == false)
+                .Select(x => new Vorgang
+                {
+                    VorgangId = x.VorgangId,
+                    Aid = x.Aid,
+                    ArbPlSap = x.ArbPlSap,
+                    Rid = x.Rid,
+                    SortPos = x.SortPos,
+                    SysStatus = x.SysStatus,
+                    Text = x.Text,
+                    AidNavigation = new OrderRb
+                    {
+                        Aid = x.AidNavigation.Aid,
+                        Abgeschlossen = x.AidNavigation.Abgeschlossen,
+                        DummyMatNavigation = new TblDummy
+                        {
+                            Aid = x.AidNavigation.DummyMatNavigation.Aid,
+                            Mattext = x.AidNavigation.DummyMatNavigation.Mattext
+                        },
+                        MaterialNavigation = new TblMaterial
+                        {
+                            Ttnr = x.AidNavigation.MaterialNavigation.Ttnr,
+                            Bezeichng = x.AidNavigation.MaterialNavigation.Bezeichng
+                        }
+                    }
+                })
+                .AsSplitQuery().ToListAsync();
+            foreach (var item in q)
+            {
+                if (item.ArbPlSap != null)
+                {
+                    item.ArbPlSapNavigation = db.WorkSaps
+                        .AsNoTracking()
+                        .Include(x => x.Ressource)
+                        .ThenInclude(x => x.WorkArea)
+                        .FirstOrDefault(x => x.WorkSapId == item.ArbPlSap);
+                }
+                if (item.Rid != null)
+                {
+                    item.RidNavigation = db.Ressources
+                        .AsNoTracking()
+                        .Include(x => x.WorkArea)
+                        .Include(x => x.RessourceWorkshifts)
+                        .ThenInclude(x => x.SidNavigation)
+                        .FirstOrDefault(x => x.RessourceId == item.Rid);
+                }
+            }
+
+            return q;
+        }
 
         private void SetAutoSaveTimer()
         {
@@ -421,13 +487,20 @@ namespace ModulePlanning.ViewModels
                 .Select(x => x.CostId)
                 .ToHashSet();
 
-            var proc = await GetVorgangsAsync(null);
+            var swTotal = Stopwatch.StartNew();
 
+            var sw = Stopwatch.StartNew();
+            var proc = await GetVorgangsAsync(null);
+            Debug.WriteLine($"GetVorgangsAsync: {sw.ElapsedMilliseconds} ms");
+
+            sw.Restart();
             var procByRid = proc
                 .Where(x => x.Rid.HasValue)
                 .GroupBy(x => x.Rid.Value)
                 .ToDictionary(g => g.Key, g => g.First());
+            Debug.WriteLine($"procByRid: {sw.ElapsedMilliseconds} ms");
 
+            sw.Restart();
             using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
 
             var machines = await db.Ressources
@@ -442,7 +515,9 @@ namespace ModulePlanning.ViewModels
 
             var factory = _container.Resolve<PlanMachineFactory>();
             var result = new List<PlanMachine>(machines.Count);
+            Debug.WriteLine($"DB-Abfrage Maschinen: {sw.ElapsedMilliseconds} ms");
 
+            sw.Restart();
             foreach (var m in machines)
             {
                 if (procByRid.TryGetValue(m.RessourceId, out var assigned))
@@ -450,7 +525,9 @@ namespace ModulePlanning.ViewModels
                 else
                     result.Add(factory.CreatePlanMachine(m, _DbCtx));
             }
+            Debug.WriteLine($"PlanMachineFactory: {sw.ElapsedMilliseconds} ms");
 
+            Debug.WriteLine($"GESAMT: {swTotal.ElapsedMilliseconds} ms");
             _machines.Clear();
             _machines.AddRange(result);
 
