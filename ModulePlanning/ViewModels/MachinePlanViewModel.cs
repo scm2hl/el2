@@ -327,14 +327,9 @@ namespace ModulePlanning.ViewModels
                 WorkAreas.Add(accWork.WorkArea);
             }           
         }
-        private async Task<List<Vorgang>> GetVorgangsAsync(string? aid)
+        private async Task<List<Vorgang>> GetVorgangsAsync(string? aid, IReadOnlyCollection<int>? resourceIds = null)
         {
-            List<Vorgang> query;
-    
-            if (aid != null)
-            {
- 
-                query = await _DbCtx.Vorgangs
+            var query = _DbCtx.Vorgangs
                 .Include(x => x.AidNavigation)
                 .ThenInclude(x => x.OrderComponents)
                 .ThenInclude(x => x.MaterialNavigation)
@@ -342,44 +337,30 @@ namespace ModulePlanning.ViewModels
                 .Include(x => x.AidNavigation.MaterialNavigation)
                 .Include(x => x.ArbPlSapNavigation)
                 .Include(x => x.Responses)
-                .Include(x => x.RidNavigation.WorkArea)
                 .Include(x => x.RidNavigation)
-                .ThenInclude(x => x.RessourceWorkshifts)
-                .ThenInclude(x => x.SidNavigation)
-                .Where(y => y.Aid == aid
-                    && y.SysStatus != null
+                .ThenInclude(x => x!.WorkArea)
+                .Include(x => x.RidNavigation)
+                .ThenInclude(x => x!.RessourceCostUnits)
+                .Where(y => y.SysStatus != null
                     && y.Text != null
-                    && y.ArbPlSapNavigation.Ressource.WorkAreaId != 5
+                    && y.ArbPlSapNavigation!.Ressource!.WorkAreaId != 5
                     && y.Text.ToLower().Contains("auftrag starten") == false
-                    && y.SysStatus.Contains("RÜCK") == false)
+                    && y.SysStatus.Contains("RÜCK") == false);
+
+            query = aid != null
+                ? query.Where(y => y.Aid == aid)
+                : query.Where(y => y.AidNavigation.Abgeschlossen == false);
+
+            if (resourceIds != null)
+            {
+                query = query.Where(y =>
+                    (y.Rid.HasValue && resourceIds.Contains(y.Rid.Value)) ||
+                    (y.ArbPlSapNavigation!.RessourceId.HasValue && resourceIds.Contains(y.ArbPlSapNavigation.RessourceId.Value)));
+            }
+
+            return await query
+                .AsSplitQuery()
                 .ToListAsync();
-                
-            }
-            else
-            {
- 
-                query = await _DbCtx.Vorgangs
-                .Include(x => x.AidNavigation)
-                .ThenInclude(x => x.OrderComponents)
-                .ThenInclude(x => x.MaterialNavigation)
-                .Include(x => x.AidNavigation.DummyMatNavigation)
-                .Include(x => x.AidNavigation.MaterialNavigation)
-                .Include(x => x.ArbPlSapNavigation)
-                .Include(x => x.Responses)
-                .Include(x => x.RidNavigation.WorkArea)
-                .Include(x => x.RidNavigation)
-                .ThenInclude(x => x.RessourceWorkshifts)
-                .ThenInclude(x => x.SidNavigation)
-                .Where(y => y.AidNavigation.Abgeschlossen == false
-                    && y.SysStatus != null
-                    && y.Text != null
-                    && y.ArbPlSapNavigation.Ressource.WorkAreaId != 5
-                    && y.Text.ToLower().Contains("auftrag starten") == false
-                    && y.SysStatus.Contains("RÜCK") == false)
-                .AsSplitQuery().ToListAsync();
-                
-            }
-            return query;
         }
         private async Task<List<Vorgang>> GetVorgangsAsyncOLD(string? aid)
         {
@@ -490,17 +471,6 @@ namespace ModulePlanning.ViewModels
             var swTotal = Stopwatch.StartNew();
 
             var sw = Stopwatch.StartNew();
-            var proc = await GetVorgangsAsync(null);
-            Debug.WriteLine($"GetVorgangsAsync: {sw.ElapsedMilliseconds} ms");
-
-            sw.Restart();
-            var procByRid = proc
-                .Where(x => x.Rid.HasValue)
-                .GroupBy(x => x.Rid.Value)
-                .ToDictionary(g => g.Key, g => g.First());
-            Debug.WriteLine($"procByRid: {sw.ElapsedMilliseconds} ms");
-
-            sw.Restart();
             using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
 
             var machines = await db.Ressources
@@ -513,6 +483,45 @@ namespace ModulePlanning.ViewModels
                 .ThenBy(x => x.RessourceId)
                 .ToListAsync();
 
+            sw.Restart();
+            var proc = await GetVorgangsAsync(null, machines.Select(x => x.RessourceId).ToHashSet());
+            Debug.WriteLine($"GetVorgangsAsync: {sw.ElapsedMilliseconds} ms");
+
+            sw.Restart();
+            var procByRid = proc
+                .Where(x => x.Rid.HasValue)
+                .GroupBy(x => x.Rid.Value)
+                .ToDictionary(g => g.Key, g => g.First());
+            Debug.WriteLine($"procByRid: {sw.ElapsedMilliseconds} ms");
+
+            sw.Restart();
+            var shiftCalendars = await db.ShiftCalendars
+                .AsNoTracking()
+                .OrderBy(x => x.Id)
+                .ToDictionaryAsync(x => x.Id, x => x.CalendarName);
+
+            var resourceIds = machines.Select(x => x.RessourceId).ToHashSet();
+            var shiftCalendarIds = machines
+                .Where(x => x.ShiftCalendar.HasValue)
+                .Select(x => x.ShiftCalendar!.Value)
+                .Distinct()
+                .ToHashSet();
+            var shiftPlanCalendars = await db.ShiftCalendars
+                .AsNoTracking()
+                .Where(x => shiftCalendarIds.Contains(x.Id))
+                .Include(x => x.ShiftCalendarShiftPlans)
+                .ThenInclude(x => x.Plan)
+                .AsSplitQuery()
+                .ToDictionaryAsync(x => x.Id);
+            var today = DateTime.Today;
+            var stoppagesByResource = (await db.Stopages
+                    .AsNoTracking()
+                    .Where(x => resourceIds.Contains(x.Rid) && x.Endtime > today)
+                    .OrderBy(x => x.Starttime)
+                    .ToListAsync())
+                .GroupBy(x => x.Rid)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
             var factory = _container.Resolve<PlanMachineFactory>();
             var result = new List<PlanMachine>(machines.Count);
             Debug.WriteLine($"DB-Abfrage Maschinen: {sw.ElapsedMilliseconds} ms");
@@ -521,9 +530,9 @@ namespace ModulePlanning.ViewModels
             foreach (var m in machines)
             {
                 if (procByRid.TryGetValue(m.RessourceId, out var assigned))
-                    result.Add(factory.CreatePlanMachine(assigned.RidNavigation, _DbCtx));
+                    result.Add(factory.CreatePlanMachine(assigned.RidNavigation, _DbCtx, shiftCalendars, stoppagesByResource, shiftPlanCalendars));
                 else
-                    result.Add(factory.CreatePlanMachine(m, _DbCtx));
+                    result.Add(factory.CreatePlanMachine(m, _DbCtx, shiftCalendars, stoppagesByResource, shiftPlanCalendars));
             }
             Debug.WriteLine($"PlanMachineFactory: {sw.ElapsedMilliseconds} ms");
 

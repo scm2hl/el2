@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
-using System.Windows.Documents;
 
 namespace ModulePlanning.Specials
 {
@@ -30,15 +29,34 @@ namespace ModulePlanning.Specials
         private ILogger logger;
 
         public ShiftPlanService(int rid, IContainerProvider container)
+            : this(rid, container, null, null, false)
+        {
+        }
+
+        public ShiftPlanService(int rid, IContainerProvider container, ShiftCalendar? shiftCalendar, List<Stopage> stoppages)
+            : this(rid, container, shiftCalendar, stoppages, true)
+        {
+        }
+
+        private ShiftPlanService(int rid, IContainerProvider container, ShiftCalendar? shiftCalendar,
+            List<Stopage>? stoppages, bool usePreloadedData)
         {
             this.rid = rid;
-
             this.container = container;
             var factory = container.Resolve<ILoggerFactory>();
             logger = factory.CreateLogger<ShiftPlanService>();
-            ReloadStoppage();
-            ReloadShiftCalendar();
-            
+
+            if (usePreloadedData)
+            {
+                this.stoppages = stoppages!;
+                LoadShiftCalendar(shiftCalendar);
+            }
+            else
+            {
+                ReloadStoppage();
+                ReloadShiftCalendar();
+            }
+
             holidayLogic = container.Resolve<HolidayLogic>();
         }
         /// <summary>
@@ -152,6 +170,11 @@ namespace ModulePlanning.Specials
                 .ThenInclude(x => x.Plan)
                 .SingleOrDefault(x => x.Ressources.Any(x => x.RessourceId == rid));
 
+            LoadShiftCalendar(scal);
+        }
+
+        private void LoadShiftCalendar(ShiftCalendar? scal)
+        {
             if (scal != null)
             {              
                 repeat = scal.Repeat;

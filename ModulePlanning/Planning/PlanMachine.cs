@@ -82,7 +82,16 @@ namespace ModulePlanning.Planning
         /// <returns></returns>
         public PlanMachine CreatePlanMachine(Ressource res, DB_COS_LIEFERLISTE_SQLContext context)
         {
-            return new PlanMachine(res, context, Container, ApplicationCommands, EventAggregator, SettingsService, DialogService);
+            return CreatePlanMachine(res, context, null, null, null);
+        }
+
+        public PlanMachine CreatePlanMachine(Ressource res, DB_COS_LIEFERLISTE_SQLContext context,
+            IReadOnlyDictionary<int, string>? shiftCalendars,
+            IReadOnlyDictionary<int, List<Stopage>>? stoppagesByResource,
+            IReadOnlyDictionary<int, ShiftCalendar>? shiftPlanCalendars)
+        {
+            return new PlanMachine(res, context, Container, ApplicationCommands, EventAggregator, SettingsService, DialogService,
+                shiftCalendars, stoppagesByResource, shiftPlanCalendars);
         }
 
     }
@@ -101,6 +110,15 @@ namespace ModulePlanning.Planning
 
         public PlanMachine(Ressource ressource, DB_COS_LIEFERLISTE_SQLContext context, IContainerProvider container, IApplicationCommands applicationCommands,
             IEventAggregator eventAggregator, IUserSettingsService settingsService, IDialogService dialogService)
+            : this(ressource, context, container, applicationCommands, eventAggregator, settingsService, dialogService, null, null, null)
+        {
+        }
+
+        public PlanMachine(Ressource ressource, DB_COS_LIEFERLISTE_SQLContext context, IContainerProvider container, IApplicationCommands applicationCommands,
+            IEventAggregator eventAggregator, IUserSettingsService settingsService, IDialogService dialogService,
+            IReadOnlyDictionary<int, string>? shiftCalendars,
+            IReadOnlyDictionary<int, List<Stopage>>? stoppagesByResource,
+            IReadOnlyDictionary<int, ShiftCalendar>? shiftPlanCalendars)
         {
             _container = container;
             var factory = container.Resolve<ILoggerFactory>();
@@ -114,7 +132,7 @@ namespace ModulePlanning.Planning
             _db = context;
             Setup = settingsService.PlanedSetup;
             Initialize();
-            LoadData(ressource);
+            LoadData(ressource, shiftCalendars, stoppagesByResource, shiftPlanCalendars);
             if(SelectedRadioButton != 0)
                 CalculateEndTime();
             ProcessesCV.Refresh();
@@ -138,6 +156,9 @@ namespace ModulePlanning.Planning
         private readonly Lock _lock = new();
         private HashSet<string> ImChanged = [];
         private ShiftPlanService _shiftPlanService;
+        private ShiftCalendar? _preloadedShiftCalendar;
+        private List<Stopage>? _preloadedStoppages;
+        private bool _hasPreloadedShiftData;
         private readonly int _rId;
         private string _title;
         public string Title => _title;
@@ -243,8 +264,24 @@ namespace ModulePlanning.Planning
         internal CollectionViewSource ProcessesCVSource { get; set; } = new CollectionViewSource();
 
 
-        private void LoadData(Ressource res)
+        private void LoadData(Ressource res, IReadOnlyDictionary<int, string>? shiftCalendars,
+            IReadOnlyDictionary<int, List<Stopage>>? stoppagesByResource,
+            IReadOnlyDictionary<int, ShiftCalendar>? shiftPlanCalendars)
         { 
+            _hasPreloadedShiftData = shiftPlanCalendars != null;
+            if (res.ShiftCalendar.HasValue)
+            {
+                shiftPlanCalendars?.TryGetValue(res.ShiftCalendar.Value, out _preloadedShiftCalendar);
+            }
+            if (stoppagesByResource?.TryGetValue(Rid, out var preloadedStoppages) == true)
+            {
+                _preloadedStoppages = preloadedStoppages;
+            }
+            else if (stoppagesByResource != null)
+            {
+                _preloadedStoppages = new List<Stopage>();
+            }
+
             CostUnits.AddRange(res.RessourceCostUnits.Select(x => x.CostId));
             WorkArea = res.WorkArea;
             Name = res.RessName;
@@ -262,16 +299,43 @@ namespace ModulePlanning.Planning
             //ProcessesCV.SortDescriptions.Add(new SortDescription("SortPos", ListSortDirection.Ascending));
   
             ProcessesCV.CollectionChanged += OnProcessesChanged;
-            var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
 
-            foreach(var s in db.ShiftCalendars.OrderBy(x => x.Id).AsNoTracking())
+            if (shiftCalendars == null || stoppagesByResource == null)
             {
-                _ShiftCalendars.Add(s.Id, s.CalendarName);
+                var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                if (shiftCalendars == null)
+                {
+                    foreach (var calendar in db.ShiftCalendars.OrderBy(x => x.Id).AsNoTracking())
+                    {
+                        _ShiftCalendars.Add(calendar.Id, calendar.CalendarName);
+                    }
+                }
+                if (stoppagesByResource == null)
+                {
+                    foreach (var stop in db.Stopages.Where(x => x.Rid == Rid && x.Endtime > DateTime.Today)
+                                 .OrderBy(x => x.Starttime).AsNoTracking())
+                    {
+                        Stoppages.Add(stop.Id, [stop.Description ?? "Stop Ausfall", string.Format("{0} - {1}",
+                            stop.Starttime.ToString("d.M H:mm"), stop.Endtime.ToString("d.M H:mm"))]);
+                    }
+                }
             }
-            foreach(var stop in db.Stopages.Where(x => x.Rid == Rid && x.Endtime > DateTime.Today).OrderBy(x => x.Starttime).AsNoTracking())
+
+            if (shiftCalendars != null)
             {
-                Stoppages.Add(stop.Id, [ stop.Description ?? "Stop Ausfall", string.Format("{0} - {1}",
+                foreach (var calendar in shiftCalendars)
+                {
+                    _ShiftCalendars.Add(calendar.Key, calendar.Value);
+                }
+            }
+
+            if (stoppagesByResource?.TryGetValue(Rid, out var resourceStoppages) == true)
+            {
+                foreach (var stop in resourceStoppages)
+                {
+                    Stoppages.Add(stop.Id, [stop.Description ?? "Stop Ausfall", string.Format("{0} - {1}",
                         stop.Starttime.ToString("d.M H:mm"), stop.Endtime.ToString("d.M H:mm"))]);
+                }
             }
             StoppagesView = CollectionViewSource.GetDefaultView(Stoppages);
             ShiftCalendarView = CollectionViewSource.GetDefaultView(ShiftCalendars);
@@ -307,7 +371,9 @@ namespace ModulePlanning.Planning
             {
                 
                 if (_SelectedRadioButton == 0) return;
-                _shiftPlanService ??= new Specials.ShiftPlanService(Rid, _container);
+                _shiftPlanService ??= _hasPreloadedShiftData
+                    ? new Specials.ShiftPlanService(Rid, _container, _preloadedShiftCalendar, _preloadedStoppages ?? new List<Stopage>())
+                    : new Specials.ShiftPlanService(Rid, _container);
                 DateTime start = DateTime.Now;
                 foreach (var p in Processes.OrderBy(x => x.SortPos))
                 {
