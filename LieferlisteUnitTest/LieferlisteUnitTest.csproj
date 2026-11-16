@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <IsTestProject>true</IsTestProject>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyTitle>LieferlisteUnitTest</AssemblyTitle>
     <Product>LieferlisteUnitTest</Product>
@@ -11,7 +12,13 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="MSTest.TestAdapter" />
     <PackageReference Include="MSTest.TestFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ModuleDeliverList\ModuleDeliverList.csproj" />
+    <ProjectReference Include="..\ModuleMeasuring\ModuleMeasuring.csproj" />
+    <ProjectReference Include="..\ModulePlanning\ModulePlanning.csproj" />
   </ItemGroup>
 </Project>
