@@ -486,6 +486,7 @@ namespace ModulePlanning.ViewModels
             sw.Restart();
             var proc = await GetVorgangsAsync(null, machines.Select(x => x.RessourceId).ToHashSet());
             Debug.WriteLine($"GetVorgangsAsync: {sw.ElapsedMilliseconds} ms");
+            _Logger.LogInformation($"GetVorgangsAsync: {sw.ElapsedMilliseconds} ms");
 
             sw.Restart();
             var procByRid = proc
@@ -493,7 +494,7 @@ namespace ModulePlanning.ViewModels
                 .GroupBy(x => x.Rid.Value)
                 .ToDictionary(g => g.Key, g => g.First());
             Debug.WriteLine($"procByRid: {sw.ElapsedMilliseconds} ms");
-
+            _Logger.LogInformation($"procByRid: {sw.ElapsedMilliseconds} ms");
             sw.Restart();
             var shiftCalendars = await db.ShiftCalendars
                 .AsNoTracking()
@@ -525,6 +526,7 @@ namespace ModulePlanning.ViewModels
             var factory = _container.Resolve<PlanMachineFactory>();
             var result = new List<PlanMachine>(machines.Count);
             Debug.WriteLine($"DB-Abfrage Maschinen: {sw.ElapsedMilliseconds} ms");
+            _Logger.LogInformation($"DB-Abfrage Maschinen: {sw.ElapsedMilliseconds} ms");
 
             sw.Restart();
             foreach (var m in machines)
@@ -535,8 +537,11 @@ namespace ModulePlanning.ViewModels
                     result.Add(factory.CreatePlanMachine(m, _DbCtx, shiftCalendars, stoppagesByResource, shiftPlanCalendars));
             }
             Debug.WriteLine($"PlanMachineFactory: {sw.ElapsedMilliseconds} ms");
+            _Logger.LogInformation($"PlanMachineFactory: {sw.ElapsedMilliseconds} ms");
 
             Debug.WriteLine($"GESAMT: {swTotal.ElapsedMilliseconds} ms");
+            _Logger.LogInformation($"GESAMT: {swTotal.ElapsedMilliseconds} ms");
+
             _machines.Clear();
             _machines.AddRange(result);
 
