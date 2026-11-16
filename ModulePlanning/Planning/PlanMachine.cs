@@ -807,24 +807,23 @@ namespace ModulePlanning.Planning
         {
             try
             {
+                if (obj is string text)
+                {
+                    setTextToClipboard(text);
+                    return;
+                }
+
+                if (obj is not Vorgang v) return;
+
+                string[] values;
                 using (_lock.EnterScope())
                 {
-                    if (obj is Vorgang v)
-                    {
-                        var m = v.AidNavigation.Quantity.ToString();
-                        var a = v.Aid.Trim();
-                        var vnr = v.Vnr.ToString();
-                        var mat = v.AidNavigation.Material?.Trim();
-                        var bez = v.AidNavigation.MaterialNavigation?.Bezeichng?.Trim();
+                    values = GetFastCopyValues(v);
+                }
 
-                        OnFastCopyExecuted(m);
-                        OnFastCopyExecuted(bez ?? a);
-                        OnFastCopyExecuted(mat ?? "DUMMY");
-                        OnFastCopyExecuted(vnr);
-                        OnFastCopyExecuted(a);
-                    }
-                    if (obj is string s)
-                    { setTextToClipboard(s); }
+                foreach (var value in values)
+                {
+                    setTextToClipboard(value);
                 }
             }
             catch (Exception e)
@@ -832,7 +831,20 @@ namespace ModulePlanning.Planning
                 _logger.LogError("{message}", e.ToString());
                 MessageBox.Show(string.Format("{0}\n{1}", e.Message, e.InnerException), "FastCopy", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-  
+        }
+
+        internal static string[] GetFastCopyValues(Vorgang v)
+        {
+            var aid = v.Aid.Trim();
+            var aidNavigation = v.AidNavigation;
+            return
+            [
+                aidNavigation.Quantity.ToString(),
+                aidNavigation.MaterialNavigation?.Bezeichng?.Trim() ?? aid,
+                aidNavigation.Material?.Trim() ?? "DUMMY",
+                v.Vnr.ToString(),
+                aid
+            ];
         }
 
         private void setTextToClipboard(string text)
