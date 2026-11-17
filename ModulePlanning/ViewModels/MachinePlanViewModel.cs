@@ -437,16 +437,19 @@ namespace ModulePlanning.ViewModels
             _autoSaveTimer.Enabled = true;
         }
 
-        private async void OnAutoSaveAsync(object? sender, ElapsedEventArgs e)
+        private void OnAutoSaveAsync(object? sender, ElapsedEventArgs e)
         {
             try
             {
-                if (MachineTask != null && MachineTask.IsSuccessfullyCompleted)
+                if (MachineTask != null && MachineTask.IsSuccessfullyCompleted && _lock.TryEnter())
                 {
-
-                    if (_lock.TryEnter())
+                    try
                     {
-                        if (_DbCtx.ChangeTracker.HasChanges()) Task.Run(async () => _DbCtx.SaveChanges());
+                        if (_DbCtx.ChangeTracker.HasChanges())
+                            _DbCtx.SaveChanges();
+                    }
+                    finally
+                    {
                         _lock.Exit();
                     }
                 }

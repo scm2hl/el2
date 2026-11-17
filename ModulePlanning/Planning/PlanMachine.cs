@@ -514,7 +514,7 @@ namespace ModulePlanning.Planning
                                 existing.CommentMach = refreshed.CommentMach;
                                 existing.SysStatus = refreshed.SysStatus;
                                 existing.RidNavigation = refreshed.RidNavigation;
-                                existing.AidNavigation = refreshed.AidNavigation;
+                                existing.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
 
                                 existing.RunPropertyChanged();
                             }
@@ -580,7 +580,7 @@ namespace ModulePlanning.Planning
                                     process.SysStatus = refreshed.SysStatus;
                                     process.Rid = refreshed.Rid;
                                     process.RidNavigation = refreshed.RidNavigation;
-                                    process.AidNavigation = refreshed.AidNavigation;
+                                    process.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
                                     process.RunPropertyChanged();
 
                                     _logger.LogInformation("PlanMachine - execute reload {message} {1}", process.VorgangId, process.SysStatus);
@@ -610,6 +610,18 @@ namespace ModulePlanning.Planning
                 }
             });
         }
+        private OrderRb GetTrackedOrder(OrderRb refreshed)
+        {
+            var trackedOrder = _db.OrderRbs.Local.FirstOrDefault(x => x.Aid == refreshed.Aid);
+            if (trackedOrder == null)
+                return refreshed;
+
+            var entry = _db.Entry(trackedOrder);
+            entry.CurrentValues.SetValues(refreshed);
+            entry.OriginalValues.SetValues(refreshed);
+            return trackedOrder;
+        }
+
         private void ChangedValues(string invoker, Vorgang local, Vorgang remote)
         {
             if (invoker == "EL2")
