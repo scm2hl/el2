@@ -513,7 +513,7 @@ namespace ModulePlanning.Planning
                                 existing.SortPos = refreshed.SortPos;
                                 existing.CommentMach = refreshed.CommentMach;
                                 existing.SysStatus = refreshed.SysStatus;
-                                existing.RidNavigation = refreshed.RidNavigation;
+                                existing.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
                                 existing.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
 
                                 existing.RunPropertyChanged();
@@ -579,7 +579,7 @@ namespace ModulePlanning.Planning
                                     ChangedValues(message.Item1, process, refreshed);
                                     process.SysStatus = refreshed.SysStatus;
                                     process.Rid = refreshed.Rid;
-                                    process.RidNavigation = refreshed.RidNavigation;
+                                    process.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
                                     process.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
                                     process.RunPropertyChanged();
 
@@ -610,6 +610,21 @@ namespace ModulePlanning.Planning
                 }
             });
         }
+        private Ressource? GetTrackedRessource(Ressource? refreshed)
+        {
+            if (refreshed == null)
+                return null;
+
+            var trackedRessource = _db.Ressources.Local.FirstOrDefault(x => x.RessourceId == refreshed.RessourceId);
+            if (trackedRessource == null)
+                return refreshed;
+
+            var entry = _db.Entry(trackedRessource);
+            entry.CurrentValues.SetValues(refreshed);
+            entry.OriginalValues.SetValues(refreshed);
+            return trackedRessource;
+        }
+
         private OrderRb GetTrackedOrder(OrderRb refreshed)
         {
             var trackedOrder = _db.OrderRbs.Local.FirstOrDefault(x => x.Aid == refreshed.Aid);

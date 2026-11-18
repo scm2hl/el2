@@ -158,99 +158,86 @@ namespace ModulePlanning.ViewModels
         }
         private void MessageVorgangReceived(List<(string, string)?> list)
         {
-            try
-            { 
-                foreach (var item in list)
+            _ = Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                try
                 {
-                    if ((item != null))
+                    foreach (var item in list)
                     {
+                        if (!item.HasValue)
+                            continue;
+
                         var vo = Priv_processes?.FirstOrDefault(x => x.VorgangId == item.Value.Item2);
+                        if (vo == null)
+                            continue;
 
-                        if (vo != null)
+                        var entry = _DbCtx.Entry(vo);
+                        if (entry.State == EntityState.Modified)
+                            _DbCtx.SaveChanges();
+                        entry.Reload();
+                        vo.RunPropertyChanged();
+                        _Logger.LogInformation("reloaded {message}-{0} rid {1} {2}", vo.Aid, vo.Vnr, vo.Rid, item.Value.Item1);
+
+                        if (item.Value.Item1 == "EL2" && vo.Rid != null)
                         {
-                            _ = Task.Factory.StartNew(() =>
-                            {
-                                if (_DbCtx.Entry(vo).State == EntityState.Modified) _DbCtx.SaveChanges();
-                                _DbCtx.Entry(vo).Reload();
-                                vo.RunPropertyChanged();
-                                _Logger.LogInformation("reloaded {message}-{0} rid {1} {2}", vo.Aid, vo.Vnr, vo.Rid, item.Value.Item1);
-                            });
-
-                            if (item.Value.Item1 == "EL2")
-                            {
-                                if (vo.Rid != null)
-                                {
-                                    Application.Current.Dispatcher.InvokeAsync(() => Priv_processes?.Remove(vo));
-                                    
-                                    _Logger.LogInformation("user has added to machine {message}-{0} rid {1}", vo.Aid, vo.Vnr, vo.Rid);
-                                }
- 
-                            }
+                            Priv_processes?.Remove(vo);
+                            _Logger.LogInformation("user has added to machine {message}-{0} rid {1}", vo.Aid, vo.Vnr, vo.Rid);
                         }
                     }
-                }                
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError("{message}", ex.ToString());
-                //MessageBox.Show(ex.Message, "MessageVorgangReceved MachinePlan", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                }
+                catch (Exception ex)
+                {
+                    _Logger.LogError("{message}", ex.ToString());
+                }
+            });
         }
 
         private void MessageOrderReceived(List<(string, string)?> list)
         {
-            Vorgang vrg;
-            Vorgang vo;
-            try
+            _ = Application.Current.Dispatcher.InvokeAsync(() =>
             {
- 
-                foreach (var item in list)
+                try
                 {
-                    if (item == null) continue;
-                    if (Priv_processes?.Any(x => x.Aid == item.Value.Item2) ?? false)
+                    foreach (var item in list)
                     {
-                        _ = Task.Factory.StartNew(async () =>
-                        {
-                            var proc = await GetVorgangsAsync(item.Value.Item2);
-                            foreach (var item2 in proc)
-                            {
-                                if (IsRelevant(item2.ArbPlSap) && item2.Rid == null)
-                                {
-                                    if (Priv_processes.Contains(item2))
-                                    {
-                                        foreach (var item3 in item2.AidNavigation.OrderComponents)
-                                        {
-                                            _ = Task.Factory.StartNew(() =>
-                                            {
-                                                if (_DbCtx.Entry(item3).State == EntityState.Modified) { _DbCtx.SaveChanges(); }
-                                                 _DbCtx.Entry(item3).Reload();
-                                                
-                                            });
-                                        }
-                                    }
-                                    else
-                                    {
-                                        _Logger.LogInformation("scope pool added {message}-{0}", item2.Aid, item2.Vnr);
-                                        using (_lock.EnterScope())
-                                        {
-                                            _ = Application.Current.Dispatcher.InvokeAsync(() => Priv_processes?.Add(item2));
-                                            _DbCtx.ChangeTracker.Entries<Vorgang>().First(x => x.Entity.VorgangId == item2.VorgangId).State = EntityState.Unchanged;
+                        if (!item.HasValue || !(Priv_processes?.Any(x => x.Aid == item.Value.Item2) ?? false))
+                            continue;
 
-                                            _Logger.LogInformation("pool added {message}-{0}", item2.Aid, item2.Vnr);
-                                        }
-                                    }
+                        var proc = GetVorgangs(item.Value.Item2);
+                        foreach (var item2 in proc)
+                        {
+                            if (!IsRelevant(item2.ArbPlSap) || item2.Rid != null)
+                                continue;
+
+                            if (Priv_processes!.Contains(item2))
+                            {
+                                foreach (var item3 in item2.AidNavigation.OrderComponents)
+                                {
+                                    var entry = _DbCtx.Entry(item3);
+                                    if (entry.State == EntityState.Modified)
+                                        _DbCtx.SaveChanges();
+                                    entry.Reload();
                                 }
                             }
-                        });
+                            else
+                            {
+                                _Logger.LogInformation("scope pool added {message}-{0}", item2.Aid, item2.Vnr);
+                                using (_lock.EnterScope())
+                                {
+                                    Priv_processes?.Add(item2);
+                                    _DbCtx.ChangeTracker.Entries<Vorgang>().First(x => x.Entity.VorgangId == item2.VorgangId).State = EntityState.Unchanged;
+                                    _Logger.LogInformation("pool added {message}-{0}", item2.Aid, item2.Vnr);
+                                }
+                            }
+                        }
                     }
                 }
-                
-            }
-            catch (Exception ex)
-            {
-                _Logger.LogError("{message}", ex.ToString());
-                MessageBox.Show(ex.Message, "MessageOrderReceived MachinePlan", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+                catch (Exception ex)
+                {
+                    _Logger.LogError("{message}", ex.ToString());
+                    MessageBox.Show(ex.Message, "MessageOrderReceived MachinePlan", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            });
         }
  
         private bool OnSaveCanExecute(object arg)
@@ -329,6 +316,20 @@ namespace ModulePlanning.ViewModels
         }
         private async Task<List<Vorgang>> GetVorgangsAsync(string? aid, IReadOnlyCollection<int>? resourceIds = null)
         {
+            return await CreateVorgangsQuery(aid, resourceIds)
+                .AsSplitQuery()
+                .ToListAsync();
+        }
+
+        private List<Vorgang> GetVorgangs(string? aid, IReadOnlyCollection<int>? resourceIds = null)
+        {
+            return CreateVorgangsQuery(aid, resourceIds)
+                .AsSplitQuery()
+                .ToList();
+        }
+
+        private IQueryable<Vorgang> CreateVorgangsQuery(string? aid, IReadOnlyCollection<int>? resourceIds)
+        {
             var query = _DbCtx.Vorgangs
                 .Include(x => x.AidNavigation)
                 .ThenInclude(x => x.OrderComponents)
@@ -358,9 +359,7 @@ namespace ModulePlanning.ViewModels
                     (y.ArbPlSapNavigation!.RessourceId.HasValue && resourceIds.Contains(y.ArbPlSapNavigation.RessourceId.Value)));
             }
 
-            return await query
-                .AsSplitQuery()
-                .ToListAsync();
+            return query;
         }
         private async Task<List<Vorgang>> GetVorgangsAsyncOLD(string? aid)
         {
@@ -439,6 +438,12 @@ namespace ModulePlanning.ViewModels
 
         private void OnAutoSaveAsync(object? sender, ElapsedEventArgs e)
         {
+            if (!Application.Current.Dispatcher.CheckAccess())
+            {
+                _ = Application.Current.Dispatcher.InvokeAsync(() => OnAutoSaveAsync(sender, e));
+                return;
+            }
+
             try
             {
                 if (MachineTask != null && MachineTask.IsSuccessfullyCompleted && _lock.TryEnter())
