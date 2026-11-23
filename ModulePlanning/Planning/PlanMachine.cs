@@ -154,7 +154,6 @@ namespace ModulePlanning.Planning
         public ICommand? DelStoppageCommand { get; private set; }
         private ILogger _logger;
         private readonly Lock _lock = new();
-        private readonly object _processesLock = new();
         private HashSet<string> ImChanged = [];
         private ShiftPlanService _shiftPlanService;
         private ShiftCalendar? _preloadedShiftCalendar;
@@ -221,6 +220,28 @@ namespace ModulePlanning.Planning
                 }
             }
         }
+        private Vorgang? _SelectedItem;
+
+        public Vorgang? SelectedItem
+        {
+            get { return _SelectedItem; }
+            set
+            {
+                
+                using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                if (value != null)
+                {
+                    if (_SelectedItem != null)
+                    {
+                        db.SaveChanges();
+                        db.Entry(_SelectedItem).State = EntityState.Detached;
+                    }
+                    _SelectedItem = value;
+                    db.Vorgangs.Attach(_SelectedItem);
+                }
+            }
+        }
+
         public string? InventNo { get; private set; }
         public WorkArea? WorkArea { get; set; }
         public List<int> CostUnits { get; set; } = [];
@@ -231,7 +252,7 @@ namespace ModulePlanning.Planning
         private IEventAggregator _eventAggregator;
         private IApplicationCommands? _applicationCommands;
         private IUserSettingsService _settingsService;
-        private DB_COS_LIEFERLISTE_SQLContext _db;
+        private DB_COS_LIEFERLISTE_SQLContext _dbb;
         private readonly IDialogService _dialogService;
         private Vorgang _scrollItem;
 
@@ -463,67 +484,133 @@ namespace ModulePlanning.Planning
         /// <param name="list"></param>
         private void MessageOrderReceived(List<(string, string)?> list)
         {
-            if (list == null || list.Count == 0)
+            var orderIds = list?
+                .Where(x => x.HasValue)
+                .Select(x => x!.Value.Item2)
+                .Distinct()
+                .ToArray();
+            if (orderIds == null || orderIds.Length == 0)
                 return;
 
             _ = Task.Run(async () =>
             {
-                foreach (var item in list)
+                try
                 {
-                    if (item == null)
-                        continue;
-
-                    var vorgangId = item.Value.Item2;
-
-                    Vorgang? refreshed = null;
-
-                    try
-                    {
-                        using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
-
-                        refreshed = await db.Vorgangs
+                    List<Vorgang> refreshedVorgangs;
+                    using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
+                    { 
+                        refreshedVorgangs = await db.Vorgangs
                             .AsNoTracking()
+                            .Where(x => orderIds.Contains(x.Aid))
                             .Include(x => x.AidNavigation)
                             .ThenInclude(x => x.MaterialNavigation)
                             .Include(x => x.AidNavigation.DummyMatNavigation)
+                            .Include(x => x.AidNavigation.OrderComponents)
+                            .ThenInclude(x => x.MaterialNavigation)
                             .Include(x => x.RidNavigation)
-                            .FirstOrDefaultAsync(x => x.VorgangId == vorgangId);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Reload vorgang {VorgangId}", vorgangId);
-                        continue;
+                            .ToListAsync();
                     }
 
-                    if (refreshed == null)
-                        continue;
-
-                    Application.Current.Dispatcher.Invoke(() =>
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        lock (_processesLock)
+                        using (_lock.EnterScope())
                         {
-                            var existing = Processes?.FirstOrDefault(x => x.VorgangId == vorgangId);
+                            using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+                            var refreshedById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
+                            var existingProcesses = Processes?
+                                .Where(x => orderIds.Contains(x.Aid))
+                                .ToArray() ?? Array.Empty<Vorgang>();
 
-                            if (existing != null)
+                            foreach (var process in existingProcesses)
                             {
-                                // update current entity in-memory instead of reloading through the shared DbContext
-                                existing.Aid = refreshed.Aid;
-                                existing.Vnr = refreshed.Vnr;
-                                existing.Rid = refreshed.Rid;
-                                existing.SortPos = refreshed.SortPos;
-                                existing.CommentMach = refreshed.CommentMach;
-                                existing.SysStatus = refreshed.SysStatus;
-                                existing.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
-                                existing.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
+                                if (!refreshedById.TryGetValue(process.VorgangId, out var refreshed))
+                                {
+                                    db.Entry(process).State = EntityState.Detached;
+                                    Processes?.Remove(process);
+                                    ProcessesCV.Refresh();
+                                    continue;
+                                }
 
-                                existing.RunPropertyChanged();
+                                var entry = db.Entry(process);
+                                entry.CurrentValues.SetValues(refreshed);
+                                entry.OriginalValues.SetValues(refreshed);
+                                process.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
+                                process.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
+
+                                if (process.Rid != Rid || (process.SysStatus?.Contains("RÜCK") ?? false))
+                                {
+                                    Processes?.Remove(process);
+                                    if (process.Rid == null)
+                                        _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
+                                    ProcessesCV.Refresh();
+                                    continue;
+                                }
+
+                                process.RunPropertyChanged();
                             }
-                            else if (refreshed.SysStatus?.Contains("RÜCK") == false)
+
+                            foreach (var refreshed in refreshedVorgangs)
                             {
-                                Processes?.Add(refreshed);
+                                if (refreshed.Rid != Rid || (refreshed.SysStatus?.Contains("RÜCK") ?? false) ||
+                                    Processes?.Any(x => x.VorgangId == refreshed.VorgangId) == true)
+                                    continue;
+
+                                var process = _db.Vorgangs.Local.FirstOrDefault(x => x.VorgangId == refreshed.VorgangId);
+                                if (process == null)
+                                {
+                                    var order = GetTrackedOrder(refreshed.AidNavigation);
+                                    var resource = GetTrackedRessource(refreshed.RidNavigation);
+                                    refreshed.AidNavigation = null!;
+                                    refreshed.RidNavigation = null;
+                                    process = db.Vorgangs.Attach(refreshed).Entity;
+                                    process.AidNavigation = order;
+                                    process.RidNavigation = resource;
+                                }
+                                else
+                                {
+                                    var entry = _db.Entry(process);
+                                    entry.CurrentValues.SetValues(refreshed);
+                                    entry.OriginalValues.SetValues(refreshed);
+                                    process.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
+                                    process.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
+                                }
+
+                                Processes?.Add(process);
+                                _logger.LogInformation("PlanMachine - added {message} {1}-{2}", process.VorgangId, process.Aid, process.Vnr);
+                                ProcessesCV.Refresh();
+                            }
+
+                            foreach (var orderId in orderIds)
+                            {
+                                var refreshedOrder = refreshedVorgangs
+                                    .Select(x => x.AidNavigation)
+                                    .FirstOrDefault(x => x.Aid == orderId);
+                                var trackedOrder = _db.OrderRbs.Local.FirstOrDefault(x => x.Aid == orderId);
+                                if (trackedOrder == null || refreshedOrder == null)
+                                    continue;
+
+                                var orderEntry = _db.Entry(trackedOrder);
+                                orderEntry.CurrentValues.SetValues(refreshedOrder);
+                                orderEntry.OriginalValues.SetValues(refreshedOrder);
+                                trackedOrder.RunPropertyChanged();
+
+                                foreach (var refreshedComponent in refreshedOrder.OrderComponents)
+                                {
+                                    var component = _db.OrderComponents.Local.FirstOrDefault(x => x.CompId == refreshedComponent.CompId);
+                                    if (component == null)
+                                        continue;
+
+                                    var componentEntry = _db.Entry(component);
+                                    componentEntry.CurrentValues.SetValues(refreshedComponent);
+                                    componentEntry.OriginalValues.SetValues(refreshedComponent);
+                                }
                             }
                         }
                     });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing plan-machine order change message.");
                 }
             });
         }
@@ -535,14 +622,11 @@ namespace ModulePlanning.Planning
         /// <param name="vorgangIdList"></param>
         private void MessageVorgangReceived(List<(string, string)?> vorgangIdList)
         {
-            if (vorgangIdList == null || vorgangIdList.Count == 0)
-                return;
-
-            var messages = vorgangIdList
+            var messages = vorgangIdList?
                 .Where(x => x.HasValue)
                 .Select(x => x!.Value)
                 .ToArray();
-            if (messages.Length == 0)
+            if (messages == null || messages.Length == 0)
                 return;
 
             _ = Task.Run(async () =>
@@ -566,23 +650,37 @@ namespace ModulePlanning.Planning
                     var vorgangsById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        lock (_processesLock)
+                        using (_lock.EnterScope())
                         {
                             foreach (var message in messages)
                             {
-                                if (!vorgangsById.TryGetValue(message.Item2, out var refreshed))
-                                    continue;
-
                                 var process = Processes?.FirstOrDefault(x => x.VorgangId == message.Item2);
                                 if (process != null)
                                 {
+                                    if (!vorgangsById.TryGetValue(message.Item2, out var refreshed))
+                                    {
+                                        _db.Entry(process).State = EntityState.Detached;
+                                        Processes?.Remove(process);
+                                        ProcessesCV.Refresh();
+                                        continue;
+                                    }
+
+                                    var trackedProcess = _db.Vorgangs.Local.FirstOrDefault(x => x.VorgangId == process.VorgangId);
+                                    if (trackedProcess != null && !ReferenceEquals(trackedProcess, process))
+                                    {
+                                        Processes?.Remove(process);
+                                        process = trackedProcess;
+                                        Processes?.Add(process);
+                                    }
+
+                                    var entry = _db.Entry(process);
+                                    entry.CurrentValues.SetValues(refreshed);
+                                    entry.OriginalValues.SetValues(refreshed);
                                     ChangedValues(message.Item1, process, refreshed);
-                                    process.SysStatus = refreshed.SysStatus;
-                                    process.Rid = refreshed.Rid;
                                     process.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
                                     process.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
-                                    process.RunPropertyChanged();
 
+                                    process.RunPropertyChanged();
                                     _logger.LogInformation("PlanMachine - execute reload {message} {1}", process.VorgangId, process.SysStatus);
                                     if ((process.SysStatus?.Contains("RÜCK") ?? false) || process.Rid == null)
                                     {
@@ -594,10 +692,31 @@ namespace ModulePlanning.Planning
                                         ProcessesCV.Refresh();
                                     }
                                 }
-                                else if (refreshed.Rid == Rid && refreshed.SysStatus?.Contains("RÜCK") == false)
+                                else if (vorgangsById.TryGetValue(message.Item2, out var refreshed) &&
+                                    refreshed.Rid == Rid && (refreshed.SysStatus?.Contains("RÜCK") ?? false) == false)
                                 {
-                                    Processes?.Add(refreshed);
-                                    _logger.LogInformation("PlanMachine - added {message} {1}-{2}", refreshed.VorgangId, refreshed.Aid, refreshed.Vnr);
+                                    var trackedProcess = _db.Vorgangs.Local.FirstOrDefault(x => x.VorgangId == refreshed.VorgangId);
+                                    if (trackedProcess == null)
+                                    {
+                                        var order = GetTrackedOrder(refreshed.AidNavigation);
+                                        var resource = GetTrackedRessource(refreshed.RidNavigation);
+                                        refreshed.AidNavigation = null!;
+                                        refreshed.RidNavigation = null;
+                                        trackedProcess = _db.Vorgangs.Attach(refreshed).Entity;
+                                        trackedProcess.AidNavigation = order;
+                                        trackedProcess.RidNavigation = resource;
+                                    }
+                                    else
+                                    {
+                                        var entry = _db.Entry(trackedProcess);
+                                        entry.CurrentValues.SetValues(refreshed);
+                                        entry.OriginalValues.SetValues(refreshed);
+                                        trackedProcess.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
+                                        trackedProcess.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
+                                    }
+
+                                    Processes?.Add(trackedProcess);
+                                    _logger.LogInformation("PlanMachine - added {message} {1}-{2}", trackedProcess.VorgangId, trackedProcess.Aid, trackedProcess.Vnr);
                                     ProcessesCV.Refresh();
                                 }
                             }
@@ -617,7 +736,10 @@ namespace ModulePlanning.Planning
 
             var trackedRessource = _db.Ressources.Local.FirstOrDefault(x => x.RessourceId == refreshed.RessourceId);
             if (trackedRessource == null)
-                return refreshed;
+            {
+                refreshed.Vorgangs.Clear();
+                return _db.Ressources.Attach(refreshed).Entity;
+            }
 
             var entry = _db.Entry(trackedRessource);
             entry.CurrentValues.SetValues(refreshed);
@@ -629,7 +751,10 @@ namespace ModulePlanning.Planning
         {
             var trackedOrder = _db.OrderRbs.Local.FirstOrDefault(x => x.Aid == refreshed.Aid);
             if (trackedOrder == null)
-                return refreshed;
+            {
+                refreshed.Vorgangs.Clear();
+                return _db.OrderRbs.Attach(refreshed).Entity;
+            }
 
             var entry = _db.Entry(trackedOrder);
             entry.CurrentValues.SetValues(refreshed);

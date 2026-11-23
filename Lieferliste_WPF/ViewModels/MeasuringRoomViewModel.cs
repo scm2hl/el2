@@ -66,6 +66,7 @@ namespace Lieferliste_WPF.ViewModels
 
         private bool OnSaveCanExecute(object arg)
         {
+            if (_settingsService.IsAutoSave) return false;
             return _dbctx.ChangeTracker.HasChanges();
         }
 
@@ -83,7 +84,7 @@ namespace Lieferliste_WPF.ViewModels
 
         private void OnAutoSave(object? sender, ElapsedEventArgs e)
         {
-            if (_dbctx.ChangeTracker.HasChanges()) _dbctx.SaveChangesAsync();
+            if (_dbctx.ChangeTracker.HasChanges()) _dbctx.SaveChanges();
         }
 
         private async Task<ICollectionView> LoadDataAsync()

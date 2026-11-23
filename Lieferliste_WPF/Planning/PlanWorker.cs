@@ -331,8 +331,11 @@ namespace Lieferliste_WPF.Planning
                     p[i].SortPos = (p[i].SysStatus?.Contains("RÜCK") == true) ? "Z" :
                         string.Format("{0}_{1,3:0}", MessRId, i.ToString("D3"));
                 }
-                if (vrg.MeasureRessVorgangs.All(x => x.MessId != MessRId && x.VorgId != vrg.VorgangId))
+                var msid = MessRId.ToString().Concat(vrg.VorgangId);
+                if (vrg.MeasureRessVorgangs.All(x => x.MessId.ToString().Concat(x.VorgId) != msid))
                 {
+                    var existing = vrg.MeasureRessVorgangs.FirstOrDefault(x => x.VorgId == vrg.VorgangId);
+                    if (existing != null) { vrg.MeasureRessVorgangs.Remove(existing); }
                     vrg.MeasureRessVorgangs.Add(new MeasureRessVorgang() { MessId = this.MessRId, VorgId = vrg.VorgangId });
                 }
                 logger.LogInformation("drops {message}", vrg.VorgangId);

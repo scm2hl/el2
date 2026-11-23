@@ -162,26 +162,29 @@ namespace ModulePlanning.ViewModels
             {
                 try
                 {
-                    foreach (var item in list)
+                    using (_lock.EnterScope())
                     {
-                        if (!item.HasValue)
-                            continue;
-
-                        var vo = Priv_processes?.FirstOrDefault(x => x.VorgangId == item.Value.Item2);
-                        if (vo == null)
-                            continue;
-
-                        var entry = _DbCtx.Entry(vo);
-                        if (entry.State == EntityState.Modified)
-                            _DbCtx.SaveChanges();
-                        entry.Reload();
-                        vo.RunPropertyChanged();
-                        _Logger.LogInformation("reloaded {message}-{0} rid {1} {2}", vo.Aid, vo.Vnr, vo.Rid, item.Value.Item1);
-
-                        if (item.Value.Item1 == "EL2" && vo.Rid != null)
+                        foreach (var item in list)
                         {
-                            Priv_processes?.Remove(vo);
-                            _Logger.LogInformation("user has added to machine {message}-{0} rid {1}", vo.Aid, vo.Vnr, vo.Rid);
+                            if (!item.HasValue)
+                                continue;
+
+                            var vo = Priv_processes?.FirstOrDefault(x => x.VorgangId == item.Value.Item2);
+                            if (vo == null)
+                                continue;
+
+                            var entry = _DbCtx.Entry(vo);
+                            if (entry.State == EntityState.Modified)
+                                _DbCtx.SaveChanges();
+                            entry.Reload();
+                            vo.RunPropertyChanged();
+                            _Logger.LogInformation("reloaded {message}-{0} rid {1} {2}", vo.Aid, vo.Vnr, vo.Rid, item.Value.Item1);
+
+                            if (item.Value.Item1 == "EL2" && vo.Rid != null)
+                            {
+                                Priv_processes?.Remove(vo);
+                                _Logger.LogInformation("user has added to machine {message}-{0} rid {1}", vo.Aid, vo.Vnr, vo.Rid);
+                            }
                         }
                     }
                 }
@@ -194,39 +197,70 @@ namespace ModulePlanning.ViewModels
 
         private void MessageOrderReceived(List<(string, string)?> list)
         {
+            if (list == null || list.Count == 0)
+                return;
+
             _ = Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 try
                 {
-                    foreach (var item in list)
+                    using (_lock.EnterScope())
                     {
-                        if (!item.HasValue || !(Priv_processes?.Any(x => x.Aid == item.Value.Item2) ?? false))
-                            continue;
-
-                        var proc = GetVorgangs(item.Value.Item2);
-                        foreach (var item2 in proc)
+                        foreach (var item in list)
                         {
-                            if (!IsRelevant(item2.ArbPlSap) || item2.Rid != null)
+                            if (!item.HasValue)
                                 continue;
 
-                            if (Priv_processes!.Contains(item2))
+                            var aid = item.Value.Item2;
+                            var proc = GetVorgangs(aid);
+                            var existing = Priv_processes?
+                                .Where(x => x.Aid == aid)
+                                .ToArray() ?? Array.Empty<Vorgang>();
+                            var order = proc.Select(x => x.AidNavigation).FirstOrDefault()
+                                ?? _DbCtx.OrderRbs.Local.FirstOrDefault(x => x.Aid == aid);
+
+                            foreach (var process in proc.Concat(existing).DistinctBy(x => x.VorgangId))
                             {
-                                foreach (var item3 in item2.AidNavigation.OrderComponents)
+                                var entry = _DbCtx.Entry(process);
+                                if (entry.State == EntityState.Modified)
+                                    _DbCtx.SaveChanges();
+
+                                entry.Reload();
+                                if (entry.State == EntityState.Detached)
                                 {
-                                    var entry = _DbCtx.Entry(item3);
-                                    if (entry.State == EntityState.Modified)
-                                        _DbCtx.SaveChanges();
-                                    entry.Reload();
+                                    Priv_processes?.Remove(process);
+                                    continue;
+                                }
+
+                                process.RunPropertyChanged();
+                                if (!IsRelevant(process.ArbPlSap) || process.Rid != null ||
+                                    (process.SysStatus?.Contains("RÜCK") ?? false))
+                                {
+                                    Priv_processes?.Remove(process);
+                                    continue;
+                                }
+
+                                if (Priv_processes?.Any(x => x.VorgangId == process.VorgangId) != true)
+                                {
+                                    Priv_processes?.Add(process);
+                                    _Logger.LogInformation("scope pool added {message}-{0}", process.Aid, process.Vnr);
                                 }
                             }
-                            else
+
+                            if (order != null)
                             {
-                                _Logger.LogInformation("scope pool added {message}-{0}", item2.Aid, item2.Vnr);
-                                using (_lock.EnterScope())
+                                var orderEntry = _DbCtx.Entry(order);
+                                if (orderEntry.State == EntityState.Modified)
+                                    _DbCtx.SaveChanges();
+                                orderEntry.Reload();
+                                order.RunPropertyChanged();
+
+                                foreach (var component in order.OrderComponents.ToArray())
                                 {
-                                    Priv_processes?.Add(item2);
-                                    _DbCtx.ChangeTracker.Entries<Vorgang>().First(x => x.Entity.VorgangId == item2.VorgangId).State = EntityState.Unchanged;
-                                    _Logger.LogInformation("pool added {message}-{0}", item2.Aid, item2.Vnr);
+                                    var componentEntry = _DbCtx.Entry(component);
+                                    if (componentEntry.State == EntityState.Modified)
+                                        _DbCtx.SaveChanges();
+                                    componentEntry.Reload();
                                 }
                             }
                         }
@@ -450,6 +484,11 @@ namespace ModulePlanning.ViewModels
                 {
                     try
                     {
+                        
+                        if (_DbCtx.ChangeTracker.Entries().All(x => x.State == EntityState.Detached))
+                        {
+                            _Logger.LogInformation("AutoSave MachPlan: {message}", "All Detached.");
+                        }
                         if (_DbCtx.ChangeTracker.HasChanges())
                             _DbCtx.SaveChanges();
                     }
@@ -808,15 +847,14 @@ namespace ModulePlanning.ViewModels
                         }
                         vrg.Rid = parkRid;
                         vrg.SortPos = null;
+                        _DbCtx.Update(vrg);
                     }
                     else
                     {
                         _Logger.LogInformation("{message} {0} unDrop machine", vrg.VorgangId, vrg.Rid);
                         vrg.Rid = null;
                         vrg.SortPos = null;
-                        var vdb = _DbCtx.Vorgangs.First(x => x.VorgangId == vrg.VorgangId);
-                        vdb.Rid = null;
-                        vdb.SortPos = null;                        
+                        _DbCtx.Update(vrg);
                     }
                     var source = ((ListCollectionView)dropInfo.DragInfo.SourceCollection);
                     if (source.IsAddingNew) { source.CommitNew(); }
@@ -866,18 +904,21 @@ namespace ModulePlanning.ViewModels
                     IViewModel vm = (IViewModel)m;
                     vm.Closing();
                 }
-                if (_DbCtx.ChangeTracker.HasChanges())
+                using (_lock.EnterScope())
                 {
-                    if (_settingsService.IsSaveMessage)
+                    if (_DbCtx.ChangeTracker.HasChanges())
                     {
-                        var result = MessageBox.Show("Sollen die Änderungen in Teamleiter-Zuteilungen gespeichert werden?",
-                            Title, MessageBoxButton.YesNo, MessageBoxImage.Question);
-                        if (result == MessageBoxResult.Yes)
+                        if (_settingsService.IsSaveMessage)
                         {
-                            _DbCtx.SaveChanges();
+                            var result = MessageBox.Show("Sollen die Änderungen in Teamleiter-Zuteilungen gespeichert werden?",
+                                Title, MessageBoxButton.YesNo, MessageBoxImage.Question);
+                            if (result == MessageBoxResult.Yes)
+                            {
+                                _DbCtx.SaveChanges();
+                            }
                         }
+                        else _DbCtx.SaveChanges();
                     }
-                    else _DbCtx.SaveChanges();
                 }
             }
             catch (Exception e)
