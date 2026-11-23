@@ -25,7 +25,6 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 
-
 namespace ModulePlanning.Planning
 {
     /// <summary>
@@ -129,7 +128,6 @@ namespace ModulePlanning.Planning
             _eventAggregator = eventAggregator;
             _settingsService = settingsService;
             _dialogService = dialogService;
-            _db = context;
             Setup = settingsService.PlanedSetup;
             Initialize();
             LoadData(ressource, shiftCalendars, stoppagesByResource, shiftPlanCalendars);
@@ -252,7 +250,6 @@ namespace ModulePlanning.Planning
         private IEventAggregator _eventAggregator;
         private IApplicationCommands? _applicationCommands;
         private IUserSettingsService _settingsService;
-        private DB_COS_LIEFERLISTE_SQLContext _dbb;
         private readonly IDialogService _dialogService;
         private Vorgang _scrollItem;
 
@@ -484,12 +481,11 @@ namespace ModulePlanning.Planning
         /// <param name="list"></param>
         private void MessageOrderReceived(List<(string, string)?> list)
         {
-            var orderIds = list?
+            var messages = list?
                 .Where(x => x.HasValue)
-                .Select(x => x!.Value.Item2)
-                .Distinct()
+                .Select(x => x!.Value)
                 .ToArray();
-            if (orderIds == null || orderIds.Length == 0)
+            if (messages == null || messages.Length == 0)
                 return;
 
             _ = Task.Run(async () =>
@@ -497,6 +493,7 @@ namespace ModulePlanning.Planning
                 try
                 {
                     List<Vorgang> refreshedVorgangs;
+                    var orderIds = messages.Select(x => x.Item2).Distinct().ToArray();
                     using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
                     { 
                         refreshedVorgangs = await db.Vorgangs
@@ -513,96 +510,38 @@ namespace ModulePlanning.Planning
 
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        using (_lock.EnterScope())
+                        using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
                         {
-                            using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
-                            var refreshedById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
-                            var existingProcesses = Processes?
-                                .Where(x => orderIds.Contains(x.Aid))
-                                .ToArray() ?? Array.Empty<Vorgang>();
 
-                            foreach (var process in existingProcesses)
+                            foreach(var message in messages)
                             {
-                                if (!refreshedById.TryGetValue(process.VorgangId, out var refreshed))
+                                var refreshedById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
+                                var existingProcesses = Processes?
+                                    .Where(x => orderIds.Contains(x.Aid))
+                                    .ToArray() ?? Array.Empty<Vorgang>();
+
+                                foreach (var process in existingProcesses)
                                 {
-                                    db.Entry(process).State = EntityState.Detached;
-                                    Processes?.Remove(process);
-                                    ProcessesCV.Refresh();
-                                    continue;
-                                }
+                                    if (refreshedById.TryGetValue(process.VorgangId, out var refreshed))
+                                    {
+                                        if (_SelectedItem?.VorgangId == process.VorgangId)
+                                        {
+                                            db.Vorgangs.Update(_SelectedItem);
+                                            db.SaveChanges();
+                                        }
+                                        ChangedValues(message.Item1, process, refreshed);
+                                        process.RunPropertyChanged();
 
-                                var entry = db.Entry(process);
-                                entry.CurrentValues.SetValues(refreshed);
-                                entry.OriginalValues.SetValues(refreshed);
-                                process.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
-                                process.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
 
-                                if (process.Rid != Rid || (process.SysStatus?.Contains("RÜCK") ?? false))
-                                {
-                                    Processes?.Remove(process);
-                                    if (process.Rid == null)
-                                        _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
-                                    ProcessesCV.Refresh();
-                                    continue;
-                                }
-
-                                process.RunPropertyChanged();
-                            }
-
-                            foreach (var refreshed in refreshedVorgangs)
-                            {
-                                if (refreshed.Rid != Rid || (refreshed.SysStatus?.Contains("RÜCK") ?? false) ||
-                                    Processes?.Any(x => x.VorgangId == refreshed.VorgangId) == true)
-                                    continue;
-
-                                var process = _db.Vorgangs.Local.FirstOrDefault(x => x.VorgangId == refreshed.VorgangId);
-                                if (process == null)
-                                {
-                                    var order = GetTrackedOrder(refreshed.AidNavigation);
-                                    var resource = GetTrackedRessource(refreshed.RidNavigation);
-                                    refreshed.AidNavigation = null!;
-                                    refreshed.RidNavigation = null;
-                                    process = db.Vorgangs.Attach(refreshed).Entity;
-                                    process.AidNavigation = order;
-                                    process.RidNavigation = resource;
-                                }
-                                else
-                                {
-                                    var entry = _db.Entry(process);
-                                    entry.CurrentValues.SetValues(refreshed);
-                                    entry.OriginalValues.SetValues(refreshed);
-                                    process.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
-                                    process.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
-                                }
-
-                                Processes?.Add(process);
-                                _logger.LogInformation("PlanMachine - added {message} {1}-{2}", process.VorgangId, process.Aid, process.Vnr);
-                                ProcessesCV.Refresh();
-                            }
-
-                            foreach (var orderId in orderIds)
-                            {
-                                var refreshedOrder = refreshedVorgangs
-                                    .Select(x => x.AidNavigation)
-                                    .FirstOrDefault(x => x.Aid == orderId);
-                                var trackedOrder = _db.OrderRbs.Local.FirstOrDefault(x => x.Aid == orderId);
-                                if (trackedOrder == null || refreshedOrder == null)
-                                    continue;
-
-                                var orderEntry = _db.Entry(trackedOrder);
-                                orderEntry.CurrentValues.SetValues(refreshedOrder);
-                                orderEntry.OriginalValues.SetValues(refreshedOrder);
-                                trackedOrder.RunPropertyChanged();
-
-                                foreach (var refreshedComponent in refreshedOrder.OrderComponents)
-                                {
-                                    var component = _db.OrderComponents.Local.FirstOrDefault(x => x.CompId == refreshedComponent.CompId);
-                                    if (component == null)
-                                        continue;
-
-                                    var componentEntry = _db.Entry(component);
-                                    componentEntry.CurrentValues.SetValues(refreshedComponent);
-                                    componentEntry.OriginalValues.SetValues(refreshedComponent);
+                                        if (process.Rid != Rid || (process.SysStatus?.Contains("RÜCK") ?? false))
+                                        {
+                                            Processes?.Remove(process);
+                                            if (process.Rid == null)
+                                                _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
+                                            ProcessesCV.Refresh();
+                                            continue;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -650,35 +589,22 @@ namespace ModulePlanning.Planning
                     var vorgangsById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        using (_lock.EnterScope())
+                        using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
                         {
                             foreach (var message in messages)
                             {
                                 var process = Processes?.FirstOrDefault(x => x.VorgangId == message.Item2);
                                 if (process != null)
                                 {
-                                    if (!vorgangsById.TryGetValue(message.Item2, out var refreshed))
+                                    if (_SelectedItem?.VorgangId == process.VorgangId)
                                     {
-                                        _db.Entry(process).State = EntityState.Detached;
-                                        Processes?.Remove(process);
-                                        ProcessesCV.Refresh();
-                                        continue;
+                                        db.Vorgangs.Update(_SelectedItem);
+                                        db.SaveChanges();
                                     }
-
-                                    var trackedProcess = _db.Vorgangs.Local.FirstOrDefault(x => x.VorgangId == process.VorgangId);
-                                    if (trackedProcess != null && !ReferenceEquals(trackedProcess, process))
+                                    if (vorgangsById.TryGetValue(message.Item2, out var refreshed))
                                     {
-                                        Processes?.Remove(process);
-                                        process = trackedProcess;
-                                        Processes?.Add(process);
+                                        ChangedValues(message.Item1, process, refreshed);
                                     }
-
-                                    var entry = _db.Entry(process);
-                                    entry.CurrentValues.SetValues(refreshed);
-                                    entry.OriginalValues.SetValues(refreshed);
-                                    ChangedValues(message.Item1, process, refreshed);
-                                    process.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
-                                    process.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
 
                                     process.RunPropertyChanged();
                                     _logger.LogInformation("PlanMachine - execute reload {message} {1}", process.VorgangId, process.SysStatus);
@@ -695,28 +621,9 @@ namespace ModulePlanning.Planning
                                 else if (vorgangsById.TryGetValue(message.Item2, out var refreshed) &&
                                     refreshed.Rid == Rid && (refreshed.SysStatus?.Contains("RÜCK") ?? false) == false)
                                 {
-                                    var trackedProcess = _db.Vorgangs.Local.FirstOrDefault(x => x.VorgangId == refreshed.VorgangId);
-                                    if (trackedProcess == null)
-                                    {
-                                        var order = GetTrackedOrder(refreshed.AidNavigation);
-                                        var resource = GetTrackedRessource(refreshed.RidNavigation);
-                                        refreshed.AidNavigation = null!;
-                                        refreshed.RidNavigation = null;
-                                        trackedProcess = _db.Vorgangs.Attach(refreshed).Entity;
-                                        trackedProcess.AidNavigation = order;
-                                        trackedProcess.RidNavigation = resource;
-                                    }
-                                    else
-                                    {
-                                        var entry = _db.Entry(trackedProcess);
-                                        entry.CurrentValues.SetValues(refreshed);
-                                        entry.OriginalValues.SetValues(refreshed);
-                                        trackedProcess.RidNavigation = GetTrackedRessource(refreshed.RidNavigation);
-                                        trackedProcess.AidNavigation = GetTrackedOrder(refreshed.AidNavigation);
-                                    }
 
-                                    Processes?.Add(trackedProcess);
-                                    _logger.LogInformation("PlanMachine - added {message} {1}-{2}", trackedProcess.VorgangId, trackedProcess.Aid, trackedProcess.Vnr);
+                                    Processes?.Add(refreshed);
+                                    _logger.LogInformation("PlanMachine - added {message} {1}-{2}", refreshed.VorgangId, refreshed.Aid, refreshed.Vnr);
                                     ProcessesCV.Refresh();
                                 }
                             }
@@ -728,38 +635,6 @@ namespace ModulePlanning.Planning
                     _logger.LogError(ex, "Error processing plan-machine Vorgang change message.");
                 }
             });
-        }
-        private Ressource? GetTrackedRessource(Ressource? refreshed)
-        {
-            if (refreshed == null)
-                return null;
-
-            var trackedRessource = _db.Ressources.Local.FirstOrDefault(x => x.RessourceId == refreshed.RessourceId);
-            if (trackedRessource == null)
-            {
-                refreshed.Vorgangs.Clear();
-                return _db.Ressources.Attach(refreshed).Entity;
-            }
-
-            var entry = _db.Entry(trackedRessource);
-            entry.CurrentValues.SetValues(refreshed);
-            entry.OriginalValues.SetValues(refreshed);
-            return trackedRessource;
-        }
-
-        private OrderRb GetTrackedOrder(OrderRb refreshed)
-        {
-            var trackedOrder = _db.OrderRbs.Local.FirstOrDefault(x => x.Aid == refreshed.Aid);
-            if (trackedOrder == null)
-            {
-                refreshed.Vorgangs.Clear();
-                return _db.OrderRbs.Attach(refreshed).Entity;
-            }
-
-            var entry = _db.Entry(trackedOrder);
-            entry.CurrentValues.SetValues(refreshed);
-            entry.OriginalValues.SetValues(refreshed);
-            return trackedOrder;
         }
 
         private void ChangedValues(string invoker, Vorgang local, Vorgang remote)
@@ -785,6 +660,8 @@ namespace ModulePlanning.Planning
                 local.QuantityMissNeo = remote.QuantityMissNeo;
                 local.Aktuell = remote.Aktuell;
                 local.QuantityYield = remote.QuantityYield;
+                local.AidNavigation.Quantity = remote.AidNavigation.Quantity;
+                local.Text = remote.Text;
             }
         }
         private bool OnCalculateCanExecute(object arg)
