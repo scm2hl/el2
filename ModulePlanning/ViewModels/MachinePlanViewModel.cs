@@ -364,7 +364,8 @@ namespace ModulePlanning.ViewModels
 
         private IQueryable<Vorgang> CreateVorgangsQuery(string? aid, IReadOnlyCollection<int>? resourceIds)
         {
-            var query = _DbCtx.Vorgangs
+            using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+            var query = db.Vorgangs
                 .Include(x => x.AidNavigation)
                 .ThenInclude(x => x.OrderComponents)
                 .ThenInclude(x => x.MaterialNavigation)
