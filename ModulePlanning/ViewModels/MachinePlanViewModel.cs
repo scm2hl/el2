@@ -200,71 +200,52 @@ namespace ModulePlanning.ViewModels
             if (list == null || list.Count == 0)
                 return;
 
-            _ = Application.Current.Dispatcher.InvokeAsync(() =>
+            _ = Application.Current.Dispatcher.InvokeAsync(async () =>
             {
                 try
                 {
-                    using (_lock.EnterScope())
+
+                    foreach (var item in list)
                     {
-                        foreach (var item in list)
+                        if (!item.HasValue)
+                            continue;
+
+                        var aid = item.Value.Item2;
+                        var proc = await GetVorgangsAsync(aid);
+                        var existing = Priv_processes?
+                            .Where(x => x.Aid == aid)
+                            .ToArray() ?? Array.Empty<Vorgang>();
+
+                        foreach (var process in proc.Concat(existing).DistinctBy(x => x.VorgangId))
                         {
-                            if (!item.HasValue)
-                                continue;
+                            var entry = _DbCtx.Entry(process);
+                            if (entry.State == EntityState.Modified)
+                                _DbCtx.SaveChanges();
 
-                            var aid = item.Value.Item2;
-                            var proc = GetVorgangs(aid);
-                            var existing = Priv_processes?
-                                .Where(x => x.Aid == aid)
-                                .ToArray() ?? Array.Empty<Vorgang>();
-                            var order = proc.Select(x => x.AidNavigation).FirstOrDefault()
-                                ?? _DbCtx.OrderRbs.Local.FirstOrDefault(x => x.Aid == aid);
-
-                            foreach (var process in proc.Concat(existing).DistinctBy(x => x.VorgangId))
+                            entry.Reload();
+                            if (entry.State == EntityState.Detached)
                             {
-                                var entry = _DbCtx.Entry(process);
-                                if (entry.State == EntityState.Modified)
-                                    _DbCtx.SaveChanges();
-
-                                entry.Reload();
-                                if (entry.State == EntityState.Detached)
-                                {
-                                    Priv_processes?.Remove(process);
-                                    continue;
-                                }
-
-                                process.RunPropertyChanged();
-                                if (!IsRelevant(process.ArbPlSap) || process.Rid != null ||
-                                    (process.SysStatus?.Contains("RÜCK") ?? false))
-                                {
-                                    Priv_processes?.Remove(process);
-                                    continue;
-                                }
-
-                                if (Priv_processes?.Any(x => x.VorgangId == process.VorgangId) != true)
-                                {
-                                    Priv_processes?.Add(process);
-                                    _Logger.LogInformation("scope pool added {message}-{0}", process.Aid, process.Vnr);
-                                }
+                                Priv_processes?.Remove(process);
+                                continue;
                             }
 
-                            if (order != null)
+                            process.RunPropertyChanged();
+                            if (!IsRelevant(process.ArbPlSap) || process.Rid != null ||
+                                (process.SysStatus?.Contains("RÜCK") ?? false))
                             {
-                                var orderEntry = _DbCtx.Entry(order);
-                                if (orderEntry.State == EntityState.Modified)
-                                    _DbCtx.SaveChanges();
-                                orderEntry.Reload();
-                                order.RunPropertyChanged();
+                                Priv_processes?.Remove(process);
+                                continue;
+                            }
 
-                                foreach (var component in order.OrderComponents.ToArray())
-                                {
-                                    var componentEntry = _DbCtx.Entry(component);
-                                    if (componentEntry.State == EntityState.Modified)
-                                        _DbCtx.SaveChanges();
-                                    componentEntry.Reload();
-                                }
+                            if (Priv_processes?.Any(x => x.VorgangId == process.VorgangId) != true)
+                            {
+                                Priv_processes?.Add(process);
+                                _Logger.LogInformation("scope pool added {message}-{0}", process.Aid, process.Vnr);
                             }
                         }
+
                     }
+                    
                 }
                 catch (Exception ex)
                 {
@@ -381,9 +362,7 @@ namespace ModulePlanning.ViewModels
             }
 
             return await query.AsSplitQuery().ToListAsync();
-            //return await CreateVorgangsQuery(aid, resourceIds)
-            //    .AsSplitQuery()
-            //    .ToListAsync();
+
         }
 
         private List<Vorgang> GetVorgangs(string? aid, IReadOnlyCollection<int>? resourceIds = null)
