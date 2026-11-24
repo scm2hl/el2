@@ -350,9 +350,40 @@ namespace ModulePlanning.ViewModels
         }
         private async Task<List<Vorgang>> GetVorgangsAsync(string? aid, IReadOnlyCollection<int>? resourceIds = null)
         {
-            return await CreateVorgangsQuery(aid, resourceIds)
-                .AsSplitQuery()
-                .ToListAsync();
+            using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
+            var query = db.Vorgangs
+                .Include(x => x.AidNavigation)
+                .ThenInclude(x => x.OrderComponents)
+                .ThenInclude(x => x.MaterialNavigation)
+                .Include(x => x.AidNavigation.DummyMatNavigation)
+                .Include(x => x.AidNavigation.MaterialNavigation)
+                .Include(x => x.ArbPlSapNavigation)
+                .Include(x => x.Responses)
+                .Include(x => x.RidNavigation)
+                .ThenInclude(x => x!.WorkArea)
+                .Include(x => x.RidNavigation)
+                .ThenInclude(x => x!.RessourceCostUnits)
+                .Where(y => y.SysStatus != null
+                    && y.Text != null
+                    && y.ArbPlSapNavigation!.Ressource!.WorkAreaId != 5
+                    && y.Text.ToLower().Contains("auftrag starten") == false
+                    && y.SysStatus.Contains("RÜCK") == false);
+
+            query = aid != null
+                ? query.Where(y => y.Aid == aid)
+                : query.Where(y => y.AidNavigation.Abgeschlossen == false);
+
+            if (resourceIds != null)
+            {
+                query = query.Where(y =>
+                    (y.Rid.HasValue && resourceIds.Contains(y.Rid.Value)) ||
+                    (y.ArbPlSapNavigation!.RessourceId.HasValue && resourceIds.Contains(y.ArbPlSapNavigation.RessourceId.Value)));
+            }
+
+            return await query.AsSplitQuery().ToListAsync();
+            //return await CreateVorgangsQuery(aid, resourceIds)
+            //    .AsSplitQuery()
+            //    .ToListAsync();
         }
 
         private List<Vorgang> GetVorgangs(string? aid, IReadOnlyCollection<int>? resourceIds = null)

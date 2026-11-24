@@ -133,7 +133,7 @@
             </Grid>
         </DockPanel>
         
-        <DataGrid x:Name="MachProcesses" Grid.Row="1" ItemsSource="{Binding PlanMachine.ProcessesCV}" AutoGenerateColumns="False"
+        <DataGrid x:Name="MachProcesses" Grid.Row="1" ItemsSource="{Binding PlanMachine.ProcessesCV}" AutoGenerateColumns="False" SelectedItem="{Binding PlanMachine.SelectedItem}"
                   CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False" IsSynchronizedWithCurrentItem="True"
                   AlternatingRowBackground="LightGray" CanUserResizeRows="True" VirtualizingPanel.IsVirtualizing="False"
                   dd:DragDrop.IsDragSource="True" 

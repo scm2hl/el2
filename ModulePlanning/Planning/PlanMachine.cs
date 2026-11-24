@@ -122,7 +122,7 @@ namespace ModulePlanning.Planning
             _container = container;
             var factory = container.Resolve<ILoggerFactory>();
             _logger = factory.CreateLogger<PlanMachine>();
-
+            _dbContext = context;
             _rId = ressource.RessourceId;
             _applicationCommands = applicationCommands;
             _eventAggregator = eventAggregator;
@@ -156,6 +156,7 @@ namespace ModulePlanning.Planning
         private ShiftPlanService _shiftPlanService;
         private ShiftCalendar? _preloadedShiftCalendar;
         private List<Stopage>? _preloadedStoppages;
+        private DB_COS_LIEFERLISTE_SQLContext _dbContext;
         private bool _hasPreloadedShiftData;
         private readonly int _rId;
         private string _title;
@@ -225,17 +226,15 @@ namespace ModulePlanning.Planning
             get { return _SelectedItem; }
             set
             {
-                
-                using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
-                if (value != null)
+                if (_SelectedItem != null)
+                {                   
+                    _dbContext.Vorgangs.Update(_SelectedItem);
+                }
+                    
+                _SelectedItem = value;
+                if (_SelectedItem != null)
                 {
-                    if (_SelectedItem != null)
-                    {
-                        db.SaveChanges();
-                        db.Entry(_SelectedItem).State = EntityState.Detached;
-                    }
-                    _SelectedItem = value;
-                    db.Vorgangs.Attach(_SelectedItem);
+                    _dbContext.Vorgangs.Attach(_SelectedItem);
                 }
             }
         }
@@ -598,8 +597,8 @@ namespace ModulePlanning.Planning
                                 {
                                     if (_SelectedItem?.VorgangId == process.VorgangId)
                                     {
-                                        db.Vorgangs.Update(_SelectedItem);
-                                        db.SaveChanges();
+                                        _dbContext.Vorgangs.Update(_SelectedItem);
+                                        _dbContext.SaveChanges();
                                     }
                                     if (vorgangsById.TryGetValue(message.Item2, out var refreshed))
                                     {
