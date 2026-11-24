@@ -638,7 +638,7 @@ namespace ModulePlanning.Planning
 
         private void ChangedValues(string invoker, Vorgang local, Vorgang remote)
         {
-            if (invoker == "EL2")
+            if (invoker == "EL2" || invoker == "EMEA/scm2hl")
             {
                 if (local.BemM != remote.BemM) local.BemM = remote.BemM;
                 if (local.BemMa != remote.BemMa) local.BemMa = remote.BemMa;
@@ -849,9 +849,13 @@ namespace ModulePlanning.Planning
                     values = GetFastCopyValues(v);
                 }
 
-                foreach (var value in values)
+                for (var i = 0; i < values.Length; i++)
                 {
-                    setTextToClipboard(value);
+                    setTextToClipboard(values[i]);
+                    if (i < values.Length - 1)
+                    {
+                        Task.Delay(500).Wait();
+                    }
                 }
             }
             catch (Exception e)
@@ -878,7 +882,6 @@ namespace ModulePlanning.Planning
         private void setTextToClipboard(string text)
         {
             System.Windows.Clipboard.SetText(text);
-            Task.Delay(500).Wait();          
         }
 
         private static bool OnSetMarkerCanExecute(object arg)
