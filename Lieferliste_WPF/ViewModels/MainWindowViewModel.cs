@@ -758,10 +758,10 @@ namespace Lieferliste_WPF.ViewModels
                     var m = db.InMemoryMsgs.AsNoTracking()
                         .Where(x => x.OnlId == UserInfo.Dbid)
                         .OrderBy(x => x.Timestamp)
-                        .ToListAsync();
-                    if (m.Result.Count > 0)
+                        .ToList();
+                    if (m.Count > 0)
                     {
-                        foreach (var item in m.Result)
+                        foreach (var item in m)
                         {
                             if (item != null && item.TableName == "Vorgang")
                             {
@@ -782,7 +782,7 @@ namespace Lieferliste_WPF.ViewModels
                             }
                         }
 
-                        foreach (var msg in m.Result)
+                        foreach (var msg in m)
                         {
                             db.Database.ExecuteSqlRaw(@"DELETE FROM InMemoryMsg WHERE MsgId={0}", msg.MsgId);
                         }

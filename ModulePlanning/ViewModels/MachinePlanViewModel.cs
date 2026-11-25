@@ -690,22 +690,28 @@ namespace ModulePlanning.ViewModels
                     ((ListCollectionView)dropInfo.TargetCollection).AddNewItem(vrg);
                     ((ListCollectionView)dropInfo.TargetCollection).CommitNew();
                 }
-                else if(dropInfo.Data is PlanMachine plm)
+                else if (dropInfo.Data is PlanMachine plm)
                 {
                     var s = dropInfo.DragInfo.SourceCollection as ListCollectionView;
                     var t = dropInfo.TargetCollection as ListCollectionView;
                     if (s.CanRemove) s.Remove(plm);
                     var v = dropInfo.InsertIndex;
 
-                        Debug.Assert(t != null, nameof(t) + " != null");
-                        ((IList)t.SourceCollection).Insert(v, plm);
-                }
-                using (_lock.EnterScope())
-                {
-                    for (var i = 0; i < _machines.Count; i++)
+                    Debug.Assert(t != null, nameof(t) + " != null");
+                    ((IList)t.SourceCollection).Insert(v, plm);
+
+                    using (_lock.EnterScope())
                     {
-                        var vv = _DbCtx.Ressources.First(x => x.RessourceId == _machines[i].Rid);
-                        vv.Sort = vv.Visability ? i : 1000;
+                        int i = 0;
+                        foreach (var m in t.SourceCollection)
+                        {
+                            
+                            var mm = (PlanMachine)m;
+                            var vv = _DbCtx.Ressources.First(x => x.RessourceId == mm.Rid );
+                            vv.Sort = vv.Visability ? i : 1000;
+                            _DbCtx.Update(vv);
+                            i++;
+                        }
                     }
                 }
             }

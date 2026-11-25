@@ -487,7 +487,7 @@ namespace ModulePlanning.Planning
             if (messages == null || messages.Length == 0)
                 return;
 
-            _ = Task.Run(async () =>
+            Application.Current.Dispatcher.InvokeAsync(async () =>
             {
                 try
                 {
@@ -507,44 +507,43 @@ namespace ModulePlanning.Planning
                             .ToListAsync();
                     }
 
-                    await Application.Current.Dispatcher.InvokeAsync(() =>
+
+                    using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
                     {
-                        using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
+
+                        foreach(var message in messages)
                         {
+                            var refreshedById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
+                            var existingProcesses = Processes?
+                                .Where(x => orderIds.Contains(x.Aid))
+                                .ToArray() ?? Array.Empty<Vorgang>();
 
-                            foreach(var message in messages)
+                            foreach (var process in existingProcesses)
                             {
-                                var refreshedById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
-                                var existingProcesses = Processes?
-                                    .Where(x => orderIds.Contains(x.Aid))
-                                    .ToArray() ?? Array.Empty<Vorgang>();
-
-                                foreach (var process in existingProcesses)
+                                if (refreshedById.TryGetValue(process.VorgangId, out var refreshed))
                                 {
-                                    if (refreshedById.TryGetValue(process.VorgangId, out var refreshed))
+                                    if (_SelectedItem?.VorgangId == process.VorgangId)
                                     {
-                                        if (_SelectedItem?.VorgangId == process.VorgangId)
-                                        {
-                                            db.Vorgangs.Update(_SelectedItem);
-                                            db.SaveChanges();
-                                        }
-                                        ChangedValues(message.Item1, process, refreshed);
-                                        process.RunPropertyChanged();
+                                        db.Vorgangs.Update(_SelectedItem);
+                                        db.SaveChanges();
+                                    }
+                                    ChangedValues(message.Item1, process, refreshed);
+                                    process.RunPropertyChanged();
 
 
-                                        if (process.Rid != Rid || (process.SysStatus?.Contains("RÜCK") ?? false))
-                                        {
-                                            Processes?.Remove(process);
-                                            if (process.Rid == null)
-                                                _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
-                                            ProcessesCV.Refresh();
-                                            continue;
-                                        }
+                                    if (process.Rid != Rid || (process.SysStatus?.Contains("RÜCK") ?? false))
+                                    {
+                                        Processes?.Remove(process);
+                                        if (process.Rid == null)
+                                            _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
+                                        ProcessesCV.Refresh();
+                                        continue;
                                     }
                                 }
                             }
                         }
-                    });
+                    }
+                    
                 }
                 catch (Exception ex)
                 {
@@ -567,7 +566,7 @@ namespace ModulePlanning.Planning
             if (messages == null || messages.Length == 0)
                 return;
 
-            _ = Task.Run(async () =>
+            _ = Application.Current.Dispatcher.InvokeAsync(async () =>
             {
                 try
                 {
@@ -586,48 +585,47 @@ namespace ModulePlanning.Planning
                     }
 
                     var vorgangsById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
-                    await Application.Current.Dispatcher.InvokeAsync(() =>
+
+                    using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
                     {
-                        using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
+                        foreach (var message in messages)
                         {
-                            foreach (var message in messages)
+                            var process = Processes?.FirstOrDefault(x => x.VorgangId == message.Item2);
+                            if (process != null)
                             {
-                                var process = Processes?.FirstOrDefault(x => x.VorgangId == message.Item2);
-                                if (process != null)
+                                if (_SelectedItem?.VorgangId == process.VorgangId)
                                 {
-                                    if (_SelectedItem?.VorgangId == process.VorgangId)
-                                    {
-                                        _dbContext.Vorgangs.Update(_SelectedItem);
-                                        _dbContext.SaveChanges();
-                                    }
-                                    if (vorgangsById.TryGetValue(message.Item2, out var refreshed))
-                                    {
-                                        ChangedValues(message.Item1, process, refreshed);
-                                    }
-
-                                    process.RunPropertyChanged();
-                                    _logger.LogInformation("PlanMachine - execute reload {message} {1}", process.VorgangId, process.SysStatus);
-                                    if ((process.SysStatus?.Contains("RÜCK") ?? false) || process.Rid == null)
-                                    {
-                                        process.SortPos = "Z";
-                                        Processes?.Remove(process);
-                                        _logger.LogInformation("PlanMachine - removed {message} {1} - {2}", process.VorgangId, process.Aid, process.Vnr);
-                                        if (process.Rid == null)
-                                            _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
-                                        ProcessesCV.Refresh();
-                                    }
+                                    _dbContext.Vorgangs.Update(_SelectedItem);
+                                    _dbContext.SaveChanges();
                                 }
-                                else if (vorgangsById.TryGetValue(message.Item2, out var refreshed) &&
-                                    refreshed.Rid == Rid && (refreshed.SysStatus?.Contains("RÜCK") ?? false) == false)
+                                if (vorgangsById.TryGetValue(message.Item2, out var refreshed))
                                 {
+                                    ChangedValues(message.Item1, process, refreshed);
+                                }
 
-                                    Processes?.Add(refreshed);
-                                    _logger.LogInformation("PlanMachine - added {message} {1}-{2}", refreshed.VorgangId, refreshed.Aid, refreshed.Vnr);
+                                process.RunPropertyChanged();
+                                _logger.LogInformation("PlanMachine - execute reload {message} {1}", process.VorgangId, process.SysStatus);
+                                if ((process.SysStatus?.Contains("RÜCK") ?? false) || process.Rid == null)
+                                {
+                                    process.SortPos = "Z";
+                                    Processes?.Remove(process);
+                                    _logger.LogInformation("PlanMachine - removed {message} {1} - {2}", process.VorgangId, process.Aid, process.Vnr);
+                                    if (process.Rid == null)
+                                        _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
                                     ProcessesCV.Refresh();
                                 }
                             }
+                            else if (vorgangsById.TryGetValue(message.Item2, out var refreshed) &&
+                                refreshed.Rid == Rid && (refreshed.SysStatus?.Contains("RÜCK") ?? false) == false)
+                            {
+
+                                Processes?.Add(refreshed);
+                                _logger.LogInformation("PlanMachine - added {message} {1}-{2}", refreshed.VorgangId, refreshed.Aid, refreshed.Vnr);
+                                ProcessesCV.Refresh();
+                            }
                         }
-                    });
+                    }
+                    
                 }
                 catch (Exception ex)
                 {
@@ -638,7 +636,7 @@ namespace ModulePlanning.Planning
 
         private void ChangedValues(string invoker, Vorgang local, Vorgang remote)
         {
-            if (invoker == "EL2" || invoker == "EMEA/scm2hl")
+            if (invoker == "EL2" || invoker == "EMEA\\SCM2HL")
             {
                 if (local.BemM != remote.BemM) local.BemM = remote.BemM;
                 if (local.BemMa != remote.BemMa) local.BemMa = remote.BemMa;
