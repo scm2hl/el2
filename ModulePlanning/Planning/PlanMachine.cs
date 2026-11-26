@@ -374,8 +374,8 @@ namespace ModulePlanning.Planning
             NewCalculateCommand = new ActionCommand(OnCalculateExecuted, OnCalculateCanExecute);
             NewStoppageCommand = new ActionCommand(OnNewStoppageExecuted, OnNewStoppageCanExecute);
             DelStoppageCommand = new ActionCommand(OnDelStoppageExecuted, OnDelStoppageCanExecute);
-            _eventAggregator.GetEvent<MessageOrderChanged>().Subscribe(MessageOrderReceived);
-            _eventAggregator.GetEvent<MessageVorgangChanged>().Subscribe(MessageVorgangReceived);
+            _eventAggregator.GetEvent<MessageOrderChanged>().Subscribe(MessageOrderReceived, ThreadOption.UIThread);
+            _eventAggregator.GetEvent<MessageVorgangChanged>().Subscribe(MessageVorgangReceived, ThreadOption.UIThread);
             _eventAggregator.GetEvent<SearchTextFilter>().Subscribe(MessageSearchFilterReceived);
             IsAdmin = PermissionsProvider.GetInstance().GetUserPermission(Permissions.AdminFunc);
             EnableRowDetails = _settingsService.IsRowDetails;           
@@ -478,7 +478,7 @@ namespace ModulePlanning.Planning
         /// Handles the reception of an order message and updates the Processes collection based on the provided list of order tuples.
         /// </summary>
         /// <param name="list"></param>
-        private void MessageOrderReceived(List<(string, string)?> list)
+        private async void MessageOrderReceived(List<(string, string)?> list)
         {
             var messages = list?
                 .Where(x => x.HasValue)
@@ -487,69 +487,58 @@ namespace ModulePlanning.Planning
             if (messages == null || messages.Length == 0)
                 return;
 
-            Application.Current.Dispatcher.InvokeAsync(async () =>
+            try
             {
-                try
+                var orderIds = messages.Select(x => x.Item2).Distinct().ToArray();
+                using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
                 {
-                    List<Vorgang> refreshedVorgangs;
-                    var orderIds = messages.Select(x => x.Item2).Distinct().ToArray();
-                    using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
-                    { 
-                        refreshedVorgangs = await db.Vorgangs
-                            .AsNoTracking()
-                            .Where(x => orderIds.Contains(x.Aid))
-                            .Include(x => x.AidNavigation)
-                            .ThenInclude(x => x.MaterialNavigation)
-                            .Include(x => x.AidNavigation.DummyMatNavigation)
-                            .Include(x => x.AidNavigation.OrderComponents)
-                            .ThenInclude(x => x.MaterialNavigation)
-                            .Include(x => x.RidNavigation)
-                            .ToListAsync();
-                    }
+                    var refreshedVorgangs = await db.Vorgangs
+                        .AsNoTracking()
+                        .Where(x => orderIds.Contains(x.Aid))
+                        .Include(x => x.AidNavigation)
+                        .ThenInclude(x => x.MaterialNavigation)
+                        .Include(x => x.AidNavigation.DummyMatNavigation)
+                        .Include(x => x.AidNavigation.OrderComponents)
+                        .ThenInclude(x => x.MaterialNavigation)
+                        .Include(x => x.RidNavigation)
+                        .ToListAsync();
 
-
-                    using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
+                    foreach (var message in messages)
                     {
+                        var refreshedById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
+                        var existingProcesses = Processes?
+                            .Where(x => orderIds.Contains(x.Aid))
+                            .ToArray() ?? Array.Empty<Vorgang>();
 
-                        foreach(var message in messages)
+                        foreach (var process in existingProcesses)
                         {
-                            var refreshedById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
-                            var existingProcesses = Processes?
-                                .Where(x => orderIds.Contains(x.Aid))
-                                .ToArray() ?? Array.Empty<Vorgang>();
-
-                            foreach (var process in existingProcesses)
+                            if (refreshedById.TryGetValue(process.VorgangId, out var refreshed))
                             {
-                                if (refreshedById.TryGetValue(process.VorgangId, out var refreshed))
+                                if (_SelectedItem?.VorgangId == process.VorgangId)
                                 {
-                                    if (_SelectedItem?.VorgangId == process.VorgangId)
-                                    {
-                                        db.Vorgangs.Update(_SelectedItem);
-                                        db.SaveChanges();
-                                    }
-                                    ChangedValues(message.Item1, process, refreshed);
-                                    process.RunPropertyChanged();
+                                    db.Vorgangs.Update(_SelectedItem);
+                                    db.SaveChanges();
+                                }
+                                ChangedValues(message.Item1, process, refreshed);
+                                process.RunPropertyChanged();
 
-
-                                    if (process.Rid != Rid || (process.SysStatus?.Contains("RÜCK") ?? false))
-                                    {
-                                        Processes?.Remove(process);
-                                        if (process.Rid == null)
-                                            _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
-                                        ProcessesCV.Refresh();
-                                        continue;
-                                    }
+                                if (process.Rid != Rid || (process.SysStatus?.Contains("RÜCK") ?? false))
+                                {
+                                    Processes?.Remove(process);
+                                    if (process.Rid == null)
+                                        _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
+                                    ProcessesCV.Refresh();
+                                    continue;
                                 }
                             }
                         }
                     }
-                    
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing plan-machine order change message.");
-                }
-            });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing plan-machine order change message.");
+            }
         }
 
  
@@ -557,7 +546,7 @@ namespace ModulePlanning.Planning
         /// Handles the reception of a vorgang message and updates the Processes collection based on the provided list of vorgang tuples.
         /// </summary>
         /// <param name="vorgangIdList"></param>
-        private void MessageVorgangReceived(List<(string, string)?> vorgangIdList)
+        private async void MessageVorgangReceived(List<(string, string)?> vorgangIdList)
         {
             var messages = vorgangIdList?
                 .Where(x => x.HasValue)
@@ -566,72 +555,63 @@ namespace ModulePlanning.Planning
             if (messages == null || messages.Length == 0)
                 return;
 
-            _ = Application.Current.Dispatcher.InvokeAsync(async () =>
+            try
             {
-                try
+                var vorgangIds = messages.Select(x => x.Item2).Distinct().ToArray();
+                using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
                 {
-                    var vorgangIds = messages.Select(x => x.Item2).Distinct().ToArray();
-                    List<Vorgang> refreshedVorgangs;
-                    using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
-                    {
-                        refreshedVorgangs = await db.Vorgangs
-                            .AsNoTracking()
-                            .Where(x => vorgangIds.Contains(x.VorgangId))
-                            .Include(x => x.AidNavigation)
-                            .ThenInclude(x => x.MaterialNavigation)
-                            .Include(x => x.AidNavigation.DummyMatNavigation)
-                            .Include(x => x.RidNavigation)
-                            .ToListAsync();
-                    }
+                    var refreshedVorgangs = await db.Vorgangs
+                        .AsNoTracking()
+                        .Where(x => vorgangIds.Contains(x.VorgangId))
+                        .Include(x => x.AidNavigation)
+                        .ThenInclude(x => x.MaterialNavigation)
+                        .Include(x => x.AidNavigation.DummyMatNavigation)
+                        .Include(x => x.RidNavigation)
+                        .ToListAsync();
 
                     var vorgangsById = refreshedVorgangs.ToDictionary(x => x.VorgangId);
 
-                    using (var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>())
+                    foreach (var message in messages)
                     {
-                        foreach (var message in messages)
+                        var process = Processes?.FirstOrDefault(x => x.VorgangId == message.Item2);
+                        if (process != null)
                         {
-                            var process = Processes?.FirstOrDefault(x => x.VorgangId == message.Item2);
-                            if (process != null)
+                            if (_SelectedItem?.VorgangId == process.VorgangId)
                             {
-                                if (_SelectedItem?.VorgangId == process.VorgangId)
-                                {
-                                    _dbContext.Vorgangs.Update(_SelectedItem);
-                                    _dbContext.SaveChanges();
-                                }
-                                if (vorgangsById.TryGetValue(message.Item2, out var refreshed))
-                                {
-                                    ChangedValues(message.Item1, process, refreshed);
-                                }
-
-                                process.RunPropertyChanged();
-                                _logger.LogInformation("PlanMachine - execute reload {message} {1}", process.VorgangId, process.SysStatus);
-                                if ((process.SysStatus?.Contains("RÜCK") ?? false) || process.Rid == null)
-                                {
-                                    process.SortPos = "Z";
-                                    Processes?.Remove(process);
-                                    _logger.LogInformation("PlanMachine - removed {message} {1} - {2}", process.VorgangId, process.Aid, process.Vnr);
-                                    if (process.Rid == null)
-                                        _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
-                                    ProcessesCV.Refresh();
-                                }
+                                _dbContext.Vorgangs.Update(_SelectedItem);
+                                _dbContext.SaveChanges();
                             }
-                            else if (vorgangsById.TryGetValue(message.Item2, out var refreshed) &&
-                                refreshed.Rid == Rid && (refreshed.SysStatus?.Contains("RÜCK") ?? false) == false)
+                            if (vorgangsById.TryGetValue(message.Item2, out var refreshed))
                             {
+                                ChangedValues(message.Item1, process, refreshed);
+                            }
 
-                                Processes?.Add(refreshed);
-                                _logger.LogInformation("PlanMachine - added {message} {1}-{2}", refreshed.VorgangId, refreshed.Aid, refreshed.Vnr);
+                            process.RunPropertyChanged();
+                            _logger.LogInformation("PlanMachine - execute reload {message} {1}", process.VorgangId, process.SysStatus);
+                            if ((process.SysStatus?.Contains("RÜCK") ?? false) || process.Rid == null)
+                            {
+                                process.SortPos = "Z";
+                                Processes?.Remove(process);
+                                _logger.LogInformation("PlanMachine - removed {message} {1} - {2}", process.VorgangId, process.Aid, process.Vnr);
+                                if (process.Rid == null)
+                                    _eventAggregator.GetEvent<MessagePlanmachineProcessRemoved>().Publish(process);
                                 ProcessesCV.Refresh();
                             }
                         }
+                        else if (vorgangsById.TryGetValue(message.Item2, out var refreshed) &&
+                            refreshed.Rid == Rid && (refreshed.SysStatus?.Contains("RÜCK") ?? false) == false)
+                        {
+                            Processes?.Add(refreshed);
+                            _logger.LogInformation("PlanMachine - added {message} {1}-{2}", refreshed.VorgangId, refreshed.Aid, refreshed.Vnr);
+                            ProcessesCV.Refresh();
+                        }
                     }
-                    
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing plan-machine Vorgang change message.");
-                }
-            });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing plan-machine Vorgang change message.");
+            }
         }
 
         private void ChangedValues(string invoker, Vorgang local, Vorgang remote)
@@ -659,6 +639,7 @@ namespace ModulePlanning.Planning
                 local.QuantityYield = remote.QuantityYield;
                 local.AidNavigation.Quantity = remote.AidNavigation.Quantity;
                 local.Text = remote.Text;
+                local.SysStatus = remote.SysStatus;
             }
         }
         private bool OnCalculateCanExecute(object arg)

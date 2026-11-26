@@ -119,7 +119,7 @@ namespace ModulePlanning.ViewModels
             SetAutoSaveTimer();
             MachineTask = new NotifyTaskCompletion<ICollectionView>(LoadMachinesAsync());
 
-            SubscribeEventsAsync();
+            _ = SubscribeEventsAsync();
 
         }
 
@@ -127,10 +127,9 @@ namespace ModulePlanning.ViewModels
         {
             using (_lock.EnterScope())
             {
-                Application.Current.Dispatcher.InvokeAsync(() => Priv_processes?.Add(vorgang));
-
+                Priv_processes?.Add(vorgang);
                 _Logger.LogInformation("user has removed from machine {message}-{0}", vorgang.Aid, vorgang.Vnr);
-            }          
+            }
         }
 
         private void AutoSaveEnable(bool obj)
@@ -158,101 +157,75 @@ namespace ModulePlanning.ViewModels
         }
         private void MessageVorgangReceived(List<(string, string)?> list)
         {
-            _ = Application.Current.Dispatcher.InvokeAsync(() =>
+            try
             {
-                try
+                using (_lock.EnterScope())
                 {
-                    using (_lock.EnterScope())
-                    {
-                        foreach (var item in list)
-                        {
-                            if (!item.HasValue)
-                                continue;
-
-                            var vo = Priv_processes?.FirstOrDefault(x => x.VorgangId == item.Value.Item2);
-                            if (vo == null)
-                                continue;
-
-                            var entry = _DbCtx.Entry(vo);
-                            if (entry.State == EntityState.Modified)
-                                _DbCtx.SaveChanges();
-                            entry.Reload();
-                            vo.RunPropertyChanged();
-                            _Logger.LogInformation("reloaded {message}-{0} rid {1} {2}", vo.Aid, vo.Vnr, vo.Rid, item.Value.Item1);
-
-                            if (item.Value.Item1 == "EL2" && vo.Rid != null)
-                            {
-                                Priv_processes?.Remove(vo);
-                                _Logger.LogInformation("user has added to machine {message}-{0} rid {1}", vo.Aid, vo.Vnr, vo.Rid);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _Logger.LogError("{message}", ex.ToString());
-                }
-            });
-        }
-
-        private void MessageOrderReceived(List<(string, string)?> list)
-        {
-            if (list == null || list.Count == 0)
-                return;
-
-            _ = Application.Current.Dispatcher.InvokeAsync(async () =>
-            {
-                try
-                {
-
                     foreach (var item in list)
                     {
                         if (!item.HasValue)
                             continue;
 
-                        var aid = item.Value.Item2;
-                        var proc = await GetVorgangsAsync(aid);
-                        var existing = Priv_processes?
-                            .Where(x => x.Aid == aid)
-                            .ToArray() ?? Array.Empty<Vorgang>();
+                        var vo = Priv_processes?.FirstOrDefault(x => x.VorgangId == item.Value.Item2);
+                        if (vo == null)
+                            continue;
 
-                        foreach (var process in proc.Concat(existing).DistinctBy(x => x.VorgangId))
+
+                        if (item.Value.Item1 == "EL2" && vo.Rid != null)
                         {
-                            var entry = _DbCtx.Entry(process);
-                            if (entry.State == EntityState.Modified)
-                                _DbCtx.SaveChanges();
+                            Priv_processes?.Remove(vo);
+                            _Logger.LogInformation("user has added to machine {message}-{0} rid {1}", vo.Aid, vo.Vnr, item.Value.Item1);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError("{message}", ex.ToString());
+            }
+        }
 
-                            entry.Reload();
-                            if (entry.State == EntityState.Detached)
-                            {
-                                Priv_processes?.Remove(process);
-                                continue;
-                            }
+        private async void MessageOrderReceived(List<(string, string)?> list)
+        {
+            if (list == null || list.Count == 0)
+                return;
 
-                            process.RunPropertyChanged();
-                            if (!IsRelevant(process.ArbPlSap) || process.Rid != null ||
-                                (process.SysStatus?.Contains("RÜCK") ?? false))
-                            {
-                                Priv_processes?.Remove(process);
-                                continue;
-                            }
+            try
+            {
+                foreach (var item in list)
+                {
+                    if (!item.HasValue)
+                        continue;
 
-                            if (Priv_processes?.Any(x => x.VorgangId == process.VorgangId) != true)
-                            {
-                                Priv_processes?.Add(process);
-                                _Logger.LogInformation("scope pool added {message}-{0}", process.Aid, process.Vnr);
-                            }
+                    var aid = item.Value.Item2;
+                    var proc = await GetVorgangsAsync(aid);
+                    var existing = Priv_processes?
+                        .Where(x => x.Aid == aid)
+                        .ToArray() ?? Array.Empty<Vorgang>();
+
+                    foreach (var process in proc.Concat(existing).DistinctBy(x => x.VorgangId))
+                    {
+
+                        if (!IsRelevant(process.ArbPlSap) || process.Rid != null ||
+                            (process.SysStatus?.Contains("RÜCK") ?? false))
+                        {
+                            Priv_processes?.Remove(process);
+                            continue;
                         }
 
+                        if (Priv_processes?.Any(x => x.VorgangId == process.VorgangId) != true)
+                        {
+                            Priv_processes?.Add(process);
+                            _Logger.LogInformation("scope pool added {message}-{0}", process.Aid, process.Vnr);
+                        }
                     }
-                    
                 }
-                catch (Exception ex)
-                {
-                    _Logger.LogError("{message}", ex.ToString());
-                    MessageBox.Show(ex.Message, "MessageOrderReceived MachinePlan", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-            });
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError("{message}", ex.ToString());
+                MessageBox.Show(ex.Message, "MessageOrderReceived MachinePlan", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
  
         private bool OnSaveCanExecute(object arg)
@@ -387,13 +360,19 @@ namespace ModulePlanning.ViewModels
                 {
                     try
                     {
-                        
+
                         if (_DbCtx.ChangeTracker.Entries().All(x => x.State == EntityState.Detached))
                         {
                             _Logger.LogInformation("AutoSave MachPlan: {message}", "All Detached.");
                         }
-                        if (_DbCtx.ChangeTracker.HasChanges())
-                            _DbCtx.SaveChanges();
+                        else
+                        {
+                            if (_DbCtx.ChangeTracker.HasChanges())
+                            {
+                                _DbCtx.SaveChanges();
+                                _Logger.LogInformation("AutoSave MachPlan: {message}", "Saved.");
+                            }
+                        }
                     }
                     finally
                     {
@@ -545,17 +524,21 @@ namespace ModulePlanning.ViewModels
 
         private async Task SubscribeEventsAsync()
         {
-            await Task.Run(() =>
+            try
             {
-                if (MachineTask.IsSuccessfullyCompleted)
-                {
-                    _ea.GetEvent<MessageOrderChanged>().Subscribe(MessageOrderReceived);
-                    _ea.GetEvent<MessageVorgangChanged>().Subscribe(MessageVorgangReceived);
-                    _ea.GetEvent<EnableAutoSave>().Subscribe(AutoSaveEnable);
-                    _ea.GetEvent<MessagePlanmachineProcessRemoved>().Subscribe(MessagePlug);
+                if (MachineTask == null)
                     return;
-                }
-            });
+
+                await MachineTask.Task;
+                _ea.GetEvent<MessageOrderChanged>().Subscribe(MessageOrderReceived, ThreadOption.UIThread);
+                _ea.GetEvent<MessageVorgangChanged>().Subscribe(MessageVorgangReceived, ThreadOption.UIThread);
+                _ea.GetEvent<EnableAutoSave>().Subscribe(AutoSaveEnable, ThreadOption.UIThread);
+                _ea.GetEvent<MessagePlanmachineProcessRemoved>().Subscribe(MessagePlug, ThreadOption.UIThread);
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogError(ex, "Error loading machines before subscribing to planning events.");
+            }
         }
         private void SelectionChange(object commandParameter)
         {
@@ -695,21 +678,25 @@ namespace ModulePlanning.ViewModels
                     var s = dropInfo.DragInfo.SourceCollection as ListCollectionView;
                     var t = dropInfo.TargetCollection as ListCollectionView;
                     if (s.CanRemove) s.Remove(plm);
-                    var v = dropInfo.InsertIndex;
+  
+                    var ind = dropInfo.UnfilteredInsertIndex;
+                    var sin = dropInfo.DragInfo.SourceIndex;
 
                     Debug.Assert(t != null, nameof(t) + " != null");
-                    ((IList)t.SourceCollection).Insert(v, plm);
+                    ((IList)t.SourceCollection).Insert(ind, plm);
 
+                    _machines.Move(sin, ind);
                     using (_lock.EnterScope())
                     {
+                        using var db = _container.Resolve<DB_COS_LIEFERLISTE_SQLContext>();
                         int i = 0;
-                        foreach (var m in t.SourceCollection)
+                        foreach (var m in _machines)
                         {
-                            
+
                             var mm = (PlanMachine)m;
-                            var vv = _DbCtx.Ressources.First(x => x.RessourceId == mm.Rid );
+                            var vv = db.Ressources.First(x => x.RessourceId == m.Rid);
                             vv.Sort = vv.Visability ? i : 1000;
-                            _DbCtx.Update(vv);
+                            db.SaveChanges();
                             i++;
                         }
                     }
